@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57c7b022ae03b5548bce878c39ad6667, type: 3}
+  m_Name: Level_01
+  m_EditorClassIdentifier: 
+  id: level_01
+  nameKey: level.level_01.name
+  roundDurationSeconds: 180
+  spawnIntervalCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 8
+      inSlope: 0
+      outSlope: -4
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 4
+      inSlope: -4
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  targetGold: 100
+  starGoldThresholds: 64000000c80000002c010000
+  maxMisses: 3
+  menu:
+  - {fileID: 11400000, guid: 0c4c9612b8ef1c94f854d507521ac51e, type: 2}
+  - {fileID: 11400000, guid: 6afbe83e4d548ef45a582eaf31cde3eb, type: 2}
+  - {fileID: 11400000, guid: d168ad4e90e7ab341bc2a7c5114db104, type: 2}
+  - {fileID: 11400000, guid: 88b49dd8340a6dc41930efdb4f126ace, type: 2}
