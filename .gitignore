@@ -36,6 +36,10 @@
 *.jks
 crashlytics-buildid.txt
 
+# Ekip dokümanları (ayrıca paylaşılır, depoya girmez)
+/docs/
+/Docs/
+
 # İşletim sistemi
 .DS_Store
 Thumbs.db

@@ -50,11 +50,19 @@ Dil: Türkçe ve İngilizce, ayarlardan seçilir.
 | Kod | `Scripts/Salon`, `Scripts/UI`, `Scripts/Showcase` | `Scripts/Core`, `Scripts/Upgrades`, `Scripts/Ads`, `Scripts/Kitchen` |
 | Sahneler | `Salon.unity`, `Showcase.unity` | `Boot.unity`, `Shop.unity`, `Kitchen.unity` |
 
-- Dal adları `rol/gorev-no-kisa-ad` biçimindedir: `oynanis/...` oynanış geliştiricisi, `altyapi/...` altyapı geliştiricisi,
-  `contract/...` ortak sözleşme değişikliği, `fix/...` acil düzeltme. Görev başında dal adından alanı anla; belli değilse kullanıcıya sor.
+- Dal adları `rol/gorev-no-kisa-ad` biçimindedir:
+  - `altyapi/...` altyapı geliştiricisi (ör. `altyapi/g1-iskelet`, `altyapi/g5-round`)
+  - `oynanis/...` oynanış geliştiricisi (ör. `oynanis/g2-masa-musteri`, `oynanis/g3-servis`)
+  - `contract/...` ortak sözleşme değişikliği, `fix/...` acil düzeltme.
+  Görev başında dal adından alanı anla; belli değilse kullanıcıya sor.
+- Commit mesajları Türkçe yazılır. Commit mesajlarına `Co-Authored-By` satırı veya Claude ibaresi eklenmez.
+- Planlama dokümanları ("Cutie Pie – Faz 1 Görev Planı" vb.) ekip tarafından ayrıca paylaşılır, depoda bulunmaz (`/docs/` git dışıdır).
 - Ortak sözleşme (GameEvents olayları, Data sınıfları, sahne/prefab kuralları) "Cutie Pie – Faz 1 Görev Planı" dokümanında tanımlıdır;
   sözleşmenin dışına çıkan bir değişiklik gerekiyorsa kodlamadan önce kullanıcıya söyle.
+  Faz 1 PDF'iyle çelişki olursa `Scripts/Core/GameEvents.cs` ve `Scripts/Core/Data/` altındaki kod güncel sözleşme kaynağıdır.
 - Altyapının Salon'da durması gereken parçaları (RoundManager vb.) prefab olarak hazırlanır; `Salon.unity`'ye sahneyi yalnızca oynanış geliştiricisi ekler.
+  (İstisna: G1'de `Salon.unity` altyapı tarafından boş kök obje ve CurrencyDisplay ile oluşturuldu.)
+- Reklam servisine yalnızca `GameManager.Instance.Ads` (`IAdsService`) üzerinden erişilir; somut servis sınıfına doğrudan bağlanılmaz.
 - Diğer kişinin klasörüne veya sahnesine dokunman gerekiyorsa kodlamadan önce söyle; gerekiyorsa değişikliği prefab olarak hazırla.
 - Bölümler arası iletişim `Core/GameEvents` üzerinden olur. GameEvents'e yeni olay eklemek ortak karardır; ekleme önerisini kullanıcıya bildir.
 - Ortak dosyalar (`CLAUDE.md`, `ProjectSettings/`, `Packages/manifest.json`) konuşulmadan değiştirilmez.
