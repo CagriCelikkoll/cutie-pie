@@ -1,0 +1,42 @@
+# Unity tarafından üretilen klasörler (depo köküne bağlı)
+/[Ll]ibrary/
+/[Tt]emp/
+/[Ll]ogs/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# IDE / üretilen proje dosyaları
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.tmp
+
+# Build çıktıları ve imzalama anahtarları
+*.apk
+*.aab
+*.unitypackage
+*.keystore
+*.jks
+crashlytics-buildid.txt
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
+desktop.ini
