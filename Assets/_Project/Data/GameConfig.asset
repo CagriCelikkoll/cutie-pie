@@ -15,5 +15,12 @@ MonoBehaviour:
   startingGold: 0
   startingGems: 0
   startingShopRating: 0
+  startingLevel: {fileID: 11400000, guid: cbb9edba61195664dacb8787b37f1167, type: 2}
+  levels:
+  - {fileID: 11400000, guid: cbb9edba61195664dacb8787b37f1167, type: 2}
+  saveFileName: save.json
+  saveTempFileName: save.json.tmp
+  saveBackupFileName: save.json.bak
+  saveVersion: 1
   firstSceneName: Salon
   fakeAdDurationSeconds: 1
