@@ -4,7 +4,7 @@ Bu dosya, projede çalışan Claude'un her oturumda okuduğu proje özetidir. Ka
 
 ## Oyun
 
-Cutie Pie, dikey ekranlı, 2D, sevimli tarzda bir mobil pastane oyunudur. Hedef platform Android (Google Play), ileride iOS.
+Cutie Pie, yatay ekranlı (landscape), 2D, sevimli tarzda bir mobil pastane oyunudur. Hedef platform Android (Google Play), ileride iOS.
 Hedef kitle çocuklar dahil karma kitledir; Google Play aile (Families) politikasına uyulur.
 
 Oyunun 3 bölümü vardır:
@@ -23,13 +23,21 @@ Dil: Türkçe ve İngilizce, ayarlardan seçilir.
 
 ## Teknik kararlar
 
-- Motor: Unity 2022.3 LTS, C#, 2D (URP 2D). Dikey ekran. Unity 6'ya özel API veya özellik kullanma
-  (geliştiricilerden birinin bilgisayarı Unity 6'yı desteklemiyor); önerdiğin her şeyin 2022.3'te çalıştığından emin ol.
+- Motor: Unity 2022.3 LTS, C#, 2D (URP 2D). Yatay ekran: Default Orientation = Auto Rotation, yalnızca Landscape Left ve Landscape Right açık.
+  Unity 6'ya özel API veya özellik kullanma (geliştiricilerden birinin bilgisayarı Unity 6'yı desteklemiyor);
+  önerdiğin her şeyin 2022.3'te çalıştığından emin ol.
+- Salon düzeni: müşteri girişi sağ üstte. Ekranın solu hazırlama alanı (üstte pasta vitrini, ortada içecek makineleri,
+  altta tepsi/tabak yığınları, hazırlık alanı ve çöp kutusu), sağı 8 masa yeri. Açık masa sayısı LevelData'dan gelir
+  (başta 3), diğer masalar kilitli görünür ve geliştirmeyle açılır.
+- Servis 5 sürüklemedir: tepsi → tabak → vitrinden tek dilim → içecek bardağı → tepsiyi masaya. Müşteriye dokununca
+  siparişi hazırlık alanındaki fişe düşer. Vitrin ve içecekler 4'lü sabit yerdir, fazlası sayfalanır; round menüsü ilk sayfadadır.
 - Android: Google Play'in güncel hedef API şartını karşılamak için Target API Level en az 36 olmalı.
 - Klasör yapısı:
   - `Assets/_Project/Scripts/{Core, Salon, Kitchen, Showcase, Upgrades, Ads, UI}`
   - `Assets/_Project/{Data, Prefabs, Scenes, Art, Audio, Localization}`
 - Sahneler: Boot, Shop (ana ekran), Salon, Kitchen, Showcase.
+- Akış: Boot → Shop (açılış ekranı: Vitrin, Kasa, Mutfak butonları; Faz 1'de sadece Kasa çalışır) → Kasa → Salon.
+  Round sonundan "Pastaneye dön" ile Shop'a dönülür.
 - Tüm denge değerleri (fiyat, süre, müşteri hızı, ödüller) ScriptableObject'lerde tutulur; kodda sihirli sayı olmaz.
 - Sistemler birbirine C# event'leriyle bağlanır. Singleton yöneticiler yalnızca Core'da
   (GameManager, EconomyManager, SaveSystem, AudioManager).
@@ -50,19 +58,11 @@ Dil: Türkçe ve İngilizce, ayarlardan seçilir.
 | Kod | `Scripts/Salon`, `Scripts/UI`, `Scripts/Showcase` | `Scripts/Core`, `Scripts/Upgrades`, `Scripts/Ads`, `Scripts/Kitchen` |
 | Sahneler | `Salon.unity`, `Showcase.unity` | `Boot.unity`, `Shop.unity`, `Kitchen.unity` |
 
-- Dal adları `rol/gorev-no-kisa-ad` biçimindedir:
-  - `altyapi/...` altyapı geliştiricisi (ör. `altyapi/g1-iskelet`, `altyapi/g5-round`)
-  - `oynanis/...` oynanış geliştiricisi (ör. `oynanis/g2-masa-musteri`, `oynanis/g3-servis`)
-  - `contract/...` ortak sözleşme değişikliği, `fix/...` acil düzeltme.
-  Görev başında dal adından alanı anla; belli değilse kullanıcıya sor.
-- Commit mesajları Türkçe yazılır. Commit mesajlarına `Co-Authored-By` satırı veya Claude ibaresi eklenmez.
-- Planlama dokümanları ("Cutie Pie – Faz 1 Görev Planı" vb.) ekip tarafından ayrıca paylaşılır, depoda bulunmaz (`/docs/` git dışıdır).
+- Dal adları `rol/gorev-no-kisa-ad` biçimindedir: `oynanis/...` oynanış geliştiricisi, `altyapi/...` altyapı geliştiricisi,
+  `contract/...` ortak sözleşme değişikliği, `fix/...` acil düzeltme. Görev başında dal adından alanı anla; belli değilse kullanıcıya sor.
 - Ortak sözleşme (GameEvents olayları, Data sınıfları, sahne/prefab kuralları) "Cutie Pie – Faz 1 Görev Planı" dokümanında tanımlıdır;
   sözleşmenin dışına çıkan bir değişiklik gerekiyorsa kodlamadan önce kullanıcıya söyle.
-  Faz 1 PDF'iyle çelişki olursa `Scripts/Core/GameEvents.cs` ve `Scripts/Core/Data/` altındaki kod güncel sözleşme kaynağıdır.
 - Altyapının Salon'da durması gereken parçaları (RoundManager vb.) prefab olarak hazırlanır; `Salon.unity`'ye sahneyi yalnızca oynanış geliştiricisi ekler.
-  (İstisna: G1'de `Salon.unity` altyapı tarafından boş kök obje ve CurrencyDisplay ile oluşturuldu.)
-- Reklam servisine yalnızca `GameManager.Instance.Ads` (`IAdsService`) üzerinden erişilir; somut servis sınıfına doğrudan bağlanılmaz.
 - Diğer kişinin klasörüne veya sahnesine dokunman gerekiyorsa kodlamadan önce söyle; gerekiyorsa değişikliği prefab olarak hazırla.
 - Bölümler arası iletişim `Core/GameEvents` üzerinden olur. GameEvents'e yeni olay eklemek ortak karardır; ekleme önerisini kullanıcıya bildir.
 - Ortak dosyalar (`CLAUDE.md`, `ProjectSettings/`, `Packages/manifest.json`) konuşulmadan değiştirilmez.
@@ -79,3 +79,11 @@ Dil: Türkçe ve İngilizce, ayarlardan seçilir.
 - Oyuncuya görünen tüm metinler yerelleştirme dosyasından gelsin, koda yazılmasın.
 - Büyük görevlerde önce kısa bir plan çıkarılsın, onaydan sonra kodlansın.
 - Yeni paket eklemeden önce sorulsun.
+
+## Sözleşme ve Git notları
+
+- Ortak sözleşmenin güncel kaynağı koddur: `Scripts/Core/GameEvents.cs` ve `Scripts/Core/Data`. Faz 1 Görev Planı ile çelişirse kod esas alınır; farkı kullanıcıya bildir.
+- Proje dokümanları (PDF'ler) depoda tutulmaz; ekip içinde ayrıca paylaşılır. Yerelde `docs/` klasöründe olabilir.
+- Reklama yalnızca `GameManager.Instance.Ads` üzerinden erişilir; `FakeAdsService` veya `AdMobAdsService` doğrudan kullanılmaz.
+- Dal açma, `git add`, commit, push ve merge işlemlerini kullanıcı yapar. Görev sonunda yalnızca önerilen dal adını, commit summary ve description metnini, PR başlığı ve açıklamasını ver.
+- Commit mesajları Türkçe olur; commit'lere ve PR açıklamalarına `Co-Authored-By` satırı veya Claude/Claude Code ibaresi eklenmez.
