@@ -38,9 +38,18 @@ namespace CutiePie.Core
 
         private void Start()
         {
-            // Boot açılınca ilk oyun sahnesine geçilir.
+            // Boot açılınca önce kayıt yüklenir, sonra ilk oyun sahnesine geçilir.
             if (SceneManager.GetActiveScene().buildIndex == 0)
             {
+                if (SaveSystem.Instance != null)
+                {
+                    SaveSystem.Instance.LoadAndApply();
+                }
+                else
+                {
+                    Debug.LogError("[GameManager] SaveSystem bulunamadı; kayıt yüklenmedi.");
+                }
+
                 LoadScene(config.firstSceneName);
             }
         }
