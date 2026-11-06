@@ -27,6 +27,9 @@ namespace CutiePie.Core.Data
         [Tooltip("Bu kadar kaçırmada round erken biter.")]
         [Min(1)] public int maxMisses;
 
+        [Tooltip("Round başında açık olan masa sayısı. Diğer masa yerleri kilitli görünür, geliştirmeyle açılır.")]
+        [Min(1)] public int openTableCount;
+
         [Tooltip("Bu seviyede sipariş edilebilen ürünler.")]
         public List<ProductData> menu = new List<ProductData>();
     }

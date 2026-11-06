@@ -42,6 +42,7 @@ MonoBehaviour:
   targetGold: 100
   starGoldThresholds: 64000000c80000002c010000
   maxMisses: 3
+  openTableCount: 3
   menu:
   - {fileID: 11400000, guid: 0c4c9612b8ef1c94f854d507521ac51e, type: 2}
   - {fileID: 11400000, guid: 6afbe83e4d548ef45a582eaf31cde3eb, type: 2}
