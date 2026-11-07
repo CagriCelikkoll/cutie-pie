@@ -27,6 +27,9 @@ namespace CutiePie.Salon
         public Transform SeatPoint => seatPoint != null ? seatPoint : transform;
         public bool IsFree => State == TableState.Empty;
 
+        /// <summary>Masaya ayrılmış müşteri (yoldayken de); yoksa null.</summary>
+        public Customer Occupant { get; private set; }
+
         /// <summary>Durum her değiştiğinde tetiklenir.</summary>
         public event Action<Table> StateChanged;
 
@@ -34,6 +37,7 @@ namespace CutiePie.Salon
         public void Initialize(SalonSettings salonSettings, bool open)
         {
             settings = salonSettings;
+            Occupant = null;
             SetState(open ? TableState.Empty : TableState.Locked, true);
         }
 
@@ -48,7 +52,7 @@ namespace CutiePie.Salon
         }
 
         /// <summary>Boş masayı bir müşteriye ayırır. Masa boş değilse false döner.</summary>
-        public bool Reserve()
+        public bool Reserve(Customer occupant)
         {
             if (State != TableState.Empty)
             {
@@ -56,6 +60,7 @@ namespace CutiePie.Salon
                 return false;
             }
 
+            Occupant = occupant;
             SetState(TableState.Occupied);
             return true;
         }
@@ -65,6 +70,7 @@ namespace CutiePie.Salon
         {
             if (State == TableState.Occupied)
             {
+                Occupant = null;
                 SetState(TableState.Empty);
             }
         }
@@ -74,6 +80,7 @@ namespace CutiePie.Salon
         {
             if (State == TableState.Occupied)
             {
+                Occupant = null;
                 SetState(TableState.Dirty);
             }
         }

@@ -18,8 +18,10 @@ namespace CutiePie.Salon.Editor
 
         private const string PlaceholderFolder = "Assets/_Project/Art/Salon/Placeholders";
         private const string SquareSpritePath = PlaceholderFolder + "/Square.png";
+        private const string CircleSpritePath = PlaceholderFolder + "/Circle.png";
         private const string PrefabFolder = "Assets/_Project/Prefabs/Salon";
         private const string TablePrefabPath = PrefabFolder + "/Table.prefab";
+        private const string CustomerPrefabPath = PrefabFolder + "/Customer.prefab";
         private const string DataFolder = "Assets/_Project/Data/Salon";
         private const string SettingsPath = DataFolder + "/SalonSettings.asset";
         private const string LevelPath = "Assets/_Project/Data/Levels/Level_01.asset";
@@ -37,9 +39,23 @@ namespace CutiePie.Salon.Editor
         private static readonly Color LockColor = new Color(0.15f, 0.15f, 0.2f, 0.65f);
         private const float LockScale = 0.9f;
 
+        // Müşteri prefab'ı yerleşimi (müşteri merkezine göre, birim).
+        private static readonly Vector2 CustomerBodySize = new Vector2(0.8f, 1f);
+        private const float PatienceBarOffsetY = 0.7f;
+        private static readonly Vector2 PatienceBarSize = new Vector2(1f, 0.15f);
+        private const float BubbleOffsetY = 1.25f;
+        private static readonly Vector2 BubbleSize = new Vector2(1.3f, 0.7f);
+        private const float BubbleIconOffsetX = 0.32f;
+        private const float BubbleIconSize = 0.45f;
+        private static readonly Color BubbleColor = Color.white;
+        private static readonly Color PatienceFillDefaultColor = new Color(0.35f, 0.8f, 0.4f, 1f);
+
         // Sorting Layer (ortak dosya) yerine sortingOrder: zemin 0, masa 10, müşteri 20, balon/bar 30.
         public const int OrderTable = 10;
         public const int OrderTableLock = 11;
+        public const int OrderCustomer = 20;
+        public const int OrderOverlay = 30;
+        public const int OrderOverlayContent = 31;
 
         [MenuItem(MenuRoot + "1 - Masaları Kur")]
         private static void BuildTables()
@@ -49,7 +65,7 @@ namespace CutiePie.Salon.Editor
                 return;
             }
 
-            Sprite square = GetOrCreatePlaceholderSprite(SquareSpritePath);
+            Sprite square = GetOrCreatePlaceholderSprite(SquareSpritePath, false);
             SalonSettings settings = GetOrCreateSettings();
             GameObject tablePrefab = GetOrCreateTablePrefab(square, settings);
 
@@ -118,6 +134,78 @@ namespace CutiePie.Salon.Editor
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
             Selection.activeGameObject = tablesGo;
             Debug.Log("[SalonSceneBuilder] 8 masa kuruldu. Sahneyi kaydetmeyi unutmayın (Ctrl+S).");
+        }
+
+        [MenuItem(MenuRoot + "2 - Müşteri Prefab'ını Kur")]
+        private static void BuildCustomerPrefab()
+        {
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(CustomerPrefabPath) != null &&
+                !EditorUtility.DisplayDialog("Müşteri Prefab'ı", "Customer.prefab zaten var. Üzerine yazılsın mı?", "Evet", "Vazgeç"))
+            {
+                return;
+            }
+
+            Sprite square = GetOrCreatePlaceholderSprite(SquareSpritePath, false);
+            Sprite circle = GetOrCreatePlaceholderSprite(CircleSpritePath, true);
+            SalonSettings settings = GetOrCreateSettings();
+            EnsureFolder(PrefabFolder);
+
+            var root = new GameObject("Customer");
+            Customer customer = root.AddComponent<Customer>();
+
+            SpriteRenderer body = CreateSpriteChild(root.transform, "Body", circle, CustomerBodySize, Color.white, OrderCustomer);
+
+            // Sabır barı: Bg + soldan sabitli FillPivot/Fill.
+            var barGo = new GameObject("PatienceBar");
+            barGo.transform.SetParent(root.transform, false);
+            barGo.transform.localPosition = new Vector3(0f, PatienceBarOffsetY, 0f);
+            PatienceBar bar = barGo.AddComponent<PatienceBar>();
+
+            SpriteRenderer barBg = CreateSpriteChild(barGo.transform, "Bg", square, PatienceBarSize, settings.patienceBackgroundColor, OrderOverlay);
+
+            var fillPivot = new GameObject("FillPivot").transform;
+            fillPivot.SetParent(barGo.transform, false);
+            fillPivot.localPosition = new Vector3(-PatienceBarSize.x * 0.5f, 0f, 0f);
+
+            SpriteRenderer fill = CreateSpriteChild(fillPivot, "Fill", square, PatienceBarSize, PatienceFillDefaultColor, OrderOverlayContent);
+            fill.transform.localPosition = new Vector3(PatienceBarSize.x * 0.5f, 0f, 0f);
+
+            var barSo = new SerializedObject(bar);
+            barSo.FindProperty("background").objectReferenceValue = barBg;
+            barSo.FindProperty("fillPivot").objectReferenceValue = fillPivot;
+            barSo.FindProperty("fill").objectReferenceValue = fill;
+            barSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // Sipariş balonu: balon kutusu + pasta ve içecek ikonu.
+            var bubbleGo = new GameObject("OrderBubble");
+            bubbleGo.transform.SetParent(root.transform, false);
+            bubbleGo.transform.localPosition = new Vector3(0f, BubbleOffsetY, 0f);
+            OrderBubble bubble = bubbleGo.AddComponent<OrderBubble>();
+
+            CreateSpriteChild(bubbleGo.transform, "Bubble", square, BubbleSize, BubbleColor, OrderOverlay);
+            var iconSize = new Vector2(BubbleIconSize, BubbleIconSize);
+            SpriteRenderer cakeIcon = CreateSpriteChild(bubbleGo.transform, "CakeIcon", square, iconSize, settings.cakePlaceholderColor, OrderOverlayContent);
+            cakeIcon.transform.localPosition = new Vector3(-BubbleIconOffsetX, 0f, 0f);
+            SpriteRenderer drinkIcon = CreateSpriteChild(bubbleGo.transform, "DrinkIcon", square, iconSize, settings.drinkPlaceholderColor, OrderOverlayContent);
+            drinkIcon.transform.localPosition = new Vector3(BubbleIconOffsetX, 0f, 0f);
+
+            var bubbleSo = new SerializedObject(bubble);
+            bubbleSo.FindProperty("cakeIcon").objectReferenceValue = cakeIcon;
+            bubbleSo.FindProperty("drinkIcon").objectReferenceValue = drinkIcon;
+            bubbleSo.ApplyModifiedPropertiesWithoutUndo();
+
+            var customerSo = new SerializedObject(customer);
+            customerSo.FindProperty("body").objectReferenceValue = body;
+            customerSo.FindProperty("orderBubble").objectReferenceValue = bubble;
+            customerSo.FindProperty("patienceBar").objectReferenceValue = bar;
+            customerSo.ApplyModifiedPropertiesWithoutUndo();
+
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, CustomerPrefabPath);
+            Object.DestroyImmediate(root);
+
+            Selection.activeObject = prefab;
+            EditorGUIUtility.PingObject(prefab);
+            Debug.Log("[SalonSceneBuilder] Customer.prefab oluşturuldu.");
         }
 
         // --- Sahne ---
@@ -242,8 +330,8 @@ namespace CutiePie.Salon.Editor
             return settings;
         }
 
-        /// <summary>Beyaz, 1x1 birimlik kare yer tutucu sprite'ı oluşturur (yoksa).</summary>
-        private static Sprite GetOrCreatePlaceholderSprite(string path)
+        /// <summary>Beyaz, 1x1 birimlik kare veya daire yer tutucu sprite'ı oluşturur (yoksa).</summary>
+        private static Sprite GetOrCreatePlaceholderSprite(string path, bool circle)
         {
             var existing = AssetDatabase.LoadAssetAtPath<Sprite>(path);
             if (existing != null)
@@ -256,9 +344,17 @@ namespace CutiePie.Salon.Editor
             int size = PlaceholderTextureSize;
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
             var pixels = new Color32[size * size];
-            for (int i = 0; i < pixels.Length; i++)
+            float radius = size * 0.5f;
+            for (int y = 0; y < size; y++)
             {
-                pixels[i] = new Color32(255, 255, 255, 255);
+                for (int x = 0; x < size; x++)
+                {
+                    // Daire: piksel merkezi yarıçapın dışındaysa saydam.
+                    float dx = x + 0.5f - radius;
+                    float dy = y + 0.5f - radius;
+                    bool inside = !circle || dx * dx + dy * dy <= radius * radius;
+                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)(inside ? 255 : 0));
+                }
             }
 
             texture.SetPixels32(pixels);
