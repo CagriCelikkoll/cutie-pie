@@ -50,7 +50,41 @@ namespace CutiePie.Salon.Editor
         private static readonly Color BubbleColor = Color.white;
         private static readonly Color PatienceFillDefaultColor = new Color(0.35f, 0.8f, 0.4f, 1f);
 
+        // Giriş (sağ üst) ve kapı kutusu.
+        private static readonly Vector3 EntrancePosition = new Vector3(8.8f, 4.4f, 0f);
+        private static readonly Vector2 DoorSize = new Vector2(1.2f, 1.4f);
+        private static readonly Color DoorColor = new Color(0.55f, 0.4f, 0.3f, 1f);
+
+        // Hazırlama alanı yer tutucuları (sol taraf, x ≈ -9.1…-2.3). G3 servisi için şimdilik işlevsiz.
+        private static readonly PrepBox[] PrepBoxes =
+        {
+            new PrepBox("CakeShowcase", new Vector2(-5.7f, 3.6f), new Vector2(6.8f, 2.6f), new Color(0.98f, 0.85f, 0.88f, 1f)),
+            new PrepBox("Drinks", new Vector2(-5.7f, 0.7f), new Vector2(6.8f, 2.4f), new Color(0.8f, 0.9f, 0.98f, 1f)),
+            new PrepBox("TrayStack", new Vector2(-8.6f, -3.0f), new Vector2(1f, 3.4f), new Color(0.85f, 0.75f, 0.6f, 1f)),
+            new PrepBox("PlateStack", new Vector2(-7.4f, -3.0f), new Vector2(1f, 3.4f), new Color(0.95f, 0.95f, 0.95f, 1f)),
+            new PrepBox("PrepCounter", new Vector2(-5.1f, -3.0f), new Vector2(3.2f, 3.4f), new Color(0.9f, 0.8f, 0.65f, 1f)),
+            new PrepBox("TrashBin", new Vector2(-2.8f, -3.0f), new Vector2(1f, 3.4f), new Color(0.6f, 0.65f, 0.6f, 1f)),
+        };
+
+        private readonly struct PrepBox
+        {
+            public readonly string Name;
+            public readonly Vector2 Position;
+            public readonly Vector2 Size;
+            public readonly Color Color;
+
+            public PrepBox(string name, Vector2 position, Vector2 size, Color color)
+            {
+                Name = name;
+                Position = position;
+                Size = size;
+                Color = color;
+            }
+        }
+
         // Sorting Layer (ortak dosya) yerine sortingOrder: zemin 0, masa 10, müşteri 20, balon/bar 30.
+        public const int OrderFloor = 0;
+        public const int OrderDoor = 1;
         public const int OrderTable = 10;
         public const int OrderTableLock = 11;
         public const int OrderCustomer = 20;
@@ -206,6 +240,106 @@ namespace CutiePie.Salon.Editor
             Selection.activeObject = prefab;
             EditorGUIUtility.PingObject(prefab);
             Debug.Log("[SalonSceneBuilder] Customer.prefab oluşturuldu.");
+        }
+
+        [MenuItem(MenuRoot + "3 - Giriş, Spawner ve Hazırlık Alanını Kur")]
+        private static void BuildSpawnerAndPrepArea()
+        {
+            if (!IsSalonSceneOpen())
+            {
+                return;
+            }
+
+            Transform root = GetOrCreateSceneObject("SalonRoot", null);
+            Transform tablesTf = root.Find("Tables");
+            TableManager manager = tablesTf != null ? tablesTf.GetComponent<TableManager>() : null;
+            var customerPrefab = AssetDatabase.LoadAssetAtPath<Customer>(CustomerPrefabPath);
+            if (manager == null || customerPrefab == null)
+            {
+                EditorUtility.DisplayDialog("Salon Kurulumu", "Önce 1. ve 2. menü adımlarını çalıştırın (Tables ve Customer.prefab gerekli).", "Tamam");
+                return;
+            }
+
+            if (root.Find("Entrance") != null || root.Find("PrepArea") != null || root.Find("CustomerSpawner") != null)
+            {
+                if (!EditorUtility.DisplayDialog("Salon Kurulumu", "Entrance / PrepArea / CustomerSpawner zaten var. Silinip yeniden kurulsun mu?", "Evet", "Vazgeç"))
+                {
+                    return;
+                }
+
+                foreach (string name in new[] { "Entrance", "PrepArea", "CustomerSpawner", "Customers" })
+                {
+                    Transform old = root.Find(name);
+                    if (old != null)
+                    {
+                        Undo.DestroyObjectImmediate(old.gameObject);
+                    }
+                }
+            }
+
+            Sprite square = GetOrCreatePlaceholderSprite(SquareSpritePath, false);
+            SalonSettings settings = GetOrCreateSettings();
+            EnsureDefaultCustomerType(settings);
+
+            // Hazırlama alanı yer tutucuları.
+            Transform prepArea = GetOrCreateSceneObject("PrepArea", root);
+            foreach (PrepBox box in PrepBoxes)
+            {
+                SpriteRenderer sr = CreateSpriteChild(prepArea, box.Name, square, box.Size, box.Color, OrderFloor);
+                sr.transform.localPosition = box.Position;
+            }
+
+            // Giriş noktası ve kapı kutusu.
+            Transform entrance = GetOrCreateSceneObject("Entrance", root);
+            entrance.localPosition = EntrancePosition;
+            CreateSpriteChild(entrance, "Door", square, DoorSize, DoorColor, OrderDoor);
+
+            Transform customers = GetOrCreateSceneObject("Customers", root);
+
+            Transform spawnerTf = GetOrCreateSceneObject("CustomerSpawner", root);
+            CustomerSpawner spawner = Undo.AddComponent<CustomerSpawner>(spawnerTf.gameObject);
+            var spawnerSo = new SerializedObject(spawner);
+            spawnerSo.FindProperty("settings").objectReferenceValue = settings;
+            spawnerSo.FindProperty("tableManager").objectReferenceValue = manager;
+            spawnerSo.FindProperty("customerPrefab").objectReferenceValue = customerPrefab;
+            spawnerSo.FindProperty("entrance").objectReferenceValue = entrance;
+            spawnerSo.FindProperty("customerContainer").objectReferenceValue = customers;
+            spawnerSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // Başlatıcıya spawner bağlanır.
+            Transform bootstrapTf = root.Find("SalonBootstrap");
+            SalonBootstrap bootstrap = bootstrapTf != null ? bootstrapTf.GetComponent<SalonBootstrap>() : null;
+            if (bootstrap != null)
+            {
+                var bootstrapSo = new SerializedObject(bootstrap);
+                bootstrapSo.FindProperty("customerSpawner").objectReferenceValue = spawner;
+                bootstrapSo.ApplyModifiedProperties();
+            }
+            else
+            {
+                Debug.LogWarning("[SalonSceneBuilder] SalonBootstrap bulunamadı; 1. adımı yeniden çalıştırın.");
+            }
+
+            EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
+            Selection.activeGameObject = spawnerTf.gameObject;
+            Debug.Log("[SalonSceneBuilder] Giriş, spawner ve hazırlık alanı kuruldu. Sahneyi kaydetmeyi unutmayın (Ctrl+S).");
+        }
+
+        private static void EnsureDefaultCustomerType(SalonSettings settings)
+        {
+            if (settings.customerTypes.Count > 0)
+            {
+                return;
+            }
+
+            var defaultType = AssetDatabase.LoadAssetAtPath<CustomerTypeData>(DefaultCustomerTypePath);
+            if (defaultType != null)
+            {
+                Undo.RecordObject(settings, "Salon Ayarları");
+                settings.customerTypes.Add(defaultType);
+                EditorUtility.SetDirty(settings);
+                AssetDatabase.SaveAssets();
+            }
         }
 
         // --- Sahne ---
