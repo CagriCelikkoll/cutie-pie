@@ -1,5 +1,6 @@
 using CutiePie.Ads;
 using CutiePie.Core.Data;
+using CutiePie.Core.Localization;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -20,6 +21,9 @@ namespace CutiePie.Core
         /// <summary>Reklam servisi. Kullanım: GameManager.Instance.Ads.ShowRewarded(...).</summary>
         public IAdsService Ads { get; private set; }
 
+        /// <summary>Yerelleştirme servisi. Kullanım: GameManager.Instance.Localization.Get("anahtar").</summary>
+        public LocalizationService Localization { get; private set; }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -34,6 +38,9 @@ namespace CutiePie.Core
 
             // TODO (yayın): AdMobAdsService hazır olunca burada seçilecek.
             Ads = new FakeAdsService(this, config.fakeAdDurationSeconds);
+
+            // Dil şimdilik kaydedilmez; her açılışta varsayılan dil kullanılır.
+            Localization = new LocalizationService(config.languages, config.defaultLanguage);
         }
 
         private void Start()
@@ -50,9 +57,17 @@ namespace CutiePie.Core
                     Debug.LogError("[GameManager] SaveSystem bulunamadı; kayıt yüklenmedi.");
                 }
 
-                LoadScene(config.firstSceneName);
+                // Editörde Play başka bir sahnede basıldıysa doğrudan o sahne açılır (build'de her zaman null).
+                string editorStartScene = EditorPlayStartScene.Consume();
+                LoadScene(string.IsNullOrEmpty(editorStartScene) ? config.firstSceneName : editorStartScene);
             }
         }
+
+        /// <summary>Açılış ekranına (pastane) döner. Ör. round sonundaki "Pastaneye dön" butonu.</summary>
+        public void GoToShop() => LoadScene(config.shopSceneName);
+
+        /// <summary>Salon'a geçer. Ör. açılış ekranındaki Kasa butonu.</summary>
+        public void GoToSalon() => LoadScene(config.salonSceneName);
 
         /// <summary>Adı verilen sahneyi yükler (Build Settings'te olmalı).</summary>
         public void LoadScene(string sceneName)

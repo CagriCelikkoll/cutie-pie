@@ -1,0 +1,13 @@
+{
+  "entries": [
+    { "key": "shop.cashier", "value": "Cashier" },
+    { "key": "shop.showcase", "value": "Showcase" },
+    { "key": "shop.kitchen", "value": "Kitchen" },
+    { "key": "common.coming_soon", "value": "Coming soon" },
+    { "key": "product.cake_strawberry.name", "value": "Strawberry Cake" },
+    { "key": "product.cake_chocolate.name", "value": "Chocolate Cake" },
+    { "key": "product.drink_tea.name", "value": "Tea" },
+    { "key": "product.drink_lemonade.name", "value": "Lemonade" },
+    { "key": "level.level_01.name", "value": "Level 1" }
+  ]
+}

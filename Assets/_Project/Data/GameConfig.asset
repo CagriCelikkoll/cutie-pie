@@ -22,5 +22,14 @@ MonoBehaviour:
   saveTempFileName: save.json.tmp
   saveBackupFileName: save.json.bak
   saveVersion: 1
-  firstSceneName: Salon
+  firstSceneName: Shop
+  shopSceneName: Shop
+  salonSceneName: Salon
+  comingSoonDurationSeconds: 1.5
+  defaultLanguage: tr
+  languages:
+  - code: tr
+    file: {fileID: 4900000, guid: d54559cd823579342a76ccca8cc3ca65, type: 3}
+  - code: en
+    file: {fileID: 4900000, guid: 3136f13f742614c4b8f013e0acb54d4f, type: 3}
   fakeAdDurationSeconds: 1
