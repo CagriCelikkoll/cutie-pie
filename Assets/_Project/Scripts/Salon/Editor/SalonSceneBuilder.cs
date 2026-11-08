@@ -4,6 +4,7 @@ using CutiePie.Core.Data;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace CutiePie.Salon.Editor
 {
@@ -82,14 +83,14 @@ namespace CutiePie.Salon.Editor
             }
         }
 
-        // Sorting Layer (ortak dosya) yerine sortingOrder: zemin 0, masa 10, müşteri 20, balon/bar 30.
-        public const int OrderFloor = 0;
-        public const int OrderDoor = 1;
-        public const int OrderTable = 10;
-        public const int OrderTableLock = 11;
-        public const int OrderCustomer = 20;
-        public const int OrderOverlay = 30;
-        public const int OrderOverlayContent = 31;
+        // Sorting Layer (ortak dosya) yerine sortingOrder; değerler çalışma zamanıyla ortak (SalonSortOrder).
+        public const int OrderFloor = SalonSortOrder.Floor;
+        public const int OrderDoor = SalonSortOrder.Door;
+        public const int OrderTable = SalonSortOrder.Table;
+        public const int OrderTableLock = SalonSortOrder.TableLock;
+        public const int OrderCustomer = SalonSortOrder.Customer;
+        public const int OrderOverlay = SalonSortOrder.Overlay;
+        public const int OrderOverlayContent = SalonSortOrder.OverlayContent;
 
         [MenuItem(MenuRoot + "1 - Masaları Kur")]
         private static void BuildTables()
@@ -323,6 +324,63 @@ namespace CutiePie.Salon.Editor
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
             Selection.activeGameObject = spawnerTf.gameObject;
             Debug.Log("[SalonSceneBuilder] Giriş, spawner ve hazırlık alanı kuruldu. Sahneyi kaydetmeyi unutmayın (Ctrl+S).");
+        }
+
+        [MenuItem(MenuRoot + "4 - Hazırlama Alanını Kur")]
+        private static void BuildPrepArea()
+        {
+            if (!IsSalonSceneOpen())
+            {
+                return;
+            }
+
+            Transform root = GetOrCreateSceneObject("SalonRoot", null);
+            Transform prepArea = root.Find("PrepArea");
+            if (prepArea == null)
+            {
+                EditorUtility.DisplayDialog("Hazırlama Alanı", "Önce 3. menü adımını çalıştırın (PrepArea gerekli).", "Tamam");
+                return;
+            }
+
+            // Fare ve dokunma girdisi: EventSystem + kamerada 2D fizik raycaster'ı.
+            EnsureEventSystem();
+            EnsurePhysics2DRaycaster();
+
+            // Bırakma hedeflerinin listesi PrepArea üzerinde durur.
+            if (prepArea.GetComponent<DropTargetRegistry>() == null)
+            {
+                Undo.AddComponent<DropTargetRegistry>(prepArea.gameObject);
+            }
+
+            EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
+            Selection.activeGameObject = prepArea.gameObject;
+            Debug.Log("[SalonSceneBuilder] Hazırlama alanı kuruldu. Sahneyi kaydetmeyi unutmayın (Ctrl+S).");
+        }
+
+        private static void EnsureEventSystem()
+        {
+            if (Object.FindObjectOfType<EventSystem>() != null)
+            {
+                return;
+            }
+
+            var go = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            Undo.RegisterCreatedObjectUndo(go, "EventSystem");
+        }
+
+        private static void EnsurePhysics2DRaycaster()
+        {
+            Camera cam = Camera.main;
+            if (cam == null)
+            {
+                Debug.LogWarning("[SalonSceneBuilder] MainCamera etiketli kamera bulunamadı; Physics2DRaycaster eklenmedi.");
+                return;
+            }
+
+            if (cam.GetComponent<Physics2DRaycaster>() == null)
+            {
+                Undo.AddComponent<Physics2DRaycaster>(cam.gameObject);
+            }
         }
 
         private static void EnsureDefaultCustomerType(SalonSettings settings)
