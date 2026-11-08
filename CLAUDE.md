@@ -57,6 +57,7 @@ Dil: Türkçe ve İngilizce, ayarlardan seçilir.
 | --- | --- | --- |
 | Kod | `Scripts/Salon`, `Scripts/UI`, `Scripts/Showcase` | `Scripts/Core`, `Scripts/Upgrades`, `Scripts/Ads`, `Scripts/Kitchen` |
 | Sahneler | `Salon.unity`, `Showcase.unity` | `Boot.unity`, `Shop.unity`, `Kitchen.unity` |
+| Veri ve görsel | `Data/Salon`, `Art/Salon` | — |
 
 - Dal adları `rol/gorev-no-kisa-ad` biçimindedir: `oynanis/...` oynanış geliştiricisi, `altyapi/...` altyapı geliştiricisi,
   `contract/...` ortak sözleşme değişikliği, `fix/...` acil düzeltme. Görev başında dal adından alanı anla; belli değilse kullanıcıya sor.
