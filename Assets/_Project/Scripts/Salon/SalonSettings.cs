@@ -4,6 +4,14 @@ using UnityEngine;
 
 namespace CutiePie.Salon
 {
+    /// <summary>İkonu olmayan bir ürünün yer tutucu rengi (SalonSettings listesinde).</summary>
+    [System.Serializable]
+    public struct ProductPlaceholderColor
+    {
+        public ProductData product;
+        public Color color;
+    }
+
     /// <summary>
     /// Salon'a özel denge ve görünüm ayarları. Koddaki tüm Salon değerleri buradan okunur.
     /// </summary>
@@ -42,6 +50,9 @@ namespace CutiePie.Salon
 
         [Tooltip("Ürün ikonu yokken içecek için kullanılan yer tutucu rengi.")]
         public Color drinkPlaceholderColor = new Color(0.45f, 0.7f, 0.95f, 1f);
+
+        [Tooltip("İkonu olmayan ürünleri birbirinden ayırmak için ürüne özel yer tutucu renkleri. Listede olmayan ürün kategori rengini alır.")]
+        public List<ProductPlaceholderColor> productPlaceholderColors = new List<ProductPlaceholderColor>();
 
         [Header("Hazırlama alanı")]
         [Tooltip("Bırakılan parça, hedefin oturma noktasına bu mesafeden yakınsa hedefe oturur (birim). Cömert tutulur.")]
@@ -82,6 +93,25 @@ namespace CutiePie.Salon
         public Color tableEmptyColor = new Color(0.8f, 0.6f, 0.4f, 1f);
         public Color tableOccupiedColor = new Color(0.7f, 0.5f, 0.3f, 1f);
         public Color tableDirtyColor = new Color(0.6f, 0.55f, 0.35f, 1f);
+
+        /// <summary>İkonu olmayan ürünün yer tutucu rengi: önce ürüne özel renk, yoksa kategori rengi.</summary>
+        public Color GetProductPlaceholderColor(ProductData product)
+        {
+            if (product == null)
+            {
+                return cakePlaceholderColor;
+            }
+
+            foreach (ProductPlaceholderColor entry in productPlaceholderColors)
+            {
+                if (entry.product == product)
+                {
+                    return entry.color;
+                }
+            }
+
+            return product.category == ProductCategory.Drink ? drinkPlaceholderColor : cakePlaceholderColor;
+        }
 
         /// <summary>Masa durumuna karşılık gelen gövde rengi.</summary>
         public Color GetTableColor(TableState state)

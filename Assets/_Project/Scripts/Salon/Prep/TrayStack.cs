@@ -11,6 +11,7 @@ namespace CutiePie.Salon
     public class TrayStack : MonoBehaviour, IDragSource
     {
         [SerializeField] private SalonSettings settings;
+        [SerializeField] private DropTargetRegistry registry;
         [SerializeField] private Tray trayPrefab;
 
         [Tooltip("Sürüklenen tepsinin gideceği tezgâh; doluyken yığından tepsi çıkmaz.")]
@@ -62,7 +63,7 @@ namespace CutiePie.Salon
         private Tray SpawnTray()
         {
             Tray tray = Instantiate(trayPrefab, transform.position, Quaternion.identity, transform);
-            tray.Item.Setup(null, settings);
+            tray.Init(settings, registry);
             return tray;
         }
     }

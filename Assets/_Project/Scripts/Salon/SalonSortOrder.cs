@@ -9,7 +9,13 @@ namespace CutiePie.Salon
         public const int Floor = 0;
         public const int Door = 1;
 
-        /// <summary>Hazırlama alanında yer tutucu kutuların üstündeki parçalar (tepsi, tabak, dilim, bardak).</summary>
+        /// <summary>Hazırlama alanında sabit duran görseller (raf ikonları, fiş, sayfa okları).</summary>
+        public const int PrepFixture = 3;
+
+        /// <summary>Sabit görsellerin üstündeki ek (vitrindeki dilim sayısı).</summary>
+        public const int PrepFixtureOverlay = 4;
+
+        /// <summary>Hazırlama alanında taşınan parçalar (tepsi, tabak, dilim, bardak).</summary>
         public const int PrepItem = 5;
 
         public const int Table = 10;
@@ -20,5 +26,11 @@ namespace CutiePie.Salon
 
         /// <summary>Sürüklenen parça her şeyin üstünde çizilir.</summary>
         public const int Dragged = 100;
+
+        // Parça içi (SortingGroup içinde) sıralar: gövde 0, üstüne konanlar 1+.
+        public const int PlateInTray = 1;
+        public const int DrinkInTray = 2;
+        public const int SliceOnPlate = 1;
+
     }
 }

@@ -25,6 +25,15 @@ MonoBehaviour:
   patienceBackgroundColor: {r: 0.2, g: 0.2, b: 0.2, a: 0.8}
   cakePlaceholderColor: {r: 0.85, g: 0.55, b: 0.35, a: 1}
   drinkPlaceholderColor: {r: 0.45, g: 0.7, b: 0.95, a: 1}
+  productPlaceholderColors:
+  - product: {fileID: 11400000, guid: 0c4c9612b8ef1c94f854d507521ac51e, type: 2}
+    color: {r: 0.45, g: 0.28, b: 0.18, a: 1}
+  - product: {fileID: 11400000, guid: 6afbe83e4d548ef45a582eaf31cde3eb, type: 2}
+    color: {r: 0.95, g: 0.5, b: 0.6, a: 1}
+  - product: {fileID: 11400000, guid: d168ad4e90e7ab341bc2a7c5114db104, type: 2}
+    color: {r: 0.98, g: 0.92, b: 0.35, a: 1}
+  - product: {fileID: 11400000, guid: 88b49dd8340a6dc41930efdb4f126ace, type: 2}
+    color: {r: 0.55, g: 0.75, b: 0.35, a: 1}
   snapDistance: 1.5
   dragReturnSpeed: 25
   dragItemScale: 1.1

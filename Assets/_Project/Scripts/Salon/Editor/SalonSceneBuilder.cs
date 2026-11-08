@@ -4,16 +4,15 @@ using CutiePie.Core.Data;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.Rendering;
 
 namespace CutiePie.Salon.Editor
 {
     /// <summary>
     /// Yalnızca editörde: Salon sahnesinin G2 yerleşimini (yer tutucu sprite'lar, prefab'lar, masalar, kamera) kurar.
     /// "Cutie Pie/Salon" menüsünden çalıştırılır; sahneyi kaydetmek kullanıcıya bırakılır.
+    /// Hazırlama alanı (G3a) kurulumu SalonSceneBuilder.Prep.cs'tedir.
     /// </summary>
-    public static class SalonSceneBuilder
+    public static partial class SalonSceneBuilder
     {
         private const string MenuRoot = "Cutie Pie/Salon/";
         private const string SceneName = "Salon";
@@ -74,19 +73,6 @@ namespace CutiePie.Salon.Editor
         private const string BoxPlateStack = "PlateStack";
         private const string BoxPrepCounter = "PrepCounter";
         private const string BoxTrashBin = "TrashBin";
-
-        // Kutunun görseli; kök ölçeksiz kalır ki altına konan parçalar ezilmesin.
-        private const string PrepVisualName = "Visual";
-
-        // Tepsi prefab'ı yerleşimi (tepsi merkezine göre, birim).
-        private const string TrayPrefabPath = PrefabFolder + "/Tray.prefab";
-        private static readonly Vector2 TraySize = new Vector2(2.4f, 1.4f);
-        private static readonly Vector2 TrayPlateSlotOffset = new Vector2(-0.45f, 0f);
-        private static readonly Vector2 TrayDrinkSlotOffset = new Vector2(0.75f, 0.15f);
-
-        // Tezgâhta tepsi yerlerinin dizildiği dikey aralık (tezgâh merkezine göre). Üst kısım fişe kalır.
-        private const float CounterSlotAreaTopY = 0.5f;
-        private const float CounterSlotAreaBottomY = -1.7f;
 
         private readonly struct PrepBox
         {
@@ -256,6 +242,8 @@ namespace CutiePie.Salon.Editor
             customerSo.FindProperty("patienceBar").objectReferenceValue = bar;
             customerSo.ApplyModifiedPropertiesWithoutUndo();
 
+            ApplyCustomerTapCollider(root, settings);
+
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, CustomerPrefabPath);
             Object.DestroyImmediate(root);
 
@@ -344,241 +332,6 @@ namespace CutiePie.Salon.Editor
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
             Selection.activeGameObject = spawnerTf.gameObject;
             Debug.Log("[SalonSceneBuilder] Giriş, spawner ve hazırlık alanı kuruldu. Sahneyi kaydetmeyi unutmayın (Ctrl+S).");
-        }
-
-        [MenuItem(MenuRoot + "4 - Hazırlama Alanını Kur")]
-        private static void BuildPrepArea()
-        {
-            if (!IsSalonSceneOpen())
-            {
-                return;
-            }
-
-            Transform root = GetOrCreateSceneObject("SalonRoot", null);
-            Transform prepArea = root.Find("PrepArea");
-            if (prepArea == null)
-            {
-                EditorUtility.DisplayDialog("Hazırlama Alanı", "Önce 3. menü adımını çalıştırın (PrepArea gerekli).", "Tamam");
-                return;
-            }
-
-            // Fare ve dokunma girdisi: EventSystem + kamerada 2D fizik raycaster'ı.
-            EnsureEventSystem();
-            EnsurePhysics2DRaycaster();
-
-            Sprite square = GetOrCreatePlaceholderSprite(SquareSpritePath, false);
-            SalonSettings settings = GetOrCreateSettings();
-
-            // Bırakma hedeflerinin listesi PrepArea üzerinde durur.
-            DropTargetRegistry registry = GetOrAddComponent<DropTargetRegistry>(prepArea.gameObject);
-
-            // Eski düzendeki (kökü ölçekli) kutular yeni düzene çevrilir.
-            foreach (PrepBox box in PrepBoxes)
-            {
-                GetOrConvertPrepBox(prepArea, box, square);
-            }
-
-            Tray trayPrefab = BuildTrayPrefab(square, settings);
-            PrepCounter counter = SetupPrepCounter(prepArea, registry, settings);
-            SetupTrayStack(prepArea, settings, registry, trayPrefab, counter);
-
-            EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
-            Selection.activeGameObject = prepArea.gameObject;
-            Debug.Log("[SalonSceneBuilder] Hazırlama alanı kuruldu. Sahneyi kaydetmeyi unutmayın (Ctrl+S).");
-        }
-
-        private static PrepCounter SetupPrepCounter(Transform prepArea, DropTargetRegistry registry, SalonSettings settings)
-        {
-            Transform counterTf = prepArea.Find(BoxPrepCounter);
-            PrepCounter counter = GetOrAddComponent<PrepCounter>(counterTf.gameObject);
-
-            // Tepsi yerleri her kurulumda yeniden üretilir (sayı SalonSettings'ten).
-            DestroyChildrenExcept(counterTf, PrepVisualName);
-            int count = Mathf.Max(1, settings.prepTraySlotCount);
-            var slots = new Transform[count];
-            for (int i = 0; i < count; i++)
-            {
-                // Yerler dikey aralığa eşit dağılır; ilk yer en üstte.
-                float t = (i + 0.5f) / count;
-                float y = Mathf.Lerp(CounterSlotAreaTopY, CounterSlotAreaBottomY, t);
-                slots[i] = CreatePoint(counterTf, $"TraySlot_{i}", new Vector2(0f, y));
-            }
-
-            var so = new SerializedObject(counter);
-            so.FindProperty("registry").objectReferenceValue = registry;
-            SerializedProperty list = so.FindProperty("traySlots");
-            list.arraySize = slots.Length;
-            for (int i = 0; i < slots.Length; i++)
-            {
-                list.GetArrayElementAtIndex(i).objectReferenceValue = slots[i];
-            }
-
-            so.ApplyModifiedProperties();
-            return counter;
-        }
-
-        private static void SetupTrayStack(Transform prepArea, SalonSettings settings, DropTargetRegistry registry, Tray trayPrefab, PrepCounter counter)
-        {
-            Transform stackTf = prepArea.Find(BoxTrayStack);
-            TrayStack stack = GetOrAddComponent<TrayStack>(stackTf.gameObject);
-            DragItem drag = GetOrAddComponent<DragItem>(stackTf.gameObject);
-            EnsureBoxCollider(stackTf, FindPrepBox(BoxTrayStack).Size);
-
-            var stackSo = new SerializedObject(stack);
-            stackSo.FindProperty("settings").objectReferenceValue = settings;
-            stackSo.FindProperty("trayPrefab").objectReferenceValue = trayPrefab;
-            stackSo.FindProperty("counter").objectReferenceValue = counter;
-            stackSo.ApplyModifiedProperties();
-
-            AssignDragItem(drag, settings, registry);
-        }
-
-        private static void AssignDragItem(DragItem drag, SalonSettings settings, DropTargetRegistry registry)
-        {
-            var so = new SerializedObject(drag);
-            so.FindProperty("settings").objectReferenceValue = settings;
-            so.FindProperty("registry").objectReferenceValue = registry;
-            so.ApplyModifiedProperties();
-        }
-
-        /// <summary>Tepsi prefab'ını her seferinde yeniden üretir (aynı yol → GUID ve sahne bağlantıları korunur).</summary>
-        private static Tray BuildTrayPrefab(Sprite square, SalonSettings settings)
-        {
-            EnsureFolder(PrefabFolder);
-
-            var root = new GameObject("Tray");
-            ServingItem item = root.AddComponent<ServingItem>(); // SortingGroup RequireComponent ile gelir
-            root.GetComponent<SortingGroup>().sortingOrder = SalonSortOrder.PrepItem;
-            Tray tray = root.AddComponent<Tray>();
-
-            SpriteRenderer body = CreateSpriteChild(root.transform, "Body", square, TraySize, settings.trayColor, 0);
-            Transform plateSlot = CreatePoint(root.transform, "PlateSlot", TrayPlateSlotOffset);
-            Transform drinkSlot = CreatePoint(root.transform, "DrinkSlot", TrayDrinkSlotOffset);
-
-            var itemSo = new SerializedObject(item);
-            itemSo.FindProperty("kind").intValue = (int)ServingItemKind.Tray;
-            itemSo.FindProperty("visual").objectReferenceValue = body;
-            itemSo.ApplyModifiedPropertiesWithoutUndo();
-
-            var traySo = new SerializedObject(tray);
-            traySo.FindProperty("plateSlot").objectReferenceValue = plateSlot;
-            traySo.FindProperty("drinkSlot").objectReferenceValue = drinkSlot;
-            traySo.ApplyModifiedPropertiesWithoutUndo();
-
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, TrayPrefabPath);
-            Object.DestroyImmediate(root);
-            return prefab.GetComponent<Tray>();
-        }
-
-        // --- Hazırlama alanı kutuları ---
-
-        private static PrepBox FindPrepBox(string name)
-        {
-            foreach (PrepBox box in PrepBoxes)
-            {
-                if (box.Name == name)
-                {
-                    return box;
-                }
-            }
-
-            throw new System.ArgumentException($"Bilinmeyen hazırlama kutusu: {name}");
-        }
-
-        /// <summary>Ölçeksiz kök + ölçekli "Visual" sprite olarak bir hazırlama kutusu kurar.</summary>
-        private static Transform CreatePrepBox(Transform prepArea, PrepBox box, Sprite square)
-        {
-            var go = new GameObject(box.Name);
-            Undo.RegisterCreatedObjectUndo(go, "Hazırlama Alanı");
-            go.transform.SetParent(prepArea, false);
-            go.transform.localPosition = box.Position;
-            CreateSpriteChild(go.transform, PrepVisualName, square, box.Size, box.Color, OrderFloor);
-            return go.transform;
-        }
-
-        /// <summary>Kutu yeni düzendeyse onu döner; eski düzendeyse (kökte SpriteRenderer) yerine yenisini kurar.</summary>
-        private static Transform GetOrConvertPrepBox(Transform prepArea, PrepBox box, Sprite square)
-        {
-            Transform existing = prepArea.Find(box.Name);
-            if (existing != null && existing.Find(PrepVisualName) != null)
-            {
-                return existing;
-            }
-
-            int siblingIndex = existing != null ? existing.GetSiblingIndex() : -1;
-            if (existing != null)
-            {
-                Undo.DestroyObjectImmediate(existing.gameObject);
-            }
-
-            Transform created = CreatePrepBox(prepArea, box, square);
-            if (siblingIndex >= 0)
-            {
-                created.SetSiblingIndex(siblingIndex);
-            }
-
-            return created;
-        }
-
-        private static void DestroyChildrenExcept(Transform parent, string keepName)
-        {
-            for (int i = parent.childCount - 1; i >= 0; i--)
-            {
-                Transform child = parent.GetChild(i);
-                if (child.name != keepName)
-                {
-                    Undo.DestroyObjectImmediate(child.gameObject);
-                }
-            }
-        }
-
-        private static Transform CreatePoint(Transform parent, string name, Vector2 localPosition)
-        {
-            var go = new GameObject(name);
-            Undo.RegisterCreatedObjectUndo(go, "Hazırlama Alanı");
-            go.transform.SetParent(parent, false);
-            go.transform.localPosition = localPosition;
-            return go.transform;
-        }
-
-        private static void EnsureBoxCollider(Transform target, Vector2 size)
-        {
-            BoxCollider2D col = GetOrAddComponent<BoxCollider2D>(target.gameObject);
-            Undo.RecordObject(col, "Collider");
-            col.size = size;
-            col.offset = Vector2.zero;
-        }
-
-        private static T GetOrAddComponent<T>(GameObject go) where T : Component
-        {
-            T component = go.GetComponent<T>();
-            return component != null ? component : Undo.AddComponent<T>(go);
-        }
-
-        private static void EnsureEventSystem()
-        {
-            if (Object.FindObjectOfType<EventSystem>() != null)
-            {
-                return;
-            }
-
-            var go = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-            Undo.RegisterCreatedObjectUndo(go, "EventSystem");
-        }
-
-        private static void EnsurePhysics2DRaycaster()
-        {
-            Camera cam = Camera.main;
-            if (cam == null)
-            {
-                Debug.LogWarning("[SalonSceneBuilder] MainCamera etiketli kamera bulunamadı; Physics2DRaycaster eklenmedi.");
-                return;
-            }
-
-            if (cam.GetComponent<Physics2DRaycaster>() == null)
-            {
-                Undo.AddComponent<Physics2DRaycaster>(cam.gameObject);
-            }
         }
 
         private static void EnsureDefaultCustomerType(SalonSettings settings)
@@ -721,7 +474,11 @@ namespace CutiePie.Salon.Editor
         }
 
         /// <summary>Beyaz, 1x1 birimlik kare veya daire yer tutucu sprite'ı oluşturur (yoksa).</summary>
-        private static Sprite GetOrCreatePlaceholderSprite(string path, bool circle)
+        private static Sprite GetOrCreatePlaceholderSprite(string path, bool circle) =>
+            GetOrCreateSprite(path, circle, new Color32(255, 255, 255, 255));
+
+        /// <summary>Verilen renkte, 1x1 birimlik kare veya daire sprite oluşturur (yoksa).</summary>
+        private static Sprite GetOrCreateSprite(string path, bool circle, Color32 color)
         {
             var existing = AssetDatabase.LoadAssetAtPath<Sprite>(path);
             if (existing != null)
@@ -743,7 +500,7 @@ namespace CutiePie.Salon.Editor
                     float dx = x + 0.5f - radius;
                     float dy = y + 0.5f - radius;
                     bool inside = !circle || dx * dx + dy * dy <= radius * radius;
-                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)(inside ? 255 : 0));
+                    pixels[y * size + x] = new Color32(color.r, color.g, color.b, inside ? color.a : (byte)0);
                 }
             }
 

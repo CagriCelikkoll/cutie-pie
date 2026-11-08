@@ -26,10 +26,15 @@ namespace CutiePie.Salon
         [Tooltip("Ürün ikonunun ya da yer tutucu rengin uygulandığı görsel.")]
         [SerializeField] private SpriteRenderer visual;
 
+        [Tooltip("Üstüne konan parçanın oturduğu nokta (ör. tabakta dilim). Boşsa parçanın merkezi.")]
+        [SerializeField] private Transform attachPoint;
+
         private SortingGroup sortingGroup;
         private Sprite placeholderSprite;
 
         public ServingItemKind Kind => kind;
+
+        public Transform AttachPoint => attachPoint != null ? attachPoint : transform;
 
         /// <summary>Pasta dilimi veya içecekte ürün; tepsi ve tabakta null.</summary>
         public ProductData Product { get; private set; }
@@ -86,8 +91,7 @@ namespace CutiePie.Salon
             {
                 case ServingItemKind.Tray: return settings.trayColor;
                 case ServingItemKind.Plate: return settings.plateColor;
-                case ServingItemKind.CakeSlice: return settings.cakePlaceholderColor;
-                default: return settings.drinkPlaceholderColor;
+                default: return settings.GetProductPlaceholderColor(Product);
             }
         }
     }

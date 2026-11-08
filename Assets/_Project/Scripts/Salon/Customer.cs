@@ -1,6 +1,7 @@
 using CutiePie.Core;
 using CutiePie.Core.Data;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace CutiePie.Salon
 {
@@ -18,8 +19,9 @@ namespace CutiePie.Salon
     /// <summary>
     /// Salon müşterisi: girişten masasına yürür, oturunca siparişini gösterir ve sabrı azalır.
     /// Sabır biterse kızgın olarak girişe yürüyüp yok olur.
+    /// Otururken dokunulursa SalonEvents.CustomerTapped yayınlar (sipariş fişe düşer); dokunma alanı prefab'taki BoxCollider2D'dir.
     /// </summary>
-    public class Customer : MonoBehaviour
+    public class Customer : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private SpriteRenderer body;
         [SerializeField] private OrderBubble orderBubble;
@@ -35,6 +37,9 @@ namespace CutiePie.Salon
         public Table Table { get; private set; }
         public CustomerOrder Order { get; private set; }
         public CustomerState State { get; private set; }
+
+        /// <summary>Gövde görseli; fişteki müşteri işareti bunu kopyalar.</summary>
+        public SpriteRenderer Body => body;
 
         /// <summary>Kalan sabır oranı (0-1).</summary>
         public float PatienceRatio => Type != null && Type.patienceSeconds > 0f ? patienceLeft / Type.patienceSeconds : 0f;
@@ -117,6 +122,15 @@ namespace CutiePie.Salon
                     }
 
                     break;
+            }
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            // Yalnızca oturan müşterinin siparişi alınır (yürürken veya giderken dokunma yok sayılır).
+            if (initialized && State == CustomerState.Seated)
+            {
+                SalonEvents.RaiseCustomerTapped(this);
             }
         }
 

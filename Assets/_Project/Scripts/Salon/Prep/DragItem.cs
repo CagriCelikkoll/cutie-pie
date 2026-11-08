@@ -113,6 +113,20 @@ namespace CutiePie.Salon
             }
         }
 
+        /// <summary>
+        /// Hedefe kabul edilmiş ama yerinde kalması gereken parçayı başlangıç konumuna geri gönderir
+        /// (ör. çöp tepsinin içeriğini siler, tepsi tezgâhtaki yerine döner). Bitince kaynağın OnReturned'ı çağrılır.
+        /// </summary>
+        public void StartReturn(ServingItem item)
+        {
+            if (item == null || dragged != null)
+            {
+                return;
+            }
+
+            returning = item;
+        }
+
         private void Update()
         {
             if (returning == null)
