@@ -1,0 +1,13 @@
+{
+  "entries": [
+    { "key": "shop.cashier", "value": "Kasa" },
+    { "key": "shop.showcase", "value": "Vitrin" },
+    { "key": "shop.kitchen", "value": "Mutfak" },
+    { "key": "common.coming_soon", "value": "Yakında" },
+    { "key": "product.cake_strawberry.name", "value": "Çilekli Pasta" },
+    { "key": "product.cake_chocolate.name", "value": "Çikolatalı Pasta" },
+    { "key": "product.drink_tea.name", "value": "Çay" },
+    { "key": "product.drink_lemonade.name", "value": "Limonata" },
+    { "key": "level.level_01.name", "value": "Seviye 1" }
+  ]
+}
