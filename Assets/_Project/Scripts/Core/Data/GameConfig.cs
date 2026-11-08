@@ -37,8 +37,36 @@ namespace CutiePie.Core.Data
         [Tooltip("Boot'tan sonra yüklenecek sahnenin adı (Build Settings'te olmalı).")]
         public string firstSceneName;
 
+        [Tooltip("Açılış ekranı (pastane) sahnesinin adı.")]
+        public string shopSceneName;
+
+        [Tooltip("Salon (satış) sahnesinin adı.")]
+        public string salonSceneName;
+
+        [Header("Açılış ekranı")]
+        [Tooltip("\"Yakında\" mesajının ekranda kalma süresi (gerçek zamanlı saniye).")]
+        [Min(0f)] public float comingSoonDurationSeconds;
+
+        [Header("Dil")]
+        [Tooltip("Açılışta kullanılan dil kodu (languages listesinde olmalı).")]
+        public string defaultLanguage;
+
+        [Tooltip("Desteklenen diller ve metin dosyaları (Assets/_Project/Localization).")]
+        public LanguageFile[] languages;
+
         [Header("Reklam (geliştirme)")]
         [Tooltip("FakeAdsService'in sahte reklamı bekleme süresi (gerçek zamanlı saniye).")]
         [Min(0f)] public float fakeAdDurationSeconds;
+    }
+
+    /// <summary>Bir dilin kodu ve metin dosyası.</summary>
+    [System.Serializable]
+    public class LanguageFile
+    {
+        [Tooltip("Dil kodu, ör. tr, en.")]
+        public string code;
+
+        [Tooltip("{\"entries\":[{\"key\":..., \"value\":...}]} biçiminde JSON dosyası.")]
+        public TextAsset file;
     }
 }
