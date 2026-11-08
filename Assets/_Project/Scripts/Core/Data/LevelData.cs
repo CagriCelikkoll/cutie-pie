@@ -32,5 +32,17 @@ namespace CutiePie.Core.Data
 
         [Tooltip("Bu seviyede sipariş edilebilen ürünler.")]
         public List<ProductData> menu = new List<ProductData>();
+
+#if UNITY_EDITOR
+        // Yıldızlar starGoldThresholds ile hesaplanır; targetGold ilk eşikten kopmasın diye uyarır.
+        private void OnValidate()
+        {
+            if (starGoldThresholds != null && starGoldThresholds.Length > 0 && targetGold != starGoldThresholds[0])
+            {
+                Debug.LogWarning($"[LevelData] '{name}': targetGold ({targetGold}) ilk yıldız eşiğinden " +
+                                 $"({starGoldThresholds[0]}) farklı.", this);
+            }
+        }
+#endif
     }
 }

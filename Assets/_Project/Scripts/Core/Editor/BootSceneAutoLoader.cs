@@ -9,7 +9,8 @@ namespace CutiePie.Core.Editor
     /// <summary>
     /// Yalnızca editörde: hangi sahne açık olursa olsun Play'e basınca önce Boot (Build Settings'teki 0. sahne) yüklenir,
     /// böylece kalıcı yöneticiler hazır olur. Boot'tan sonra Play'e basılan sahne açılır (ör. Salon'da basılırsa doğrudan Salon);
-    /// Boot'ta basılırsa normal akış (GameConfig.firstSceneName) çalışır. "Cutie Pie" menüsünden kapatılabilir.
+    /// Boot'ta basılırsa normal akış (GameConfig.firstSceneName) çalışır. Build Settings dışı sahneler (ör. RoundTest)
+    /// Boot'a uğramadan doğrudan açılır. "Cutie Pie" menüsünden kapatılabilir.
     /// </summary>
     [InitializeOnLoad]
     public static class BootSceneAutoLoader
@@ -64,7 +65,7 @@ namespace CutiePie.Core.Editor
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(bootPath);
         }
 
-        // Play'e basılan sahneyi Boot'a bildirir; Boot'un kendisi veya Build Settings dışı sahneler için normal akış.
+        // Play'e basılan sahneyi Boot'a bildirir; Boot'un kendisinde normal akış, Build Settings dışı sahnede Boot atlanır.
         private static void RememberStartScene()
         {
             EditorPlayStartScene.Set(null);
@@ -83,7 +84,9 @@ namespace CutiePie.Core.Editor
             bool inBuild = Array.Exists(EditorBuildSettings.scenes, s => s.enabled && s.path == active.path);
             if (!inBuild)
             {
-                Debug.LogWarning($"[BootSceneAutoLoader] '{active.name}' Build Settings'te değil; normal akış çalışacak.");
+                // Test sahneleri gibi Build Settings dışı sahneler Boot'a uğramadan doğrudan açılır.
+                EditorSceneManager.playModeStartScene = null;
+                Debug.Log($"[BootSceneAutoLoader] '{active.name}' Build Settings'te değil; Boot atlanıyor.");
                 return;
             }
 

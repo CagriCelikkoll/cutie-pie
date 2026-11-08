@@ -12,6 +12,9 @@ namespace CutiePie.Core.Data
         /// <summary>Bu toplamın bahşişten gelen kısmı.</summary>
         public int tipsEarned;
 
+        /// <summary>Bu toplamın kombo çarpanından gelen kısmı.</summary>
+        public int comboBonusEarned;
+
         /// <summary>Round içindeki en yüksek art arda doğru teslim sayısı.</summary>
         public int highestCombo;
 
