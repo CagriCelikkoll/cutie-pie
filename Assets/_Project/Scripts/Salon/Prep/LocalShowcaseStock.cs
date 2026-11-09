@@ -9,7 +9,7 @@ namespace CutiePie.Salon
     /// GEÇİCİ yerel vitrin stoğu (Faz 1: Mutfak yok). Round başında menüdeki her pastaya
     /// SalonSettings.startingSlicesPerCake dilim yazar; round içinde yenilenmez, kaydedilmez.
     /// Faz 2'de StockManager adaptörüyle değişecek (IShowcaseStock arayüzü aynı kalır).
-    /// Şimdilik SalonBootstrap.Start doldurur; G4'te GameEvents.RoundStarted'a bağlanacak.
+    /// SalonRound her GameEvents.RoundStarted'da doldurur.
     /// İçeceklerde stok yoktur (sınırsız).
     /// </summary>
     public class LocalShowcaseStock : MonoBehaviour, IShowcaseStock

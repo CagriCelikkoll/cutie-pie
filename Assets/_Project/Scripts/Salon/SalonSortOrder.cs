@@ -25,6 +25,9 @@ namespace CutiePie.Salon
         /// <summary>Masaya teslim edilmiş tepsi (müşterinin önünde, balonların altında).</summary>
         public const int TrayOnTable = 21;
 
+        /// <summary>Masa temizlenirken çıkan parıltı (masadaki tabağın üstünde).</summary>
+        public const int TableSparkle = 22;
+
         public const int Overlay = 30;
         public const int OverlayContent = 31;
 

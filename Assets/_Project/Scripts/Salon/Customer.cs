@@ -24,6 +24,7 @@ namespace CutiePie.Salon
     /// Sabır biterse kızgın olarak girişe yürüyüp yok olur.
     /// Otururken dokunulursa SalonEvents.CustomerTapped yayınlar (sipariş fişe düşer); dokunma alanı prefab'taki BoxCollider2D'dir.
     /// Teslim kararını OrderDelivery verir; müşteri yalnızca sonucu oynar (StartEating / RejectOrder).
+    /// Round bitince (GameEvents.RoundEnded) olduğu yerde donar: yürümez, sabrı akmaz, dokunma yok sayılır.
     /// </summary>
     public class Customer : MonoBehaviour, IPointerClickHandler
     {
@@ -38,6 +39,9 @@ namespace CutiePie.Salon
         private float shakeTimeLeft;
         private Vector3 bodyBasePosition;
         private bool initialized;
+
+        /// <summary>Round bitti; müşteri olduğu yerde durur.</summary>
+        public bool IsFrozen { get; private set; }
 
         public int Id { get; private set; }
         public CustomerTypeData Type { get; private set; }
@@ -90,9 +94,22 @@ namespace CutiePie.Salon
             initialized = true;
         }
 
+        private void OnEnable() => GameEvents.RoundEnded += HandleRoundEnded;
+
+        private void OnDisable() => GameEvents.RoundEnded -= HandleRoundEnded;
+
+        private void HandleRoundEnded(RoundResult result) => Freeze();
+
+        /// <summary>Müşteriyi olduğu yerde durdurur (yürüme, sabır, yeme ve ayrılış durur).</summary>
+        public void Freeze()
+        {
+            IsFrozen = true;
+            StopShake();
+        }
+
         private void Update()
         {
-            if (!initialized)
+            if (!initialized || IsFrozen)
             {
                 return;
             }
@@ -153,7 +170,7 @@ namespace CutiePie.Salon
         public void OnPointerClick(PointerEventData eventData)
         {
             // Yalnızca oturan müşterinin siparişi alınır (yürürken veya giderken dokunma yok sayılır).
-            if (initialized && State == CustomerState.Seated)
+            if (initialized && !IsFrozen && !SalonInput.IsLocked && State == CustomerState.Seated)
             {
                 SalonEvents.RaiseCustomerTapped(this);
             }
@@ -206,11 +223,10 @@ namespace CutiePie.Salon
         {
             State = CustomerState.LeavingHappy;
 
-            // G4: burada Table.MarkDirty() çağrılacak (masa kirli kalır, tepsi kirli tabak olur).
-            // Şimdilik masa hemen boşalır ve masadaki tepsi kaldırılır.
+            // Masa kirli kalır (boş tabak); oyuncu dokunarak temizler.
             if (Table != null)
             {
-                Table.Release();
+                Table.MarkDirty();
             }
         }
 

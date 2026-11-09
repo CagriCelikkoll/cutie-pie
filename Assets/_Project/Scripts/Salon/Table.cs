@@ -1,13 +1,16 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace CutiePie.Salon
 {
     /// <summary>
     /// Salon'daki tek bir masa yeri. Durumunu tutar ve görünümünü duruma göre günceller.
     /// Tepsi için bırakma hedefidir: hazır tepsi masanın yakınına bırakılınca teslim OrderDelivery'ye devredilir.
+    /// Müşteri yiyip kalkınca masa kirlenir (boş tabak kalır); kirli masaya dokununca temizlenir.
+    /// Dokunma alanı prefab'taki BoxCollider2D'dir; masadaki tepsiye dokunulsa da tıklama masaya çıkar.
     /// </summary>
-    public class Table : MonoBehaviour, IDropTarget
+    public class Table : MonoBehaviour, IDropTarget, IPointerClickHandler
     {
         [Tooltip("Masanın sırası (0-7). Üst sıra soldan sağa 0-3, alt sıra 4-7. Açık masalar ilk N sıradır.")]
         [SerializeField] private int index;
@@ -21,14 +24,22 @@ namespace CutiePie.Salon
         [Tooltip("Kilitliyken görünen kapak.")]
         [SerializeField] private GameObject lockVisual;
 
+        [Tooltip("Temizlikte büyüyüp sönen parıltı görseli (normalde kapalı).")]
+        [SerializeField] private SpriteRenderer sparkle;
+
         private SalonSettings settings;
         private DropTargetRegistry registry;
         private OrderDelivery delivery;
+        private Vector3 sparkleBaseScale = Vector3.one;
+        private float cleanTimeLeft;
 
         public int Index => index;
         public TableState State { get; private set; } = TableState.Locked;
         public Transform SeatPoint => seatPoint != null ? seatPoint : transform;
         public bool IsFree => State == TableState.Empty;
+
+        /// <summary>Temizlik parıltısı sürüyor (masa bu sırada hâlâ Dirty).</summary>
+        public bool IsCleaning { get; private set; }
 
         /// <summary>Masaya ayrılmış müşteri (yoldayken de); yoksa null.</summary>
         public Customer Occupant { get; private set; }
@@ -52,6 +63,7 @@ namespace CutiePie.Salon
             delivery = orderDelivery;
             Occupant = null;
             ClearServedTray();
+            StopSparkle();
 
             if (registry != null && registry != dropTargets)
             {
@@ -67,12 +79,39 @@ namespace CutiePie.Salon
             SetState(open ? TableState.Empty : TableState.Locked, true);
         }
 
+        private void Awake()
+        {
+            if (sparkle != null)
+            {
+                sparkleBaseScale = sparkle.transform.localScale;
+                sparkle.enabled = false;
+            }
+        }
+
         private void OnDestroy()
         {
             if (registry != null)
             {
                 registry.Unregister(this);
             }
+        }
+
+        private void Update()
+        {
+            if (!IsCleaning)
+            {
+                return;
+            }
+
+            cleanTimeLeft -= Time.deltaTime;
+            if (cleanTimeLeft > 0f)
+            {
+                UpdateSparkle(1f - cleanTimeLeft / settings.cleanSparkleDuration);
+                return;
+            }
+
+            StopSparkle();
+            SetState(TableState.Empty);
         }
 
         public void Lock() => SetState(TableState.Locked);
@@ -110,23 +149,61 @@ namespace CutiePie.Salon
             }
         }
 
-        /// <summary>Mutlu teslimden sonra masa kirlenir (G4: tepsi kirli tabak olarak masada kalır).</summary>
+        /// <summary>Müşteri yiyip kalkınca masa kirlenir: tepsideki dilim ve bardak kalkar, boş tabak masada kalır.</summary>
         public void MarkDirty()
         {
-            if (State == TableState.Occupied)
+            if (State != TableState.Occupied)
             {
-                Occupant = null;
-                SetState(TableState.Dirty);
+                return;
             }
+
+            Occupant = null;
+            if (ServedTray != null)
+            {
+                ServedTray.ClearFood();
+            }
+
+            SetState(TableState.Dirty);
         }
 
-        /// <summary>Kirli masa temizlenince boşalır (G4).</summary>
-        public void Clean()
+        /// <summary>
+        /// Kirli masayı temizler: tabak kalkar, kısa parıltı oynar, parıltı bitince masa boşalır.
+        /// Dokunmadan bağımsızdır; ileride "bulaşıkçı" geliştirmesi de bunu doğrudan çağıracak.
+        /// Masa kirli değilse veya zaten temizleniyorsa false döner.
+        /// </summary>
+        public bool Clean()
         {
-            if (State == TableState.Dirty)
+            if (State != TableState.Dirty || IsCleaning)
             {
-                ClearServedTray();
+                return false;
+            }
+
+            ClearServedTray();
+
+            // Ayarlar yoksa parıltı oynatılamaz; masa hemen boşalır.
+            if (settings == null)
+            {
                 SetState(TableState.Empty);
+                return true;
+            }
+
+            IsCleaning = true;
+            cleanTimeLeft = settings.cleanSparkleDuration;
+            if (sparkle != null)
+            {
+                sparkle.enabled = true;
+            }
+
+            UpdateSparkle(0f);
+            return true;
+        }
+
+        /// <summary>Oyuncu masaya dokundu: kirliyse temizlenir (round bittiyse yok sayılır).</summary>
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (!SalonInput.IsLocked && State == TableState.Dirty)
+            {
+                Clean();
             }
         }
 
@@ -151,6 +228,31 @@ namespace CutiePie.Salon
             }
 
             ServedTray = null;
+        }
+
+        // t: 0 → 1 parıltı ilerlemesi; büyür ve söner.
+        private void UpdateSparkle(float t)
+        {
+            if (sparkle == null)
+            {
+                return;
+            }
+
+            sparkle.transform.localScale = sparkleBaseScale * Mathf.Lerp(1f, settings.cleanSparkleMaxScale, t);
+            Color color = settings.cleanSparkleColor;
+            color.a = Mathf.Lerp(color.a, 0f, t);
+            sparkle.color = color;
+        }
+
+        private void StopSparkle()
+        {
+            IsCleaning = false;
+            cleanTimeLeft = 0f;
+            if (sparkle != null)
+            {
+                sparkle.enabled = false;
+                sparkle.transform.localScale = sparkleBaseScale;
+            }
         }
 
         // --- Bırakma hedefi (IDropTarget): kurallar OrderDelivery'de, masa yalnızca yönlendirir ---

@@ -163,6 +163,17 @@ namespace CutiePie.Salon
             ContentsChanged?.Invoke(this);
         }
 
+        /// <summary>Müşteri yedikten sonra dilimi ve bardağı siler; masada boş tabak kalır (kirli masa görünümü).</summary>
+        public void ClearFood()
+        {
+            DestroyPart(Slice);
+            DestroyPart(Drink);
+            Slice = null;
+            Drink = null;
+
+            ContentsChanged?.Invoke(this);
+        }
+
         private static void Attach(ServingItem serving, Transform parent, int sortingOrder)
         {
             Transform tf = serving.transform;
