@@ -5,8 +5,9 @@ namespace CutiePie.Salon
 {
     /// <summary>
     /// Salon'daki tek bir masa yeri. Durumunu tutar ve görünümünü duruma göre günceller.
+    /// Tepsi için bırakma hedefidir: hazır tepsi masanın yakınına bırakılınca teslim OrderDelivery'ye devredilir.
     /// </summary>
-    public class Table : MonoBehaviour
+    public class Table : MonoBehaviour, IDropTarget
     {
         [Tooltip("Masanın sırası (0-7). Üst sıra soldan sağa 0-3, alt sıra 4-7. Açık masalar ilk N sıradır.")]
         [SerializeField] private int index;
@@ -21,6 +22,8 @@ namespace CutiePie.Salon
         [SerializeField] private GameObject lockVisual;
 
         private SalonSettings settings;
+        private DropTargetRegistry registry;
+        private OrderDelivery delivery;
 
         public int Index => index;
         public TableState State { get; private set; } = TableState.Locked;
@@ -30,15 +33,46 @@ namespace CutiePie.Salon
         /// <summary>Masaya ayrılmış müşteri (yoldayken de); yoksa null.</summary>
         public Customer Occupant { get; private set; }
 
+        /// <summary>Masaya teslim edilmiş tepsi; yoksa null.</summary>
+        public Tray ServedTray { get; private set; }
+
+        /// <summary>Tepsinin bırakılacağı nokta: masanın merkezi (üstündeki müşteri de snapDistance içinde kalır).</summary>
+        public Vector3 SnapPoint => transform.position;
+
         /// <summary>Durum her değiştiğinde tetiklenir.</summary>
         public event Action<Table> StateChanged;
 
-        /// <summary>TableManager kurulumda çağırır: ayarları verir ve başlangıç durumunu belirler.</summary>
-        public void Initialize(SalonSettings salonSettings, bool open)
+        /// <summary>
+        /// TableManager kurulumda çağırır: ayarları verir, başlangıç durumunu belirler ve masayı bırakma hedefi olarak kaydeder.
+        /// registry veya delivery yoksa masaya tepsi bırakılamaz.
+        /// </summary>
+        public void Initialize(SalonSettings salonSettings, bool open, DropTargetRegistry dropTargets, OrderDelivery orderDelivery)
         {
             settings = salonSettings;
+            delivery = orderDelivery;
             Occupant = null;
+            ClearServedTray();
+
+            if (registry != null && registry != dropTargets)
+            {
+                registry.Unregister(this);
+            }
+
+            registry = dropTargets;
+            if (registry != null)
+            {
+                registry.Register(this);
+            }
+
             SetState(open ? TableState.Empty : TableState.Locked, true);
+        }
+
+        private void OnDestroy()
+        {
+            if (registry != null)
+            {
+                registry.Unregister(this);
+            }
         }
 
         public void Lock() => SetState(TableState.Locked);
@@ -65,17 +99,18 @@ namespace CutiePie.Salon
             return true;
         }
 
-        /// <summary>Müşteri gidince (kızgın) masayı yeniden boşaltır.</summary>
+        /// <summary>Müşteri gidince masayı yeniden boşaltır; masadaki tepsi de kaldırılır.</summary>
         public void Release()
         {
             if (State == TableState.Occupied)
             {
                 Occupant = null;
+                ClearServedTray();
                 SetState(TableState.Empty);
             }
         }
 
-        /// <summary>Mutlu teslimden sonra masa kirlenir (G3).</summary>
+        /// <summary>Mutlu teslimden sonra masa kirlenir (G4: tepsi kirli tabak olarak masada kalır).</summary>
         public void MarkDirty()
         {
             if (State == TableState.Occupied)
@@ -85,13 +120,55 @@ namespace CutiePie.Salon
             }
         }
 
-        /// <summary>Kirli masa temizlenince boşalır (G3).</summary>
+        /// <summary>Kirli masa temizlenince boşalır (G4).</summary>
         public void Clean()
         {
             if (State == TableState.Dirty)
             {
+                ClearServedTray();
                 SetState(TableState.Empty);
             }
+        }
+
+        /// <summary>OrderDelivery doğru teslimde çağırır: tepsiyi masaya küçültülmüş olarak oturtur.</summary>
+        public void PlaceServedTray(Tray tray)
+        {
+            if (tray == null)
+            {
+                return;
+            }
+
+            ClearServedTray();
+            ServedTray = tray;
+            tray.PlaceOnTable(transform, settings != null ? settings.trayOnTableScale : 1f, SalonSortOrder.TrayOnTable);
+        }
+
+        private void ClearServedTray()
+        {
+            if (ServedTray != null)
+            {
+                Destroy(ServedTray.gameObject);
+            }
+
+            ServedTray = null;
+        }
+
+        // --- Bırakma hedefi (IDropTarget): kurallar OrderDelivery'de, masa yalnızca yönlendirir ---
+
+        public bool CanAccept(ServingItem item)
+        {
+            if (delivery == null || item == null || item.Kind != ServingItemKind.Tray || State != TableState.Occupied)
+            {
+                return false;
+            }
+
+            return delivery.CanDeliver(item.GetComponent<Tray>(), Occupant);
+        }
+
+        public void Accept(ServingItem item)
+        {
+            // Yanlış siparişte tepsi tezgâhta kalır; Tray.OnDropped onu tezgâhtaki yerine geri gönderir.
+            delivery.Deliver(item.GetComponent<Tray>(), Occupant);
         }
 
         private void SetState(TableState newState, bool force = false)

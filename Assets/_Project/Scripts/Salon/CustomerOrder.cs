@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CutiePie.Salon
 {
     /// <summary>
-    /// Bir müşterinin siparişi: 1 pasta dilimi + 1 içecek. G3'te servis kontrolü bunu kullanacak.
+    /// Bir müşterinin siparişi: 1 pasta dilimi + 1 içecek. Teslim kontrolü (OrderDelivery) Matches'i kullanır.
     /// </summary>
     public class CustomerOrder
     {
@@ -20,6 +20,12 @@ namespace CutiePie.Salon
             Cake = cake;
             Drink = drink;
         }
+
+        /// <summary>Ürün fiyatları toplamı (teslimdeki ödeme).</summary>
+        public int TotalPrice => (Cake != null ? Cake.price : 0) + (Drink != null ? Drink.price : 0);
+
+        /// <summary>Tepsideki dilim ve içecek bu siparişle birebir aynı mı? Eksik veya fazla parça yanlış sayılır.</summary>
+        public bool Matches(ProductData slice, ProductData drink) => slice == Cake && drink == Drink;
 
         /// <summary>Seviyenin menüsünden kategoriye göre rastgele 1 pasta + 1 içecek seçer.</summary>
         public static CustomerOrder Create(LevelData level)

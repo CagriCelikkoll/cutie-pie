@@ -5,7 +5,7 @@ namespace CutiePie.Salon
 {
     /// <summary>
     /// Servis tepsisi: tabak yuvası ve bardak yuvası olan taşınabilir parça.
-    /// Tezgâhtayken bırakma hedefidir (tabak, dilim, bardak alır) ve kendisi de sürüklenebilir (çöpe; G3b'de masaya).
+    /// Tezgâhtayken bırakma hedefidir (tabak, dilim, bardak alır) ve kendisi de sürüklenebilir (çöpe veya masaya).
     /// Kurallar: dilim yalnızca boş bir tabağa konur; bardak tabaksız da konabilir; her yuvada tek parça.
     /// </summary>
     [RequireComponent(typeof(ServingItem))]
@@ -83,11 +83,23 @@ namespace CutiePie.Salon
             transform.localRotation = Quaternion.identity;
         }
 
-        /// <summary>Tepsi tezgâhtan ayrıldı (G3b: masaya teslim).</summary>
+        /// <summary>Tepsi tezgâhtan ayrıldı (masaya teslim).</summary>
         public void DetachFromCounter()
         {
             Counter = null;
             HomeSlot = null;
+        }
+
+        /// <summary>
+        /// Teslim edilen tepsiyi masaya oturtur. Tezgâhta olmadığı için artık sürüklenemez, çöpe atılamaz ve içine parça konamaz.
+        /// </summary>
+        public void PlaceOnTable(Transform parent, float scale, int sortingOrder)
+        {
+            transform.SetParent(parent, false);
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+            transform.localScale = Vector3.one * scale;
+            Item.SortingGroup.sortingOrder = sortingOrder;
         }
 
         // --- İçerik (IDropTarget) ---

@@ -21,8 +21,15 @@ namespace CutiePie.Salon
         public const int Table = 10;
         public const int TableLock = 11;
         public const int Customer = 20;
+
+        /// <summary>Masaya teslim edilmiş tepsi (müşterinin önünde, balonların altında).</summary>
+        public const int TrayOnTable = 21;
+
         public const int Overlay = 30;
         public const int OverlayContent = 31;
+
+        /// <summary>Teslimde yükselen altın yazısı.</summary>
+        public const int Popup = 40;
 
         /// <summary>Sürüklenen parça her şeyin üstünde çizilir.</summary>
         public const int Dragged = 100;
