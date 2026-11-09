@@ -14,6 +14,11 @@ namespace CutiePie.Salon
         [SerializeField] private TableManager tableManager;
         [SerializeField] private CustomerSpawner customerSpawner;
 
+        [Header("Hazırlama alanı")]
+        [SerializeField] private LocalShowcaseStock showcaseStock;
+        [SerializeField] private ProductShelf cakeShelf;
+        [SerializeField] private ProductShelf drinkShelf;
+
         [Tooltip("Açıksa Start'ta seviye kendiliğinden kurulur.")]
         [SerializeField] private bool autoStart = true;
 
@@ -31,7 +36,32 @@ namespace CutiePie.Salon
             }
 
             tableManager.Setup(level.openTableCount);
+            SetupPrepArea();
             customerSpawner.StartSpawning(level);
+        }
+
+        // Vitrin stoğu ve raflar round başında menüye göre kurulur. G4'te GameEvents.RoundStarted'a taşınacak.
+        private void SetupPrepArea()
+        {
+            if (showcaseStock == null || cakeShelf == null || drinkShelf == null)
+            {
+                Debug.LogWarning("[SalonBootstrap] Vitrin stoğu veya raflar atanmamış; builder 4. adımı çalıştırın.", this);
+            }
+
+            if (showcaseStock != null)
+            {
+                showcaseStock.Refill(level);
+            }
+
+            if (cakeShelf != null)
+            {
+                cakeShelf.Setup(level, showcaseStock);
+            }
+
+            if (drinkShelf != null)
+            {
+                drinkShelf.Setup(level, null);
+            }
         }
 
 #if UNITY_EDITOR

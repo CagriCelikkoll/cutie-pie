@@ -10,8 +10,9 @@ namespace CutiePie.Salon.Editor
     /// <summary>
     /// Yalnızca editörde: Salon sahnesinin G2 yerleşimini (yer tutucu sprite'lar, prefab'lar, masalar, kamera) kurar.
     /// "Cutie Pie/Salon" menüsünden çalıştırılır; sahneyi kaydetmek kullanıcıya bırakılır.
+    /// Hazırlama alanı (G3a) kurulumu SalonSceneBuilder.Prep.cs'tedir.
     /// </summary>
-    public static class SalonSceneBuilder
+    public static partial class SalonSceneBuilder
     {
         private const string MenuRoot = "Cutie Pie/Salon/";
         private const string SceneName = "Salon";
@@ -58,13 +59,20 @@ namespace CutiePie.Salon.Editor
         // Hazırlama alanı yer tutucuları (sol taraf, x ≈ -9.1…-2.3). G3 servisi için şimdilik işlevsiz.
         private static readonly PrepBox[] PrepBoxes =
         {
-            new PrepBox("CakeShowcase", new Vector2(-5.7f, 3.6f), new Vector2(6.8f, 2.6f), new Color(0.98f, 0.85f, 0.88f, 1f)),
-            new PrepBox("Drinks", new Vector2(-5.7f, 0.7f), new Vector2(6.8f, 2.4f), new Color(0.8f, 0.9f, 0.98f, 1f)),
-            new PrepBox("TrayStack", new Vector2(-8.6f, -3.0f), new Vector2(1f, 3.4f), new Color(0.85f, 0.75f, 0.6f, 1f)),
-            new PrepBox("PlateStack", new Vector2(-7.4f, -3.0f), new Vector2(1f, 3.4f), new Color(0.95f, 0.95f, 0.95f, 1f)),
-            new PrepBox("PrepCounter", new Vector2(-5.1f, -3.0f), new Vector2(3.2f, 3.4f), new Color(0.9f, 0.8f, 0.65f, 1f)),
-            new PrepBox("TrashBin", new Vector2(-2.8f, -3.0f), new Vector2(1f, 3.4f), new Color(0.6f, 0.65f, 0.6f, 1f)),
+            new PrepBox(BoxCakeShowcase, new Vector2(-5.7f, 3.6f), new Vector2(6.8f, 2.6f), new Color(0.98f, 0.85f, 0.88f, 1f)),
+            new PrepBox(BoxDrinks, new Vector2(-5.7f, 0.7f), new Vector2(6.8f, 2.4f), new Color(0.8f, 0.9f, 0.98f, 1f)),
+            new PrepBox(BoxTrayStack, new Vector2(-8.6f, -3.0f), new Vector2(1f, 3.4f), new Color(0.85f, 0.75f, 0.6f, 1f)),
+            new PrepBox(BoxPlateStack, new Vector2(-7.4f, -3.0f), new Vector2(1f, 3.4f), new Color(0.95f, 0.95f, 0.95f, 1f)),
+            new PrepBox(BoxPrepCounter, new Vector2(-5.1f, -3.0f), new Vector2(3.2f, 3.4f), new Color(0.9f, 0.8f, 0.65f, 1f)),
+            new PrepBox(BoxTrashBin, new Vector2(-2.8f, -3.0f), new Vector2(1f, 3.4f), new Color(0.6f, 0.65f, 0.6f, 1f)),
         };
+
+        private const string BoxCakeShowcase = "CakeShowcase";
+        private const string BoxDrinks = "Drinks";
+        private const string BoxTrayStack = "TrayStack";
+        private const string BoxPlateStack = "PlateStack";
+        private const string BoxPrepCounter = "PrepCounter";
+        private const string BoxTrashBin = "TrashBin";
 
         private readonly struct PrepBox
         {
@@ -82,14 +90,14 @@ namespace CutiePie.Salon.Editor
             }
         }
 
-        // Sorting Layer (ortak dosya) yerine sortingOrder: zemin 0, masa 10, müşteri 20, balon/bar 30.
-        public const int OrderFloor = 0;
-        public const int OrderDoor = 1;
-        public const int OrderTable = 10;
-        public const int OrderTableLock = 11;
-        public const int OrderCustomer = 20;
-        public const int OrderOverlay = 30;
-        public const int OrderOverlayContent = 31;
+        // Sorting Layer (ortak dosya) yerine sortingOrder; değerler çalışma zamanıyla ortak (SalonSortOrder).
+        public const int OrderFloor = SalonSortOrder.Floor;
+        public const int OrderDoor = SalonSortOrder.Door;
+        public const int OrderTable = SalonSortOrder.Table;
+        public const int OrderTableLock = SalonSortOrder.TableLock;
+        public const int OrderCustomer = SalonSortOrder.Customer;
+        public const int OrderOverlay = SalonSortOrder.Overlay;
+        public const int OrderOverlayContent = SalonSortOrder.OverlayContent;
 
         [MenuItem(MenuRoot + "1 - Masaları Kur")]
         private static void BuildTables()
@@ -234,6 +242,8 @@ namespace CutiePie.Salon.Editor
             customerSo.FindProperty("patienceBar").objectReferenceValue = bar;
             customerSo.ApplyModifiedPropertiesWithoutUndo();
 
+            ApplyCustomerTapCollider(root, settings);
+
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, CustomerPrefabPath);
             Object.DestroyImmediate(root);
 
@@ -281,12 +291,11 @@ namespace CutiePie.Salon.Editor
             SalonSettings settings = GetOrCreateSettings();
             EnsureDefaultCustomerType(settings);
 
-            // Hazırlama alanı yer tutucuları.
+            // Hazırlama alanı yer tutucuları (ölçeksiz kök + ölçekli Visual).
             Transform prepArea = GetOrCreateSceneObject("PrepArea", root);
             foreach (PrepBox box in PrepBoxes)
             {
-                SpriteRenderer sr = CreateSpriteChild(prepArea, box.Name, square, box.Size, box.Color, OrderFloor);
-                sr.transform.localPosition = box.Position;
+                CreatePrepBox(prepArea, box, square);
             }
 
             // Giriş noktası ve kapı kutusu.
@@ -465,7 +474,11 @@ namespace CutiePie.Salon.Editor
         }
 
         /// <summary>Beyaz, 1x1 birimlik kare veya daire yer tutucu sprite'ı oluşturur (yoksa).</summary>
-        private static Sprite GetOrCreatePlaceholderSprite(string path, bool circle)
+        private static Sprite GetOrCreatePlaceholderSprite(string path, bool circle) =>
+            GetOrCreateSprite(path, circle, new Color32(255, 255, 255, 255));
+
+        /// <summary>Verilen renkte, 1x1 birimlik kare veya daire sprite oluşturur (yoksa).</summary>
+        private static Sprite GetOrCreateSprite(string path, bool circle, Color32 color)
         {
             var existing = AssetDatabase.LoadAssetAtPath<Sprite>(path);
             if (existing != null)
@@ -487,7 +500,7 @@ namespace CutiePie.Salon.Editor
                     float dx = x + 0.5f - radius;
                     float dy = y + 0.5f - radius;
                     bool inside = !circle || dx * dx + dy * dy <= radius * radius;
-                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)(inside ? 255 : 0));
+                    pixels[y * size + x] = new Color32(color.r, color.g, color.b, inside ? color.a : (byte)0);
                 }
             }
 

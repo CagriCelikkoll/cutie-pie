@@ -4,6 +4,14 @@ using UnityEngine;
 
 namespace CutiePie.Salon
 {
+    /// <summary>İkonu olmayan bir ürünün yer tutucu rengi (SalonSettings listesinde).</summary>
+    [System.Serializable]
+    public struct ProductPlaceholderColor
+    {
+        public ProductData product;
+        public Color color;
+    }
+
     /// <summary>
     /// Salon'a özel denge ve görünüm ayarları. Koddaki tüm Salon değerleri buradan okunur.
     /// </summary>
@@ -43,11 +51,67 @@ namespace CutiePie.Salon
         [Tooltip("Ürün ikonu yokken içecek için kullanılan yer tutucu rengi.")]
         public Color drinkPlaceholderColor = new Color(0.45f, 0.7f, 0.95f, 1f);
 
+        [Tooltip("İkonu olmayan ürünleri birbirinden ayırmak için ürüne özel yer tutucu renkleri. Listede olmayan ürün kategori rengini alır.")]
+        public List<ProductPlaceholderColor> productPlaceholderColors = new List<ProductPlaceholderColor>();
+
+        [Header("Hazırlama alanı")]
+        [Tooltip("Bırakılan parça, hedefin oturma noktasına bu mesafeden yakınsa hedefe oturur (birim). Cömert tutulur.")]
+        [Min(0.1f)] public float snapDistance = 1.5f;
+
+        [Tooltip("Hedefe oturmayan parçanın başlangıç yerine dönüş hızı (birim/saniye).")]
+        [Min(0.1f)] public float dragReturnSpeed = 25f;
+
+        [Tooltip("Sürüklenen parçanın büyüme çarpanı (elde tutuluyor hissi).")]
+        [Min(0.1f)] public float dragItemScale = 1.1f;
+
+        [Tooltip("Tezgâhtaki tepsi yeri sayısı. Geliştirmeyle değişmez.")]
+        [Min(1)] public int prepTraySlotCount = 1;
+
+        [Tooltip("Vitrin ve içecek rafında sayfa başına ürün yeri.")]
+        [Min(1)] public int shelfSlotsPerPage = 4;
+
+        [Tooltip("Round başında menüdeki her pasta için vitrindeki dilim sayısı (Faz 1: round içinde yenilenmez).")]
+        [Min(0)] public int startingSlicesPerCake = 15;
+
+        [Tooltip("Müşteriye dokunma alanı (birim); gövdeden büyük tutulur.")]
+        public Vector2 customerTapSize = new Vector2(1.3f, 1.6f);
+
+        [Tooltip("İkonu olmayan tepsinin yer tutucu rengi.")]
+        public Color trayColor = new Color(0.7f, 0.5f, 0.35f, 1f);
+
+        [Tooltip("İkonu olmayan tabağın yer tutucu rengi.")]
+        public Color plateColor = new Color(1f, 1f, 1f, 1f);
+
+        [Tooltip("Fişte tamamlanan satırın tik rengi.")]
+        public Color ticketTickColor = new Color(0.3f, 0.75f, 0.35f, 1f);
+
+        [Tooltip("Dilimi biten vitrin yuvasının saydamlığı (0-1).")]
+        [Range(0f, 1f)] public float slotEmptyAlpha = 0.35f;
+
         [Header("Masa renkleri")]
         public Color tableLockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);
         public Color tableEmptyColor = new Color(0.8f, 0.6f, 0.4f, 1f);
         public Color tableOccupiedColor = new Color(0.7f, 0.5f, 0.3f, 1f);
         public Color tableDirtyColor = new Color(0.6f, 0.55f, 0.35f, 1f);
+
+        /// <summary>İkonu olmayan ürünün yer tutucu rengi: önce ürüne özel renk, yoksa kategori rengi.</summary>
+        public Color GetProductPlaceholderColor(ProductData product)
+        {
+            if (product == null)
+            {
+                return cakePlaceholderColor;
+            }
+
+            foreach (ProductPlaceholderColor entry in productPlaceholderColors)
+            {
+                if (entry.product == product)
+                {
+                    return entry.color;
+                }
+            }
+
+            return product.category == ProductCategory.Drink ? drinkPlaceholderColor : cakePlaceholderColor;
+        }
 
         /// <summary>Masa durumuna karşılık gelen gövde rengi.</summary>
         public Color GetTableColor(TableState state)

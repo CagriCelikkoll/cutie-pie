@@ -25,8 +25,10 @@ namespace CutiePie.Salon
         public void Show(CustomerOrder order, SalonSettings settings)
         {
             gameObject.SetActive(true);
-            ApplyIcon(cakeIcon, order?.Cake, cakePlaceholder, settings != null ? settings.cakePlaceholderColor : Color.white);
-            ApplyIcon(drinkIcon, order?.Drink, drinkPlaceholder, settings != null ? settings.drinkPlaceholderColor : Color.white);
+            ProductData cake = order?.Cake;
+            ProductData drink = order?.Drink;
+            ApplyIcon(cakeIcon, cake, cakePlaceholder, settings != null ? settings.GetProductPlaceholderColor(cake) : Color.white);
+            ApplyIcon(drinkIcon, drink, drinkPlaceholder, settings != null ? settings.GetProductPlaceholderColor(drink) : Color.white);
         }
 
         public void Hide() => gameObject.SetActive(false);
