@@ -158,18 +158,8 @@ namespace CutiePie.Salon.Editor
             }
             managerSo.ApplyModifiedPropertiesWithoutUndo();
 
-            // Geçici başlatıcı.
-            Transform bootstrapTf = GetOrCreateSceneObject("SalonBootstrap", root);
-            SalonBootstrap bootstrap = bootstrapTf.GetComponent<SalonBootstrap>();
-            if (bootstrap == null)
-            {
-                bootstrap = Undo.AddComponent<SalonBootstrap>(bootstrapTf.gameObject);
-            }
-
-            var bootstrapSo = new SerializedObject(bootstrap);
-            bootstrapSo.FindProperty("level").objectReferenceValue = AssetDatabase.LoadAssetAtPath<LevelData>(LevelPath);
-            bootstrapSo.FindProperty("tableManager").objectReferenceValue = manager;
-            bootstrapSo.ApplyModifiedProperties();
+            // Round bağlantısı masaları her RoundStarted'da kurar.
+            SetObjectField(GetOrCreateSalonRound(root), "tableManager", manager);
 
             SetupCamera();
 
@@ -315,19 +305,8 @@ namespace CutiePie.Salon.Editor
             spawnerSo.FindProperty("customerContainer").objectReferenceValue = customers;
             spawnerSo.ApplyModifiedPropertiesWithoutUndo();
 
-            // Başlatıcıya spawner bağlanır.
-            Transform bootstrapTf = root.Find("SalonBootstrap");
-            SalonBootstrap bootstrap = bootstrapTf != null ? bootstrapTf.GetComponent<SalonBootstrap>() : null;
-            if (bootstrap != null)
-            {
-                var bootstrapSo = new SerializedObject(bootstrap);
-                bootstrapSo.FindProperty("customerSpawner").objectReferenceValue = spawner;
-                bootstrapSo.ApplyModifiedProperties();
-            }
-            else
-            {
-                Debug.LogWarning("[SalonSceneBuilder] SalonBootstrap bulunamadı; 1. adımı yeniden çalıştırın.");
-            }
+            // Round bağlantısına spawner bağlanır.
+            SetObjectField(GetOrCreateSalonRound(root), "customerSpawner", spawner);
 
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
             Selection.activeGameObject = spawnerTf.gameObject;

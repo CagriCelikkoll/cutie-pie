@@ -4,8 +4,9 @@ using UnityEngine;
 namespace CutiePie.Salon
 {
     /// <summary>
-    /// Sabit aralıkla müşteri üretir. Boş masa yoksa o deneme atlanır (kaçırma sayılmaz, olay yayınlanmaz).
-    /// G4'te aralık LevelData.spawnIntervalCurve'den okunacak.
+    /// Round boyunca müşteri üretir. İki deneme arası süre LevelData.spawnIntervalCurve'den okunur
+    /// (X: round ilerlemesi 0-1, Y: saniye). Boş masa yoksa o deneme atlanır (kaçırma sayılmaz, olay yayınlanmaz).
+    /// SalonRound, RoundStarted'da StartSpawning, RoundEnded'da StopSpawning çağırır.
     /// </summary>
     public class CustomerSpawner : MonoBehaviour
     {
@@ -20,12 +21,13 @@ namespace CutiePie.Salon
         [SerializeField] private Transform customerContainer;
 
         private LevelData level;
-        private float timer;
+        private float elapsed;
+        private float timeUntilNext;
         private int nextCustomerId = 1;
 
         public bool IsSpawning { get; private set; }
 
-        /// <summary>Üretimi başlatır; ilk müşteri hemen denenir.</summary>
+        /// <summary>Önceki round'dan kalan müşterileri siler ve üretimi başlatır; ilk müşteri hemen denenir.</summary>
         public void StartSpawning(LevelData levelData)
         {
             if (levelData == null || settings == null || tableManager == null || customerPrefab == null || entrance == null)
@@ -40,8 +42,10 @@ namespace CutiePie.Salon
                 return;
             }
 
+            ClearCustomers();
             level = levelData;
-            timer = settings.spawnIntervalSeconds;
+            elapsed = 0f;
+            timeUntilNext = 0f;
             IsSpawning = true;
         }
 
@@ -54,14 +58,36 @@ namespace CutiePie.Salon
                 return;
             }
 
-            timer += Time.deltaTime;
-            if (timer < settings.spawnIntervalSeconds)
+            elapsed += Time.deltaTime;
+            timeUntilNext -= Time.deltaTime;
+            if (timeUntilNext > 0f)
             {
                 return;
             }
 
-            timer -= settings.spawnIntervalSeconds;
             TrySpawn();
+            timeUntilNext += CurrentInterval();
+        }
+
+        /// <summary>Round ilerlemesine göre eğriden okunan aralık; ayarlardaki en kısa süreden aşağı inmez.</summary>
+        private float CurrentInterval()
+        {
+            float progress = level.roundDurationSeconds > 0f ? Mathf.Clamp01(elapsed / level.roundDurationSeconds) : 1f;
+            float interval = level.spawnIntervalCurve != null ? level.spawnIntervalCurve.Evaluate(progress) : 0f;
+            return Mathf.Max(settings.minSpawnIntervalSeconds, interval);
+        }
+
+        private void ClearCustomers()
+        {
+            if (customerContainer == null)
+            {
+                return;
+            }
+
+            for (int i = customerContainer.childCount - 1; i >= 0; i--)
+            {
+                Destroy(customerContainer.GetChild(i).gameObject);
+            }
         }
 
         private void TrySpawn()

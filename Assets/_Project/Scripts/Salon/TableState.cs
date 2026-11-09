@@ -12,7 +12,7 @@ namespace CutiePie.Salon
         /// <summary>Bir müşteriye ayrılmış (müşteri yoldayken de dolu sayılır).</summary>
         Occupied = 2,
 
-        /// <summary>Mutlu teslimden sonra temizlenmeyi bekliyor (G3'te kullanılacak).</summary>
+        /// <summary>Müşteri yiyip kalktı; masada boş tabak var, temizlenene kadar müşteri oturmaz.</summary>
         Dirty = 3
     }
 }

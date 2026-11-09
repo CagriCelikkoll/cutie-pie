@@ -19,8 +19,9 @@ namespace CutiePie.Salon
     public class SalonSettings : ScriptableObject
     {
         [Header("Müşteri üretimi")]
-        [Tooltip("İki müşteri denemesi arasındaki sabit süre (saniye). G4'te LevelData.spawnIntervalCurve ile değiştirilecek.")]
-        [Min(0.1f)] public float spawnIntervalSeconds = 6f;
+        [Tooltip("İki müşteri denemesi arası en kısa süre (saniye). Geliş aralığı LevelData.spawnIntervalCurve'den gelir; " +
+                 "eğri bundan küçük (veya 0) değer verirse bu kullanılır.")]
+        [Min(0.1f)] public float minSpawnIntervalSeconds = 1f;
 
         [Tooltip("Üretilecek müşteri tipleri; her müşteri için rastgele biri seçilir.")]
         public List<CustomerTypeData> customerTypes = new List<CustomerTypeData>();
@@ -121,6 +122,16 @@ namespace CutiePie.Salon
 
         public Color goldPopupColor = new Color(0.95f, 0.75f, 0.1f, 1f);
         public Color tipPopupColor = new Color(0.35f, 0.8f, 0.4f, 1f);
+
+        [Header("Masa temizliği")]
+        [Tooltip("Temizlik parıltısının süresi (saniye); bitince masa boşalır.")]
+        [Min(0.05f)] public float cleanSparkleDuration = 0.35f;
+
+        [Tooltip("Parıltının sonunda ulaştığı ölçek (masa boyutuna göre çarpan).")]
+        [Min(0.1f)] public float cleanSparkleMaxScale = 1.3f;
+
+        [Tooltip("Parıltı rengi; saydamlığı süre boyunca bu değerden 0'a iner.")]
+        public Color cleanSparkleColor = new Color(1f, 0.97f, 0.7f, 0.9f);
 
         [Header("Masa renkleri")]
         public Color tableLockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);

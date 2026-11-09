@@ -9,6 +9,7 @@ namespace CutiePie.Salon
     /// Bırakınca DropTargetRegistry'den en yakın uygun hedef aranır: snapDistance içindeyse hedef parçayı alır,
     /// değilse parça dragReturnSpeed ile başlangıç konumuna döner ve kaynağa haber verilir.
     /// Aynı anda yalnızca bir sürükleme olur; çoklu dokunmada ikinci parmak yok sayılır.
+    /// SalonInput kilitliyken (round bitti) yeni sürükleme başlamaz.
     /// </summary>
     public class DragItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
@@ -46,7 +47,7 @@ namespace CutiePie.Salon
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (activeDrag != null || IsBusy || eventData.button != PointerEventData.InputButton.Left)
+            if (SalonInput.IsLocked || activeDrag != null || IsBusy || eventData.button != PointerEventData.InputButton.Left)
             {
                 return;
             }
@@ -146,9 +147,20 @@ namespace CutiePie.Salon
             source.OnReturned(item);
         }
 
-        private void OnDisable()
+        /// <summary>O an sürüklenen parça varsa sürüklemeyi iptal eder ve parçayı hemen başlangıç yerine koyar.</summary>
+        public static void CancelActiveDrag()
         {
-            // Sürükleme/dönüş yarıda kaldıysa parça hemen yerine konur, kilit bırakılır.
+            if (activeDrag != null)
+            {
+                activeDrag.SnapBack();
+            }
+        }
+
+        private void OnDisable() => SnapBack();
+
+        // Sürükleme/dönüş yarıda kaldıysa parça hemen yerine konur, kilit bırakılır.
+        private void SnapBack()
+        {
             if (activeDrag == this)
             {
                 activeDrag = null;

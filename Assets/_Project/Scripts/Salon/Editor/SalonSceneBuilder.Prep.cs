@@ -166,7 +166,7 @@ namespace CutiePie.Salon.Editor
             SetupOrderTicket(prepArea, ticketPrefab, counter);
 
             EnsureCustomerTapCollider(settings);
-            WireBootstrap(root, stock, cakeShelf, drinkShelf);
+            WireSalonRoundPrep(root, stock, cakeShelf, drinkShelf);
 
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
             Selection.activeGameObject = prepArea.gameObject;
@@ -211,7 +211,8 @@ namespace CutiePie.Salon.Editor
 
             Selection.activeObject = level;
             EditorGUIUtility.PingObject(level);
-            Debug.Log("[SalonSceneBuilder] Test seviyesi hazır. Denemek için SalonBootstrap > Level alanına Level_Test_Paging atayın.");
+            // Salon seviyesi artık SaveSystem'deki mevcut seviyeden gelir (RoundManager); bu varlık kendiliğinden kullanılmaz.
+            Debug.Log("[SalonSceneBuilder] Test seviyesi hazır (Level_Test_Paging).");
         }
 
         // --- Sahne parçaları ---
@@ -351,17 +352,9 @@ namespace CutiePie.Salon.Editor
             SetObjectField(go.GetComponent<OrderTicket>(), "counter", counter);
         }
 
-        private static void WireBootstrap(Transform root, LocalShowcaseStock stock, ProductShelf cakeShelf, ProductShelf drinkShelf)
+        private static void WireSalonRoundPrep(Transform root, LocalShowcaseStock stock, ProductShelf cakeShelf, ProductShelf drinkShelf)
         {
-            Transform bootstrapTf = root.Find("SalonBootstrap");
-            SalonBootstrap bootstrap = bootstrapTf != null ? bootstrapTf.GetComponent<SalonBootstrap>() : null;
-            if (bootstrap == null)
-            {
-                Debug.LogWarning("[SalonSceneBuilder] SalonBootstrap bulunamadı; 1. adımı yeniden çalıştırın.");
-                return;
-            }
-
-            var so = new SerializedObject(bootstrap);
+            var so = new SerializedObject(GetOrCreateSalonRound(root));
             so.FindProperty("showcaseStock").objectReferenceValue = stock;
             so.FindProperty("cakeShelf").objectReferenceValue = cakeShelf;
             so.FindProperty("drinkShelf").objectReferenceValue = drinkShelf;
