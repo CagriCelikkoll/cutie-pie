@@ -1,6 +1,7 @@
 using CutiePie.Ads;
 using CutiePie.Core.Data;
 using CutiePie.Core.Localization;
+using CutiePie.Upgrades;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -24,6 +25,9 @@ namespace CutiePie.Core
         /// <summary>Yerelleştirme servisi. Kullanım: GameManager.Instance.Localization.Get("anahtar").</summary>
         public LocalizationService Localization { get; private set; }
 
+        /// <summary>Geliştirme servisi. Kullanım: GameManager.Instance.Upgrades.TryPurchase("id").</summary>
+        public UpgradeManager Upgrades { get; private set; }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -41,6 +45,8 @@ namespace CutiePie.Core
 
             // Dil şimdilik kaydedilmez; her açılışta varsayılan dil kullanılır.
             Localization = new LocalizationService(config.languages, config.defaultLanguage);
+
+            Upgrades = new UpgradeManager(config.upgrades);
         }
 
         private void Start()

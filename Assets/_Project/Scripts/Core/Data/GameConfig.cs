@@ -20,6 +20,10 @@ namespace CutiePie.Core.Data
         [Tooltip("Oyundaki tüm seviyeler; kayıttaki seviye id'si bu listede aranır.")]
         public LevelData[] levels;
 
+        [Header("Geliştirmeler")]
+        [Tooltip("Oyundaki tüm geliştirmeler (Assets/_Project/Data/Upgrades).")]
+        public UpgradeData[] upgrades;
+
         [Header("Kayıt")]
         [Tooltip("persistentDataPath altındaki kayıt dosyasının adı.")]
         public string saveFileName;

@@ -18,6 +18,11 @@ MonoBehaviour:
   startingLevel: {fileID: 11400000, guid: cbb9edba61195664dacb8787b37f1167, type: 2}
   levels:
   - {fileID: 11400000, guid: cbb9edba61195664dacb8787b37f1167, type: 2}
+  upgrades:
+  - {fileID: 11400000, guid: 0693e6a6df0285d4ab2072fe81cc33a2, type: 2}
+  - {fileID: 11400000, guid: 42ddaef7659373c4cb362d49930dec1f, type: 2}
+  - {fileID: 11400000, guid: 9ccbd07ff7db57944bacf15550ac0696, type: 2}
+  - {fileID: 11400000, guid: f99df7827072b054894abfff902962f1, type: 2}
   saveFileName: save.json
   saveTempFileName: save.json.tmp
   saveBackupFileName: save.json.bak
