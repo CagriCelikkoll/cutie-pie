@@ -8,6 +8,10 @@
     { "key": "product.cake_chocolate.name", "value": "Çikolatalı Pasta" },
     { "key": "product.drink_tea.name", "value": "Çay" },
     { "key": "product.drink_lemonade.name", "value": "Limonata" },
-    { "key": "level.level_01.name", "value": "Seviye 1" }
+    { "key": "level.level_01.name", "value": "Seviye 1" },
+    { "key": "upgrade.extra_table.name", "value": "Ek Masa" },
+    { "key": "upgrade.ready_tray.name", "value": "Hazır Tepsi İstasyonu" },
+    { "key": "upgrade.auto_drink.name", "value": "İçecek Makinesi" },
+    { "key": "upgrade.waiter.name", "value": "Garson" }
   ]
 }
