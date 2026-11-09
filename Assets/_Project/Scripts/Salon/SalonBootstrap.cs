@@ -70,13 +70,23 @@ namespace CutiePie.Salon
         {
             GameEvents.CustomerSeated += LogSeated;
             GameEvents.CustomerLeftAngry += LogLeftAngry;
+            GameEvents.CustomerServed += LogServed;
+            GameEvents.WrongOrderDelivered += LogWrongOrder;
         }
 
         private void OnDisable()
         {
             GameEvents.CustomerSeated -= LogSeated;
             GameEvents.CustomerLeftAngry -= LogLeftAngry;
+            GameEvents.CustomerServed -= LogServed;
+            GameEvents.WrongOrderDelivered -= LogWrongOrder;
         }
+
+        private static void LogServed(CustomerInfo info, int payment, int tip) =>
+            Debug.Log($"[SalonTest] CustomerServed → id={info.CustomerId}, table={info.TableIndex}, payment={payment}, tip={tip}");
+
+        private static void LogWrongOrder(CustomerInfo info) =>
+            Debug.Log($"[SalonTest] WrongOrderDelivered → id={info.CustomerId}, table={info.TableIndex}");
 
         private static void LogSeated(CustomerInfo info) =>
             Debug.Log($"[SalonTest] CustomerSeated → id={info.CustomerId}, table={info.TableIndex}, type={(info.Type != null ? info.Type.id : "null")}");

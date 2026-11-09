@@ -12,14 +12,18 @@ namespace CutiePie.Salon
         Seated = 1,
         LeavingAngry = 2,
 
-        /// <summary>G3: doğru teslimden sonra mutlu ayrılış.</summary>
-        LeavingHappy = 3
+        /// <summary>Doğru teslimden sonra mutlu ayrılış.</summary>
+        LeavingHappy = 3,
+
+        /// <summary>Doğru sipariş teslim edildi, masada yiyor (sabır akmaz).</summary>
+        Eating = 4
     }
 
     /// <summary>
     /// Salon müşterisi: girişten masasına yürür, oturunca siparişini gösterir ve sabrı azalır.
     /// Sabır biterse kızgın olarak girişe yürüyüp yok olur.
     /// Otururken dokunulursa SalonEvents.CustomerTapped yayınlar (sipariş fişe düşer); dokunma alanı prefab'taki BoxCollider2D'dir.
+    /// Teslim kararını OrderDelivery verir; müşteri yalnızca sonucu oynar (StartEating / RejectOrder).
     /// </summary>
     public class Customer : MonoBehaviour, IPointerClickHandler
     {
@@ -30,6 +34,9 @@ namespace CutiePie.Salon
         private SalonSettings settings;
         private Vector3 exitPosition;
         private float patienceLeft;
+        private float eatTimeLeft;
+        private float shakeTimeLeft;
+        private Vector3 bodyBasePosition;
         private bool initialized;
 
         public int Id { get; private set; }
@@ -43,6 +50,9 @@ namespace CutiePie.Salon
 
         /// <summary>Kalan sabır oranı (0-1).</summary>
         public float PatienceRatio => Type != null && Type.patienceSeconds > 0f ? patienceLeft / Type.patienceSeconds : 0f;
+
+        /// <summary>Sabır barı yeşil mi (bahşiş koşulu)?</summary>
+        public bool IsPatienceGreen => settings != null && settings.IsPatienceGreen(PatienceRatio);
 
         /// <summary>Olaylarda taşınan hafif bilgi.</summary>
         public CustomerInfo Info => new CustomerInfo(Id, Type, Table != null ? Table.Index : -1);
@@ -61,6 +71,10 @@ namespace CutiePie.Salon
             name = $"Customer_{id}";
 
             ApplyAppearance();
+            if (body != null)
+            {
+                bodyBasePosition = body.transform.localPosition;
+            }
 
             if (orderBubble != null)
             {
@@ -107,9 +121,20 @@ namespace CutiePie.Salon
                         patienceBar.SetRatio(PatienceRatio);
                     }
 
+                    UpdateShake();
+
                     if (patienceLeft <= 0f)
                     {
                         LeaveAngry();
+                    }
+
+                    break;
+
+                case CustomerState.Eating:
+                    eatTimeLeft -= Time.deltaTime;
+                    if (eatTimeLeft <= 0f)
+                    {
+                        LeaveHappy();
                     }
 
                     break;
@@ -152,9 +177,74 @@ namespace CutiePie.Salon
             GameEvents.RaiseCustomerSeated(Info);
         }
 
+        /// <summary>
+        /// OrderDelivery doğru teslimde çağırır: sabır durur, balon ve bar gizlenir; eatDurationSeconds sonra mutlu ayrılır.
+        /// </summary>
+        public void StartEating()
+        {
+            if (State != CustomerState.Seated)
+            {
+                return;
+            }
+
+            State = CustomerState.Eating;
+            eatTimeLeft = settings.eatDurationSeconds;
+            StopShake();
+            HideOverlays();
+        }
+
+        /// <summary>OrderDelivery yanlış teslimde çağırır: müşteri başını sallar, oturmaya ve beklemeye devam eder.</summary>
+        public void RejectOrder()
+        {
+            if (State == CustomerState.Seated)
+            {
+                shakeTimeLeft = settings.rejectShakeDuration;
+            }
+        }
+
+        private void LeaveHappy()
+        {
+            State = CustomerState.LeavingHappy;
+
+            // G4: burada Table.MarkDirty() çağrılacak (masa kirli kalır, tepsi kirli tabak olur).
+            // Şimdilik masa hemen boşalır ve masadaki tepsi kaldırılır.
+            if (Table != null)
+            {
+                Table.Release();
+            }
+        }
+
+        private void UpdateShake()
+        {
+            if (shakeTimeLeft <= 0f || body == null)
+            {
+                return;
+            }
+
+            shakeTimeLeft -= Time.deltaTime;
+            if (shakeTimeLeft <= 0f)
+            {
+                StopShake();
+                return;
+            }
+
+            float offset = Mathf.Sin(shakeTimeLeft * settings.rejectShakeFrequency) * settings.rejectShakeAmplitude;
+            body.transform.localPosition = bodyBasePosition + new Vector3(offset, 0f, 0f);
+        }
+
+        private void StopShake()
+        {
+            shakeTimeLeft = 0f;
+            if (body != null)
+            {
+                body.transform.localPosition = bodyBasePosition;
+            }
+        }
+
         private void LeaveAngry()
         {
             State = CustomerState.LeavingAngry;
+            StopShake();
             HideOverlays();
 
             // Olay masa boşaltılmadan önce yayınlanır; Info masa sırasını taşımaya devam eder.

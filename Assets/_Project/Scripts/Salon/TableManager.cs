@@ -10,6 +10,12 @@ namespace CutiePie.Salon
     {
         [SerializeField] private SalonSettings settings;
 
+        [Tooltip("Hazırlama alanının bırakma hedefi listesi (PrepArea); masalar tepsi hedefi olarak buraya kaydolur.")]
+        [SerializeField] private DropTargetRegistry registry;
+
+        [Tooltip("Masaya bırakılan tepsiyi teslim eden bileşen.")]
+        [SerializeField] private OrderDelivery delivery;
+
         [Tooltip("Index sırasına göre masalar (liste sırası = Table.Index).")]
         [SerializeField] private List<Table> tables = new List<Table>();
 
@@ -32,11 +38,16 @@ namespace CutiePie.Salon
                 Debug.LogWarning($"[TableManager] İstenen açık masa sayısı ({openCount}) masa yerinden ({tables.Count}) fazla.", this);
             }
 
+            if (registry == null || delivery == null)
+            {
+                Debug.LogWarning("[TableManager] DropTargetRegistry veya OrderDelivery atanmamış; masaya teslim çalışmaz. Builder 6. adımı çalıştırın.", this);
+            }
+
             for (int i = 0; i < tables.Count; i++)
             {
                 if (tables[i] != null)
                 {
-                    tables[i].Initialize(settings, i < openCount);
+                    tables[i].Initialize(settings, i < openCount, registry, delivery);
                 }
             }
         }

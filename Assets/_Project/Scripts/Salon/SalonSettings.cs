@@ -88,6 +88,40 @@ namespace CutiePie.Salon
         [Tooltip("Dilimi biten vitrin yuvasının saydamlığı (0-1).")]
         [Range(0f, 1f)] public float slotEmptyAlpha = 0.35f;
 
+        [Header("Teslim")]
+        [Tooltip("Bahşiş = ödeme × bu oran × müşteri tipinin bahşiş çarpanı (yalnızca sabır yeşilken).")]
+        [Min(0f)] public float tipPaymentRatio = 0.2f;
+
+        [Tooltip("Doğru teslimden sonra müşterinin yemek yeme süresi (saniye).")]
+        [Min(0f)] public float eatDurationSeconds = 3f;
+
+        [Tooltip("Masaya konan tepsinin ölçeği (tepsi masadan büyük olduğu için küçültülür).")]
+        [Min(0.1f)] public float trayOnTableScale = 0.6f;
+
+        [Tooltip("Yanlış siparişte müşterinin sallanma süresi (saniye).")]
+        [Min(0f)] public float rejectShakeDuration = 0.4f;
+
+        [Tooltip("Sallanmanın yatay genliği (birim).")]
+        [Min(0f)] public float rejectShakeAmplitude = 0.12f;
+
+        [Tooltip("Sallanma hızı (radyan/saniye).")]
+        [Min(0f)] public float rejectShakeFrequency = 30f;
+
+        [Tooltip("Altın yazısının ekranda kalma süresi (saniye).")]
+        [Min(0.1f)] public float popupDuration = 1f;
+
+        [Tooltip("Altın yazısının bu süre boyunca yükseldiği mesafe (birim).")]
+        public float popupRiseDistance = 0.8f;
+
+        [Tooltip("Altın yazısının müşteri merkezine göre başlangıç konumu (birim).")]
+        public Vector2 popupOffset = new Vector2(0f, 1.9f);
+
+        [Tooltip("Bahşiş yazısının ödeme yazısına göre kayması (birim).")]
+        public Vector2 tipPopupOffset = new Vector2(0.9f, -0.35f);
+
+        public Color goldPopupColor = new Color(0.95f, 0.75f, 0.1f, 1f);
+        public Color tipPopupColor = new Color(0.35f, 0.8f, 0.4f, 1f);
+
         [Header("Masa renkleri")]
         public Color tableLockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);
         public Color tableEmptyColor = new Color(0.8f, 0.6f, 0.4f, 1f);
@@ -124,6 +158,9 @@ namespace CutiePie.Salon
                 default: return tableLockedColor;
             }
         }
+
+        /// <summary>Sabır barı yeşil mi? (Bahşiş yalnızca yeşilde verilir; bar rengiyle aynı kural.)</summary>
+        public bool IsPatienceGreen(float ratio) => ratio > patienceYellowThreshold;
 
         /// <summary>Sabır oranına (0-1) göre bar rengi: yeşil → sarı → kırmızı.</summary>
         public Color GetPatienceColor(float ratio)

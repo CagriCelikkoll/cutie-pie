@@ -6,8 +6,8 @@ namespace CutiePie.Salon
 {
     /// <summary>
     /// Hazırlık alanındaki sipariş fişi. Oturan müşteriye dokununca o müşterinin işareti, pastası ve içeceği görünür;
-    /// tezgâhtaki tepside doğru ürün olan satıra tik konur. Müşteri giderse fiş temizlenir.
-    /// CurrentCustomer G3b'de teslim kontrolünde kullanılacak.
+    /// tezgâhtaki tepside doğru ürün olan satıra tik konur. Fişteki müşteri kızgın giderse veya ona doğru teslim
+    /// yapılırsa (CustomerServed, CustomerId eşleşmesi) fiş temizlenir; yanlış teslimde fiş açık kalır.
     /// </summary>
     public class OrderTicket : MonoBehaviour
     {
