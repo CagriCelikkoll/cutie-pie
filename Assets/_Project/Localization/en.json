@@ -12,6 +12,22 @@
     { "key": "upgrade.extra_table.name", "value": "Extra Table" },
     { "key": "upgrade.ready_tray.name", "value": "Ready Tray Station" },
     { "key": "upgrade.auto_drink.name", "value": "Drink Machine" },
-    { "key": "upgrade.waiter.name", "value": "Waiter" }
+    { "key": "upgrade.waiter.name", "value": "Waiter" },
+    { "key": "round_end.title_completed", "value": "Time's up!" },
+    { "key": "round_end.title_early", "value": "Round ended early!" },
+    { "key": "round_end.early_reason", "value": "{0} customers got tired of waiting and left." },
+    { "key": "round_end.gold", "value": "Total earned" },
+    { "key": "round_end.tips", "value": "Tips" },
+    { "key": "round_end.best_combo", "value": "Best combo" },
+    { "key": "round_end.combo_value", "value": "{0} in a row" },
+    { "key": "round_end.watch_ad", "value": "Watch ad: 2x" },
+    { "key": "round_end.ad_playing", "value": "Ad playing..." },
+    { "key": "round_end.ad_claimed", "value": "2x claimed!" },
+    { "key": "round_end.play_again", "value": "Play again" },
+    { "key": "round_end.back_to_shop", "value": "Back to bakery" },
+    { "key": "round_end.upgrades", "value": "Upgrades" },
+    { "key": "upgrades.title", "value": "Upgrades" },
+    { "key": "common.close", "value": "Close" },
+    { "key": "round_end.combo_none", "value": "–" }
   ]
 }

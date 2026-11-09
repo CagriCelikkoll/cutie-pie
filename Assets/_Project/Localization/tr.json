@@ -12,6 +12,22 @@
     { "key": "upgrade.extra_table.name", "value": "Ek Masa" },
     { "key": "upgrade.ready_tray.name", "value": "Hazır Tepsi İstasyonu" },
     { "key": "upgrade.auto_drink.name", "value": "İçecek Makinesi" },
-    { "key": "upgrade.waiter.name", "value": "Garson" }
+    { "key": "upgrade.waiter.name", "value": "Garson" },
+    { "key": "round_end.title_completed", "value": "Süre doldu!" },
+    { "key": "round_end.title_early", "value": "Round erken bitti!" },
+    { "key": "round_end.early_reason", "value": "{0} müşteri beklemekten sıkılıp gitti." },
+    { "key": "round_end.gold", "value": "Toplam kazanç" },
+    { "key": "round_end.tips", "value": "Bahşiş" },
+    { "key": "round_end.best_combo", "value": "En yüksek kombo" },
+    { "key": "round_end.combo_value", "value": "{0} art arda" },
+    { "key": "round_end.watch_ad", "value": "Reklam izle: 2x" },
+    { "key": "round_end.ad_playing", "value": "Reklam oynuyor..." },
+    { "key": "round_end.ad_claimed", "value": "2x alındı!" },
+    { "key": "round_end.play_again", "value": "Tekrar oyna" },
+    { "key": "round_end.back_to_shop", "value": "Pastaneye dön" },
+    { "key": "round_end.upgrades", "value": "Geliştirmeler" },
+    { "key": "upgrades.title", "value": "Geliştirmeler" },
+    { "key": "common.close", "value": "Kapat" },
+    { "key": "round_end.combo_none", "value": "–" }
   ]
 }

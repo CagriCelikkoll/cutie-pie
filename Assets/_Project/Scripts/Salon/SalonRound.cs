@@ -6,8 +6,8 @@ namespace CutiePie.Salon
 {
     /// <summary>
     /// Salon'u RoundManager'ın round olaylarına bağlar ve kurulum sırasını tek yerde tutar.
-    /// RoundStarted: masalar → vitrin stoğu → raflar → girdi açılır → müşteri üretimi başlar.
-    /// RoundEnded: üretim durur, girdi kilitlenir (müşteriler kendileri donar). Sonuç ekranı G6'da.
+    /// RoundStarted: masalar → tezgâh ve fiş temizliği → vitrin stoğu → raflar → girdi açılır → müşteri üretimi başlar.
+    /// RoundEnded: üretim durur, girdi kilitlenir (müşteriler kendileri donar). Sonuç ekranı: UI/RoundEndPanel.
     /// </summary>
     public class SalonRound : MonoBehaviour
     {
@@ -18,6 +18,12 @@ namespace CutiePie.Salon
         [SerializeField] private LocalShowcaseStock showcaseStock;
         [SerializeField] private ProductShelf cakeShelf;
         [SerializeField] private ProductShelf drinkShelf;
+
+        [Tooltip("Yeni round başında üstündeki tepsiler silinir.")]
+        [SerializeField] private PrepCounter prepCounter;
+
+        [Tooltip("Yeni round başında boşaltılır.")]
+        [SerializeField] private OrderTicket orderTicket;
 
         // RoundManager.Start'ta yayınlar; OnEnable'da abone olunduğu için ilk round kaçmaz.
         private void OnEnable()
@@ -41,6 +47,7 @@ namespace CutiePie.Salon
             }
 
             tableManager.Setup(level.openTableCount);
+            ResetCounterAndTicket();
             SetupPrepArea(level);
             SalonInput.Unlock();
             customerSpawner.StartSpawning(level);
@@ -54,6 +61,25 @@ namespace CutiePie.Salon
             }
 
             SalonInput.Lock();
+        }
+
+        // Önceki round'dan tezgâhta kalan tepsi ve açık fiş temizlenir ("Tekrar oyna").
+        private void ResetCounterAndTicket()
+        {
+            if (prepCounter == null || orderTicket == null)
+            {
+                Debug.LogWarning("[SalonRound] PrepCounter veya OrderTicket atanmamış; builder 7. adımı yeniden çalıştırın.", this);
+            }
+
+            if (prepCounter != null)
+            {
+                prepCounter.ClearAll();
+            }
+
+            if (orderTicket != null)
+            {
+                orderTicket.Clear();
+            }
         }
 
         // Vitrin stoğu önce dolar; pasta rafı ürünlerini ve dilim sayılarını ondan okur.

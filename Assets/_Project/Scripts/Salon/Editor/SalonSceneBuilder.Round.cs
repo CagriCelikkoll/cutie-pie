@@ -8,7 +8,7 @@ namespace CutiePie.Salon.Editor
     /// <summary>
     /// Yalnızca editörde: G4 round bağlantısını ve kirli masayı kurar.
     /// "7 - Round ve Kirli Masayı Kur" tekrar çalıştırılabilir: Table.prefab'a dokunma alanı ve parıltı ekler,
-    /// eski SalonBootstrap nesnesini siler, SalonRound'u bağlar, RoundManager prefab'ını (Core) sahneye ekler.
+    /// eski SalonBootstrap nesnesini siler, SalonRound'u (G6: tezgâh ve fiş dahil) bağlar, RoundManager prefab'ını (Core) sahneye ekler.
     /// RoundManager.prefab'ın kendisi değiştirilmez.
     /// </summary>
     public static partial class SalonSceneBuilder
@@ -63,6 +63,8 @@ namespace CutiePie.Salon.Editor
             so.FindProperty("showcaseStock").objectReferenceValue = prepArea.GetComponent<LocalShowcaseStock>();
             so.FindProperty("cakeShelf").objectReferenceValue = FindShelf(prepArea, BoxCakeShowcase);
             so.FindProperty("drinkShelf").objectReferenceValue = FindShelf(prepArea, BoxDrinks);
+            so.FindProperty("prepCounter").objectReferenceValue = FindPrepComponent<PrepCounter>(prepArea, BoxPrepCounter);
+            so.FindProperty("orderTicket").objectReferenceValue = FindPrepComponent<OrderTicket>(prepArea, OrderTicketName);
             so.ApplyModifiedProperties();
 
             // RoundManager (sayaç Canvas'ı içinde) yoksa sahne köküne eklenir.
@@ -97,6 +99,18 @@ namespace CutiePie.Salon.Editor
             }
 
             return shelf;
+        }
+
+        private static T FindPrepComponent<T>(Transform prepArea, string childName) where T : Component
+        {
+            Transform tf = prepArea.Find(childName);
+            T component = tf != null ? tf.GetComponent<T>() : null;
+            if (component == null)
+            {
+                Debug.LogWarning($"[SalonSceneBuilder] PrepArea/{childName} üzerinde {typeof(T).Name} bulunamadı; 4. adımı çalıştırın.");
+            }
+
+            return component;
         }
 
         /// <summary>Mevcut Table.prefab'a dokunma collider'ı ve temizlik parıltısı ekler/günceller.</summary>
