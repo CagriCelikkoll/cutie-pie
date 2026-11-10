@@ -8,7 +8,7 @@ namespace CutiePie.Salon.Editor
     /// <summary>
     /// Yalnızca editörde: G4 round bağlantısını ve kirli masayı kurar.
     /// "7 - Round ve Kirli Masayı Kur" tekrar çalıştırılabilir: Table.prefab'a dokunma alanı ve parıltı ekler,
-    /// eski SalonBootstrap nesnesini siler, SalonRound'u bağlar, RoundManager prefab'ını (Core) sahneye ekler.
+    /// eski SalonBootstrap nesnesini siler, SalonRound'u (G6: tezgâh ve fiş dahil) bağlar, RoundManager prefab'ını (Core) sahneye ekler.
     /// RoundManager.prefab'ın kendisi değiştirilmez.
     /// </summary>
     public static partial class SalonSceneBuilder
@@ -63,6 +63,8 @@ namespace CutiePie.Salon.Editor
             so.FindProperty("showcaseStock").objectReferenceValue = prepArea.GetComponent<LocalShowcaseStock>();
             so.FindProperty("cakeShelf").objectReferenceValue = FindShelf(prepArea, BoxCakeShowcase);
             so.FindProperty("drinkShelf").objectReferenceValue = FindShelf(prepArea, BoxDrinks);
+            so.FindProperty("prepCounter").objectReferenceValue = FindPrepComponent<PrepCounter>(prepArea, BoxPrepCounter);
+            so.FindProperty("orderTicket").objectReferenceValue = FindPrepComponent<OrderTicket>(prepArea, OrderTicketName);
             so.ApplyModifiedProperties();
 
             // RoundManager (sayaç Canvas'ı içinde) yoksa sahne köküne eklenir.
@@ -99,41 +101,139 @@ namespace CutiePie.Salon.Editor
             return shelf;
         }
 
-        /// <summary>Mevcut Table.prefab'a dokunma collider'ı ve temizlik parıltısı ekler/günceller.</summary>
+        private static T FindPrepComponent<T>(Transform prepArea, string childName) where T : Component
+        {
+            Transform tf = prepArea.Find(childName);
+            T component = tf != null ? tf.GetComponent<T>() : null;
+            if (component == null)
+            {
+                Debug.LogWarning($"[SalonSceneBuilder] PrepArea/{childName} üzerinde {typeof(T).Name} bulunamadı; 4. adımı çalıştırın.");
+            }
+
+            return component;
+        }
+
+        /// <summary>
+        /// Mevcut Table.prefab'a dokunma collider'ı ve temizlik parıltısı ekler/günceller.
+        /// Var olan Sparkle silinmez; yalnızca farklı olan ayarlar düzeltilir. Hiçbir şey değişmediyse prefab kaydedilmez.
+        /// </summary>
         private static void UpdateTablePrefabForCleaning(Sprite circle, SalonSettings settings)
         {
             GameObject contents = PrefabUtility.LoadPrefabContents(TablePrefabPath);
             try
             {
+                bool changed = false;
+
                 BoxCollider2D col = contents.GetComponent<BoxCollider2D>();
                 if (col == null)
                 {
                     col = contents.AddComponent<BoxCollider2D>();
+                    changed = true;
                 }
 
-                col.size = TableSize;
-                col.offset = Vector2.zero;
-
-                Transform old = contents.transform.Find(SparkleName);
-                if (old != null)
+                if (col.size != TableSize)
                 {
-                    Object.DestroyImmediate(old.gameObject);
+                    col.size = TableSize;
+                    changed = true;
                 }
 
-                SpriteRenderer sparkle = CreateSpriteChild(contents.transform, SparkleName, circle, TableSize,
-                    settings.cleanSparkleColor, SalonSortOrder.TableSparkle);
-                sparkle.enabled = false;
+                if (col.offset != Vector2.zero)
+                {
+                    col.offset = Vector2.zero;
+                    changed = true;
+                }
+
+                changed |= EnsureSparkle(contents.transform, circle, settings, out SpriteRenderer sparkle);
 
                 var so = new SerializedObject(contents.GetComponent<Table>());
-                so.FindProperty("sparkle").objectReferenceValue = sparkle;
-                so.ApplyModifiedPropertiesWithoutUndo();
+                SerializedProperty sparkleProp = so.FindProperty("sparkle");
+                if (sparkleProp.objectReferenceValue != sparkle)
+                {
+                    sparkleProp.objectReferenceValue = sparkle;
+                    so.ApplyModifiedPropertiesWithoutUndo();
+                    changed = true;
+                }
 
-                PrefabUtility.SaveAsPrefabAsset(contents, TablePrefabPath);
+                if (changed)
+                {
+                    PrefabUtility.SaveAsPrefabAsset(contents, TablePrefabPath);
+                    Debug.Log("[SalonSceneBuilder] Table.prefab güncellendi.");
+                }
             }
             finally
             {
                 PrefabUtility.UnloadPrefabContents(contents);
             }
+        }
+
+        /// <summary>
+        /// Sparkle çocuğu yoksa oluşturur; varsa yalnızca farklı olan ayarlarını günceller.
+        /// Bir şey oluşturulduysa veya değiştiyse true döner.
+        /// </summary>
+        private static bool EnsureSparkle(Transform parent, Sprite circle, SalonSettings settings, out SpriteRenderer sparkle)
+        {
+            Transform tf = parent.Find(SparkleName);
+            if (tf == null)
+            {
+                sparkle = CreateSpriteChild(parent, SparkleName, circle, TableSize,
+                    settings.cleanSparkleColor, SalonSortOrder.TableSparkle);
+                sparkle.enabled = false;
+                return true;
+            }
+
+            bool changed = false;
+            sparkle = tf.GetComponent<SpriteRenderer>();
+            if (sparkle == null)
+            {
+                sparkle = tf.gameObject.AddComponent<SpriteRenderer>();
+                changed = true;
+            }
+
+            var scale = new Vector3(TableSize.x, TableSize.y, 1f);
+            if (tf.localScale != scale)
+            {
+                tf.localScale = scale;
+                changed = true;
+            }
+
+            if (tf.localPosition != Vector3.zero)
+            {
+                tf.localPosition = Vector3.zero;
+                changed = true;
+            }
+
+            if (tf.localRotation != Quaternion.identity)
+            {
+                tf.localRotation = Quaternion.identity;
+                changed = true;
+            }
+
+            if (sparkle.sprite != circle)
+            {
+                sparkle.sprite = circle;
+                changed = true;
+            }
+
+            if (sparkle.color != settings.cleanSparkleColor)
+            {
+                sparkle.color = settings.cleanSparkleColor;
+                changed = true;
+            }
+
+            if (sparkle.sortingOrder != SalonSortOrder.TableSparkle)
+            {
+                sparkle.sortingOrder = SalonSortOrder.TableSparkle;
+                changed = true;
+            }
+
+            // Parıltı başta kapalıdır; Table çalışma anında açar.
+            if (sparkle.enabled)
+            {
+                sparkle.enabled = false;
+                changed = true;
+            }
+
+            return changed;
         }
     }
 }

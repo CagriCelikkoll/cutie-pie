@@ -112,6 +112,32 @@ namespace CutiePie.Salon
             TraysChanged?.Invoke();
         }
 
+        /// <summary>
+        /// Tezgâhtaki tüm tepsileri içerikleriyle (tabak, dilim, bardak) siler. Yeni round başında SalonRound çağırır.
+        /// Silinen dilimler stoğa dönmez; vitrin stoğu round başında zaten yeniden doldurulur.
+        /// </summary>
+        public void ClearAll()
+        {
+            EnsureArray();
+            bool changed = false;
+            for (int i = 0; i < trays.Length; i++)
+            {
+                Tray tray = trays[i];
+                trays[i] = null;
+                if (tray != null)
+                {
+                    // Parçalar tepsinin alt nesneleri olduğu için tepsiyle birlikte silinir.
+                    Destroy(tray.gameObject);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                TraysChanged?.Invoke();
+            }
+        }
+
         private int FreeSlotIndex()
         {
             EnsureArray();
