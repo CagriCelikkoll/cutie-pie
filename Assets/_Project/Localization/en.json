@@ -27,7 +27,15 @@
     { "key": "round_end.back_to_shop", "value": "Back to bakery" },
     { "key": "round_end.upgrades", "value": "Upgrades" },
     { "key": "upgrades.title", "value": "Upgrades" },
+    { "key": "upgrades.your_gold", "value": "Your gold" },
+    { "key": "upgrades.level", "value": "Level {0}/{1}" },
+    { "key": "upgrades.buy", "value": "Buy" },
+    { "key": "upgrades.maxed", "value": "Max" },
+    { "key": "upgrade.extra_table.desc", "value": "Opens a new table for more customers." },
+    { "key": "upgrade.ready_tray.desc", "value": "Trays with plates get ready by themselves." },
+    { "key": "upgrade.auto_drink.desc", "value": "Drinks pop onto the tray by themselves." },
+    { "key": "upgrade.waiter.desc", "value": "A waiter carries the tray to the table for you." },
     { "key": "common.close", "value": "Close" },
-    { "key": "round_end.combo_none", "value": "–" }
+    { "key": "round_end.combo_none", "value": "-" }
   ]
 }

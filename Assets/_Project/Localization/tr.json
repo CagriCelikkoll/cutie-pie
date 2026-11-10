@@ -27,7 +27,15 @@
     { "key": "round_end.back_to_shop", "value": "Pastaneye dön" },
     { "key": "round_end.upgrades", "value": "Geliştirmeler" },
     { "key": "upgrades.title", "value": "Geliştirmeler" },
+    { "key": "upgrades.your_gold", "value": "Altının" },
+    { "key": "upgrades.level", "value": "Seviye {0}/{1}" },
+    { "key": "upgrades.buy", "value": "Satın al" },
+    { "key": "upgrades.maxed", "value": "Tam" },
+    { "key": "upgrade.extra_table.desc", "value": "Daha çok müşteri için yeni bir masa açar." },
+    { "key": "upgrade.ready_tray.desc", "value": "Tabaklı tepsiler kendiliğinden hazırlanır." },
+    { "key": "upgrade.auto_drink.desc", "value": "İçecekler kendiliğinden tepsiye gelir." },
+    { "key": "upgrade.waiter.desc", "value": "Garson tepsiyi masaya senin yerine götürür." },
     { "key": "common.close", "value": "Kapat" },
-    { "key": "round_end.combo_none", "value": "–" }
+    { "key": "round_end.combo_none", "value": "-" }
   ]
 }
