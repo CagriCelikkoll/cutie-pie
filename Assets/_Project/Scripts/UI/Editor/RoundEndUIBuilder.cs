@@ -1,4 +1,3 @@
-using System.IO;
 using CutiePie.Core;
 using CutiePie.Core.Localization;
 using TMPro;
@@ -11,41 +10,23 @@ using UnityEngine.UI;
 namespace CutiePie.UI.Editor
 {
     /// <summary>
-    /// Yalnızca editörde: G6 round sonu ekranını kurar. "Cutie Pie/UI/Round Sonu Panelini Kur" tekrar çalıştırılabilir:
-    /// yer tutucu sprite'ları (yuvarlak köşeli kutu, yıldız) ve RoundEndSettings asset'ini yoksa üretir,
-    /// RoundEndPanel.prefab'ı baştan kurar, prefab'ı Salon sahnesine ekler (yoksa) ve sahnedeki RoundManager'ı bağlar.
+    /// Yalnızca editörde: G6 round sonu ekranını ve G8 geliştirme mağazasını kurar.
+    /// "Cutie Pie/UI/Round Sonu Panelini Kur" tekrar çalıştırılabilir: yer tutucu sprite'ları ve RoundEndSettings asset'ini
+    /// yoksa üretir, UpgradeCard / UpgradesPanel / RoundEndPanel prefab'larını baştan kurar (UpgradesPanel, RoundEndPanel'in
+    /// içine iç içe prefab olarak girer), RoundEndPanel'i Salon sahnesine ekler (yoksa) ve sahnedeki RoundManager'ı bağlar.
     /// Renkler RoundEndSettings'ten okunur; buradaki sayılar yalnızca yerleşimdir (1920x1080 referans).
     /// </summary>
     public static class RoundEndUIBuilder
     {
         private const string MenuPath = "Cutie Pie/UI/Round Sonu Panelini Kur";
         private const string SalonSceneName = "Salon";
+        private const string PrefabPath = UIBuilderKit.PrefabFolder + "/RoundEndPanel.prefab";
 
-        private const string PrefabFolder = "Assets/_Project/Prefabs/UI";
-        private const string PrefabPath = PrefabFolder + "/RoundEndPanel.prefab";
-        private const string SettingsPath = "Assets/_Project/Data/Salon/RoundEndSettings.asset";
-        private const string PlaceholderFolder = "Assets/_Project/Art/Salon/Placeholders";
-        private const string RoundedSpritePath = PlaceholderFolder + "/RoundedRect.png";
-        private const string StarSpritePath = PlaceholderFolder + "/Star.png";
-
-        // Yuvarlak köşeli kutu dokusu: 9-slice kenarı köşe yarıçapından biraz geniş tutulur.
-        private const int RoundedTextureSize = 64;
-        private const int RoundedCornerRadius = 26;
-        private const int RoundedSliceBorder = 28;
-        private const int StarTextureSize = 128;
-        private const int StarPoints = 5;
-        private const float StarInnerRatio = 0.48f;
-        private const int Supersample = 4;
-        private const float SpritePixelsPerUnit = 100f;
-
-        // Canvas: TimerCanvas'ın (0) üstünde.
+        // Canvas: TimerCanvas'ın (0) üstünde; geliştirme paneli (20) bunun da üstündedir.
         private const int CanvasSortingOrder = 10;
-        private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
-        private const float MatchWidthOrHeight = 0.5f;
 
         // Kart yerleşimi (kart merkezine göre, referans piksel).
         private static readonly Vector2 CardSize = new Vector2(1120f, 920f);
-        private const float CardBorderWidth = 14f;
         private const float TitleY = 375f;
         private static readonly Vector2 TitleSize = new Vector2(1000f, 100f);
         private const float TitleFontSize = 76f;
@@ -65,19 +46,6 @@ namespace CutiePie.UI.Editor
         private static readonly Vector2 SecondaryButtonSize = new Vector2(480f, 104f);
         private const float PrimaryButtonFontSize = 48f;
         private const float SecondaryButtonFontSize = 42f;
-        private const float MinAutoFontSize = 24f;
-
-        // Geliştirmeler paneli.
-        private static readonly Vector2 UpgradesCardSize = new Vector2(900f, 600f);
-        private const float UpgradesTitleY = 215f;
-        private const float UpgradesBodyY = 20f;
-        private const float UpgradesBodyFontSize = 44f;
-        private const float UpgradesCloseY = -195f;
-
-        // Buton tonları (Image rengi butonun kendi rengidir; bunlar onun üstüne çarpılır).
-        private static readonly Color ButtonHighlighted = new Color(0.95f, 0.95f, 0.95f, 1f);
-        private static readonly Color ButtonPressed = new Color(0.82f, 0.82f, 0.82f, 1f);
-        private static readonly Color ButtonDisabled = new Color(0.7f, 0.7f, 0.7f, 0.5f);
 
         private const string KeyGold = "round_end.gold";
         private const string KeyTips = "round_end.tips";
@@ -89,9 +57,6 @@ namespace CutiePie.UI.Editor
         private const string KeyPlayAgain = "round_end.play_again";
         private const string KeyBackToShop = "round_end.back_to_shop";
         private const string KeyUpgrades = "round_end.upgrades";
-        private const string KeyUpgradesTitle = "upgrades.title";
-        private const string KeyComingSoon = "common.coming_soon";
-        private const string KeyClose = "common.close";
 
         [MenuItem(MenuPath)]
         private static void Build()
@@ -102,50 +67,40 @@ namespace CutiePie.UI.Editor
                 return;
             }
 
-            RoundEndSettings settings = GetOrCreateSettings();
-            Sprite rounded = GetOrCreateRoundedSprite();
-            Sprite star = GetOrCreateStarSprite();
+            RoundEndSettings settings = UIBuilderKit.GetOrCreateSettings();
+            Sprite rounded = UIBuilderKit.GetOrCreateRoundedSprite();
+            Sprite star = UIBuilderKit.GetOrCreateStarSprite();
 
-            GameObject prefab = BuildPrefab(settings, rounded, star);
+            GameObject upgradesPrefab = UpgradesUIBuilder.BuildPrefabs(settings, rounded);
+            GameObject prefab = BuildPrefab(settings, rounded, star, upgradesPrefab);
             RoundEndPanel panel = PlaceInScene(prefab);
             EnsureEventSystem();
 
             EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
             Selection.activeGameObject = panel.gameObject;
-            Debug.Log("[RoundEndUIBuilder] Round sonu paneli kuruldu. Sahneyi kaydetmeyi unutmayın (Ctrl+S).");
+            Debug.Log("[RoundEndUIBuilder] Round sonu paneli ve geliştirme mağazası kuruldu. Sahneyi kaydetmeyi unutmayın (Ctrl+S).");
         }
 
         // ------------------------------------------------------------------ Prefab
 
-        private static GameObject BuildPrefab(RoundEndSettings settings, Sprite rounded, Sprite star)
+        private static GameObject BuildPrefab(RoundEndSettings settings, Sprite rounded, Sprite star, GameObject upgradesPrefab)
         {
-            EnsureFolder(PrefabFolder);
-
             var root = new GameObject("RoundEndPanel", typeof(RectTransform));
             try
             {
-                var canvas = root.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.sortingOrder = CanvasSortingOrder;
-
-                var scaler = root.AddComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = ReferenceResolution;
-                scaler.matchWidthOrHeight = MatchWidthOrHeight;
-                root.AddComponent<GraphicRaycaster>();
-
+                UIBuilderKit.SetupCanvas(root, CanvasSortingOrder);
                 RoundEndPanel panel = root.AddComponent<RoundEndPanel>();
 
                 // İçerik: perde + kart.
-                RectTransform content = CreateStretched(root.transform, "Content");
-                CreateDim(content, settings);
-                RectTransform card = CreateCard(content, "Card", CardSize, rounded, settings);
+                RectTransform content = UIBuilderKit.CreateStretched(root.transform, "Content");
+                UIBuilderKit.CreateDim(content, settings);
+                RectTransform card = UIBuilderKit.CreateCard(content, "Card", CardSize, rounded, settings);
 
-                LocalizedText title = CreateText(card, "Title", KeyTitle, new Vector2(0f, TitleY), TitleSize,
+                LocalizedText title = UIBuilderKit.CreateText(card, "Title", KeyTitle, new Vector2(0f, TitleY), TitleSize,
                     TitleFontSize, settings.textColor, TextAlignmentOptions.Center).GetComponent<LocalizedText>();
 
-                RectTransform earlyRow = CreateRect(card, "EarlyEndRow", new Vector2(0f, EarlyEndY), EarlyEndSize);
-                LocalizedText earlyText = CreateText(earlyRow, "Text", KeyEarlyReason, Vector2.zero, EarlyEndSize,
+                RectTransform earlyRow = UIBuilderKit.CreateRect(card, "EarlyEndRow", new Vector2(0f, EarlyEndY), EarlyEndSize);
+                LocalizedText earlyText = UIBuilderKit.CreateText(earlyRow, "Text", KeyEarlyReason, Vector2.zero, EarlyEndSize,
                     EarlyEndFontSize, settings.earlyEndColor, TextAlignmentOptions.Center).GetComponent<LocalizedText>();
                 earlyRow.gameObject.SetActive(false);
 
@@ -155,16 +110,23 @@ namespace CutiePie.UI.Editor
                 TMP_Text tipsValue = CreateStatRow(card, "TipsRow", KeyTips, StatRowY[1], rounded, settings, null);
                 TMP_Text comboValue = CreateStatRow(card, "ComboRow", KeyBestCombo, StatRowY[2], rounded, settings, KeyComboValue);
 
-                Button playAgain = CreateButton(card, "PlayAgainButton", KeyPlayAgain, new Vector2(-ButtonColumnX, ButtonRowY[0]),
-                    PrimaryButtonSize, PrimaryButtonFontSize, settings.playAgainColor, rounded, settings);
-                Button adButton = CreateButton(card, "AdButton", KeyWatchAd, new Vector2(ButtonColumnX, ButtonRowY[0]),
-                    PrimaryButtonSize, PrimaryButtonFontSize, settings.adButtonColor, rounded, settings);
-                Button shop = CreateButton(card, "ShopButton", KeyBackToShop, new Vector2(-ButtonColumnX, ButtonRowY[1]),
-                    SecondaryButtonSize, SecondaryButtonFontSize, settings.shopButtonColor, rounded, settings);
-                Button upgrades = CreateButton(card, "UpgradesButton", KeyUpgrades, new Vector2(ButtonColumnX, ButtonRowY[1]),
-                    SecondaryButtonSize, SecondaryButtonFontSize, settings.upgradesButtonColor, rounded, settings);
+                Button playAgain = UIBuilderKit.CreateButton(card, "PlayAgainButton", KeyPlayAgain,
+                    new Vector2(-ButtonColumnX, ButtonRowY[0]), PrimaryButtonSize, PrimaryButtonFontSize,
+                    settings.playAgainColor, rounded, settings);
+                Button adButton = UIBuilderKit.CreateButton(card, "AdButton", KeyWatchAd,
+                    new Vector2(ButtonColumnX, ButtonRowY[0]), PrimaryButtonSize, PrimaryButtonFontSize,
+                    settings.adButtonColor, rounded, settings);
+                Button shop = UIBuilderKit.CreateButton(card, "ShopButton", KeyBackToShop,
+                    new Vector2(-ButtonColumnX, ButtonRowY[1]), SecondaryButtonSize, SecondaryButtonFontSize,
+                    settings.shopButtonColor, rounded, settings);
+                Button upgrades = UIBuilderKit.CreateButton(card, "UpgradesButton", KeyUpgrades,
+                    new Vector2(ButtonColumnX, ButtonRowY[1]), SecondaryButtonSize, SecondaryButtonFontSize,
+                    settings.upgradesButtonColor, rounded, settings);
 
-                UpgradesPanel upgradesPanel = CreateUpgradesPanel(root.transform, rounded, settings);
+                // Geliştirme mağazası ayrı prefab; burada iç içe örneği durur (alt Canvas olarak ölçeği bu Canvas'tan alır).
+                var upgradesInstance = (GameObject)PrefabUtility.InstantiatePrefab(upgradesPrefab, root.transform);
+                UIBuilderKit.PrepareNestedCanvas(upgradesInstance, UpgradesUIBuilder.CanvasSortingOrder);
+                UpgradesPanel upgradesPanel = upgradesInstance.GetComponent<UpgradesPanel>();
 
                 var so = new SerializedObject(panel);
                 so.FindProperty("settings").objectReferenceValue = settings;
@@ -195,44 +157,18 @@ namespace CutiePie.UI.Editor
             }
         }
 
-        private static void CreateDim(Transform parent, RoundEndSettings settings)
-        {
-            RectTransform dim = CreateStretched(parent, "Dim");
-            Image image = dim.gameObject.AddComponent<Image>();
-            image.color = settings.dimColor;
-
-            // Perde tıklamaları yutar; alttaki salona dokunulmaz.
-            image.raycastTarget = true;
-        }
-
-        /// <summary>Kenarlıklı, yuvarlak köşeli kart; içindeki parçalar dönen RectTransform'a eklenir.</summary>
-        private static RectTransform CreateCard(Transform parent, string name, Vector2 size, Sprite rounded, RoundEndSettings settings)
-        {
-            RectTransform border = CreateRect(parent, name, Vector2.zero, size + Vector2.one * (CardBorderWidth * 2f));
-            AddSlicedImage(border.gameObject, rounded, settings.cardBorderColor);
-
-            RectTransform card = CreateRect(border, "Inner", Vector2.zero, size);
-            AddSlicedImage(card.gameObject, rounded, settings.cardColor);
-            return card;
-        }
-
         private static StarRow CreateStars(Transform card, Sprite star, RoundEndSettings settings)
         {
             float width = StarSize * 3f + StarSpacing * 2f;
-            RectTransform row = CreateRect(card, "Stars", new Vector2(0f, StarsY), new Vector2(width, StarSize));
+            RectTransform row = UIBuilderKit.CreateRect(card, "Stars", new Vector2(0f, StarsY), new Vector2(width, StarSize));
             StarRow starRow = row.gameObject.AddComponent<StarRow>();
 
             var images = new Object[3];
             for (int i = 0; i < images.Length; i++)
             {
                 float x = (i - 1) * (StarSize + StarSpacing);
-                RectTransform tf = CreateRect(row, $"Star_{i + 1}", new Vector2(x, 0f), new Vector2(StarSize, StarSize));
-                Image image = tf.gameObject.AddComponent<Image>();
-                image.sprite = star;
-                image.color = settings.starEmptyColor;
-                image.preserveAspect = true;
-                image.raycastTarget = false;
-                images[i] = image;
+                images[i] = UIBuilderKit.CreateIcon(row, $"Star_{i + 1}", new Vector2(x, 0f), StarSize, star,
+                    settings.starEmptyColor);
             }
 
             var so = new SerializedObject(starRow);
@@ -251,14 +187,14 @@ namespace CutiePie.UI.Editor
         private static TMP_Text CreateStatRow(Transform card, string name, string labelKey, float y, Sprite rounded,
             RoundEndSettings settings, string valueKey)
         {
-            RectTransform row = CreateRect(card, name, new Vector2(0f, y), StatRowSize);
-            AddSlicedImage(row.gameObject, rounded, settings.statRowColor).raycastTarget = false;
+            RectTransform row = UIBuilderKit.CreateRect(card, name, new Vector2(0f, y), StatRowSize);
+            UIBuilderKit.AddSlicedImage(row.gameObject, rounded, settings.statRowColor).raycastTarget = false;
 
             var textSize = new Vector2(StatRowSize.x * 0.5f - StatPaddingX, StatRowSize.y);
             float textX = StatRowSize.x * 0.25f - StatPaddingX * 0.5f;
-            CreateText(row, "Label", labelKey, new Vector2(-textX, 0f), textSize, StatFontSize, settings.textColor,
+            UIBuilderKit.CreateText(row, "Label", labelKey, new Vector2(-textX, 0f), textSize, StatFontSize, settings.textColor,
                 TextAlignmentOptions.MidlineLeft);
-            TMP_Text value = CreateText(row, "Value", valueKey, new Vector2(textX, 0f), textSize, StatFontSize,
+            TMP_Text value = UIBuilderKit.CreateText(row, "Value", valueKey, new Vector2(textX, 0f), textSize, StatFontSize,
                 settings.textColor, TextAlignmentOptions.MidlineRight);
             if (valueKey == null)
             {
@@ -266,56 +202,6 @@ namespace CutiePie.UI.Editor
             }
 
             return value;
-        }
-
-        private static Button CreateButton(Transform parent, string name, string key, Vector2 position, Vector2 size,
-            float fontSize, Color color, Sprite rounded, RoundEndSettings settings)
-        {
-            RectTransform tf = CreateRect(parent, name, position, size);
-            Image image = AddSlicedImage(tf.gameObject, rounded, color);
-
-            Button button = tf.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
-            ColorBlock colors = button.colors;
-            colors.normalColor = Color.white;
-            colors.highlightedColor = ButtonHighlighted;
-            colors.selectedColor = Color.white;
-            colors.pressedColor = ButtonPressed;
-            colors.disabledColor = ButtonDisabled;
-            button.colors = colors;
-
-            // Dokunmatikte seçili kalma görünümü olmasın.
-            Navigation navigation = button.navigation;
-            navigation.mode = Navigation.Mode.None;
-            button.navigation = navigation;
-
-            CreateText(tf, "Label", key, Vector2.zero, size, fontSize, settings.buttonTextColor, TextAlignmentOptions.Center);
-            return button;
-        }
-
-        private static UpgradesPanel CreateUpgradesPanel(Transform root, Sprite rounded, RoundEndSettings settings)
-        {
-            RectTransform panelTf = CreateStretched(root, "UpgradesPanel");
-            UpgradesPanel panel = panelTf.gameObject.AddComponent<UpgradesPanel>();
-
-            RectTransform content = CreateStretched(panelTf, "Content");
-            CreateDim(content, settings);
-            RectTransform card = CreateCard(content, "Card", UpgradesCardSize, rounded, settings);
-
-            CreateText(card, "Title", KeyUpgradesTitle, new Vector2(0f, UpgradesTitleY), TitleSize, TitleFontSize,
-                settings.textColor, TextAlignmentOptions.Center);
-            CreateText(card, "Body", KeyComingSoon, new Vector2(0f, UpgradesBodyY), TitleSize, UpgradesBodyFontSize,
-                settings.textColor, TextAlignmentOptions.Center);
-            Button close = CreateButton(card, "CloseButton", KeyClose, new Vector2(0f, UpgradesCloseY), SecondaryButtonSize,
-                SecondaryButtonFontSize, settings.closeButtonColor, rounded, settings);
-
-            var so = new SerializedObject(panel);
-            so.FindProperty("content").objectReferenceValue = content.gameObject;
-            so.FindProperty("closeButton").objectReferenceValue = close;
-            so.ApplyModifiedPropertiesWithoutUndo();
-
-            content.gameObject.SetActive(false);
-            return panel;
         }
 
         // ------------------------------------------------------------------ Sahne
@@ -352,206 +238,6 @@ namespace CutiePie.UI.Editor
 
             var go = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             Undo.RegisterCreatedObjectUndo(go, "EventSystem");
-        }
-
-        // ------------------------------------------------------------------ UI yardımcıları
-
-        private static RectTransform CreateRect(Transform parent, string name, Vector2 position, Vector2 size)
-        {
-            var go = new GameObject(name, typeof(RectTransform));
-            var tf = (RectTransform)go.transform;
-            tf.SetParent(parent, false);
-            tf.anchorMin = tf.anchorMax = tf.pivot = new Vector2(0.5f, 0.5f);
-            tf.anchoredPosition = position;
-            tf.sizeDelta = size;
-            return tf;
-        }
-
-        private static RectTransform CreateStretched(Transform parent, string name)
-        {
-            var go = new GameObject(name, typeof(RectTransform));
-            var tf = (RectTransform)go.transform;
-            tf.SetParent(parent, false);
-            tf.anchorMin = Vector2.zero;
-            tf.anchorMax = Vector2.one;
-            tf.offsetMin = tf.offsetMax = Vector2.zero;
-            return tf;
-        }
-
-        private static Image AddSlicedImage(GameObject go, Sprite sprite, Color color)
-        {
-            Image image = go.AddComponent<Image>();
-            image.sprite = sprite;
-            image.type = Image.Type.Sliced;
-            image.color = color;
-            return image;
-        }
-
-        /// <summary>TMP metni; key verilirse LocalizedText eklenir ve metin çalışma zamanında yerelleştirme dosyasından gelir.</summary>
-        private static TMP_Text CreateText(Transform parent, string name, string key, Vector2 position, Vector2 size,
-            float fontSize, Color color, TextAlignmentOptions alignment)
-        {
-            RectTransform tf = CreateRect(parent, name, position, size);
-            TextMeshProUGUI text = tf.gameObject.AddComponent<TextMeshProUGUI>();
-            text.font = TMP_Settings.defaultFontAsset;
-            text.fontStyle = FontStyles.Bold;
-            text.color = color;
-            text.alignment = alignment;
-            text.enableWordWrapping = true;
-            text.enableAutoSizing = true;
-            text.fontSizeMin = MinAutoFontSize;
-            text.fontSizeMax = fontSize;
-            text.fontSize = fontSize;
-            text.raycastTarget = false;
-
-            if (!string.IsNullOrEmpty(key))
-            {
-                // Editörde anahtar görünür; oyunda LocalizedText gerçek metni yazar.
-                text.text = key;
-                LocalizedText localized = tf.gameObject.AddComponent<LocalizedText>();
-                var so = new SerializedObject(localized);
-                so.FindProperty("key").stringValue = key;
-                so.ApplyModifiedPropertiesWithoutUndo();
-            }
-
-            return text;
-        }
-
-        // ------------------------------------------------------------------ Asset'ler
-
-        private static RoundEndSettings GetOrCreateSettings()
-        {
-            var settings = AssetDatabase.LoadAssetAtPath<RoundEndSettings>(SettingsPath);
-            if (settings != null)
-            {
-                return settings;
-            }
-
-            EnsureFolder(Path.GetDirectoryName(SettingsPath)?.Replace('\\', '/'));
-            settings = ScriptableObject.CreateInstance<RoundEndSettings>();
-            AssetDatabase.CreateAsset(settings, SettingsPath);
-            AssetDatabase.SaveAssets();
-            return settings;
-        }
-
-        private static Sprite GetOrCreateRoundedSprite()
-        {
-            var existing = AssetDatabase.LoadAssetAtPath<Sprite>(RoundedSpritePath);
-            if (existing != null)
-            {
-                return existing;
-            }
-
-            int size = RoundedTextureSize;
-            float r = RoundedCornerRadius;
-            return WriteSprite(RoundedSpritePath, size, (x, y) =>
-            {
-                // Köşe dairelerinin merkezine olan uzaklık; kenar ortalarında köşe yok.
-                float dx = Mathf.Max(0f, Mathf.Max(r - x, x - (size - r)));
-                float dy = Mathf.Max(0f, Mathf.Max(r - y, y - (size - r)));
-                return dx * dx + dy * dy <= r * r;
-            }, new Vector4(RoundedSliceBorder, RoundedSliceBorder, RoundedSliceBorder, RoundedSliceBorder));
-        }
-
-        private static Sprite GetOrCreateStarSprite()
-        {
-            var existing = AssetDatabase.LoadAssetAtPath<Sprite>(StarSpritePath);
-            if (existing != null)
-            {
-                return existing;
-            }
-
-            int size = StarTextureSize;
-            float center = size * 0.5f;
-            float outer = center * 0.96f;
-            float inner = outer * StarInnerRatio;
-
-            // Uçları ve iç köşeleri sırayla dizilen çokgen; ilk uç yukarı bakar.
-            var polygon = new Vector2[StarPoints * 2];
-            for (int i = 0; i < polygon.Length; i++)
-            {
-                float angle = Mathf.PI * 0.5f + i * Mathf.PI / StarPoints;
-                float radius = i % 2 == 0 ? outer : inner;
-                polygon[i] = new Vector2(center + Mathf.Cos(angle) * radius, center + Mathf.Sin(angle) * radius);
-            }
-
-            return WriteSprite(StarSpritePath, size, (x, y) => InsidePolygon(polygon, new Vector2(x, y)), Vector4.zero);
-        }
-
-        // Beyaz şekil dokusu yazar (kenarlar Supersample x Supersample örnekle yumuşatılır) ve Sprite olarak içe aktarır.
-        private static Sprite WriteSprite(string path, int size, System.Func<float, float, bool> inside, Vector4 border)
-        {
-            EnsureFolder(Path.GetDirectoryName(path)?.Replace('\\', '/'));
-
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            var pixels = new Color32[size * size];
-            float step = 1f / Supersample;
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    int hits = 0;
-                    for (int sy = 0; sy < Supersample; sy++)
-                    {
-                        for (int sx = 0; sx < Supersample; sx++)
-                        {
-                            if (inside(x + (sx + 0.5f) * step, y + (sy + 0.5f) * step))
-                            {
-                                hits++;
-                            }
-                        }
-                    }
-
-                    byte alpha = (byte)(255 * hits / (Supersample * Supersample));
-                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
-                }
-            }
-
-            texture.SetPixels32(pixels);
-            File.WriteAllBytes(path, texture.EncodeToPNG());
-            Object.DestroyImmediate(texture);
-
-            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
-            var importer = (TextureImporter)AssetImporter.GetAtPath(path);
-            importer.textureType = TextureImporterType.Sprite;
-            importer.spriteImportMode = SpriteImportMode.Single;
-            importer.spritePixelsPerUnit = SpritePixelsPerUnit;
-            importer.spriteBorder = border;
-            importer.mipmapEnabled = false;
-            importer.alphaIsTransparency = true;
-            importer.wrapMode = TextureWrapMode.Clamp;
-            importer.SaveAndReimport();
-
-            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
-        }
-
-        private static bool InsidePolygon(Vector2[] polygon, Vector2 point)
-        {
-            bool inside = false;
-            for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
-            {
-                Vector2 a = polygon[i];
-                Vector2 b = polygon[j];
-                if ((a.y > point.y) != (b.y > point.y) &&
-                    point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x)
-                {
-                    inside = !inside;
-                }
-            }
-
-            return inside;
-        }
-
-        private static void EnsureFolder(string folder)
-        {
-            if (string.IsNullOrEmpty(folder) || AssetDatabase.IsValidFolder(folder))
-            {
-                return;
-            }
-
-            string parent = Path.GetDirectoryName(folder)?.Replace('\\', '/');
-            EnsureFolder(parent);
-            AssetDatabase.CreateFolder(parent, Path.GetFileName(folder));
         }
     }
 }

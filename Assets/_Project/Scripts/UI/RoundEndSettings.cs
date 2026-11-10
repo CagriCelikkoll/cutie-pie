@@ -3,7 +3,7 @@ using UnityEngine;
 namespace CutiePie.UI
 {
     /// <summary>
-    /// Round sonu ekranının zamanlama ve renk ayarları. Asset: Assets/_Project/Data/Salon/RoundEndSettings.asset
+    /// Round sonu ekranının ve geliştirme mağazasının zamanlama ve renk ayarları. Asset: Assets/_Project/Data/Salon/RoundEndSettings.asset
     /// (RoundEndUIBuilder yoksa oluşturur). Süreler gerçek zamanlı saniyedir (Time.timeScale'den etkilenmez).
     /// </summary>
     [CreateAssetMenu(fileName = "RoundEndSettings", menuName = "Cutie Pie/UI/Round End Settings")]
@@ -49,5 +49,21 @@ namespace CutiePie.UI
         public Color upgradesButtonColor = new Color(0.82f, 0.7f, 0.96f, 1f);
         public Color closeButtonColor = new Color(0.98f, 0.7f, 0.76f, 1f);
         public Color buttonTextColor = new Color(0.3f, 0.2f, 0.25f, 1f);
+
+        [Header("Geliştirme mağazası")]
+        [Tooltip("Her geliştirme kartının zemini.")]
+        public Color upgradeCardColor = new Color(1f, 0.91f, 0.86f, 1f);
+
+        [Tooltip("Geliştirmenin simgesi yoksa görünen yer tutucu kutunun rengi.")]
+        public Color upgradeIconColor = new Color(0.82f, 0.7f, 0.96f, 1f);
+
+        [Tooltip("Satın alınabilir geliştirmenin buton rengi. Altın yetmezse buton soluk görünür.")]
+        public Color buyButtonColor = new Color(0.55f, 0.84f, 0.62f, 1f);
+
+        [Tooltip("En üst seviyedeki geliştirmenin \"Tam\" buton rengi (soluklaşmaz).")]
+        public Color maxedButtonColor = new Color(1f, 0.82f, 0.38f, 1f);
+
+        [Tooltip("Altın simgesi (fiyat ve mevcut altın).")]
+        public Color goldIconColor = new Color(1f, 0.76f, 0.2f, 1f);
     }
 }
