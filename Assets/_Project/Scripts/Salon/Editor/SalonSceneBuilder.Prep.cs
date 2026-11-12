@@ -18,6 +18,7 @@ namespace CutiePie.Salon.Editor
         // Kutunun görseli; kök ölçeksiz kalır ki altına konan parçalar ezilmesin.
         private const string PrepVisualName = "Visual";
         private const string OrderTicketName = "OrderTicket";
+        private const string ReadyTrayStationName = "ReadyTrayStation";
 
         // Prefab yolları.
         private const string TrayPrefabPath = PrefabFolder + "/Tray.prefab";
@@ -158,15 +159,16 @@ namespace CutiePie.Salon.Editor
 
             // Sahne parçaları.
             PrepCounter counter = SetupPrepCounter(prepArea, registry, settings);
-            SetupTrayStack(prepArea, settings, registry, trayPrefab, counter);
-            SetupPlateStack(prepArea, settings, registry, platePrefab, counter);
+            TrayStack trayStack = SetupTrayStack(prepArea, settings, registry, trayPrefab, counter);
+            PlateStack plateStack = SetupPlateStack(prepArea, settings, registry, platePrefab, counter);
+            ReadyTrayStation readyTrayStation = SetupReadyTrayStation(prepArea, settings, counter, trayStack, plateStack);
             ProductShelf cakeShelf = SetupShelf(prepArea, BoxCakeShowcase, ProductCategory.Cake, showcaseSlotPrefab, settings, registry, square);
             ProductShelf drinkShelf = SetupShelf(prepArea, BoxDrinks, ProductCategory.Drink, drinkSlotPrefab, settings, registry, square);
             SetupTrashBin(prepArea, registry);
             SetupOrderTicket(prepArea, ticketPrefab, counter);
 
             EnsureCustomerTapCollider(settings);
-            WireSalonRoundPrep(root, stock, cakeShelf, drinkShelf);
+            WireSalonRoundPrep(root, stock, cakeShelf, drinkShelf, readyTrayStation);
 
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
             Selection.activeGameObject = prepArea.gameObject;
@@ -241,7 +243,7 @@ namespace CutiePie.Salon.Editor
             return counter;
         }
 
-        private static void SetupTrayStack(Transform prepArea, SalonSettings settings, DropTargetRegistry registry, Tray trayPrefab, PrepCounter counter)
+        private static TrayStack SetupTrayStack(Transform prepArea, SalonSettings settings, DropTargetRegistry registry, Tray trayPrefab, PrepCounter counter)
         {
             Transform stackTf = prepArea.Find(BoxTrayStack);
             TrayStack stack = GetOrAddComponent<TrayStack>(stackTf.gameObject);
@@ -255,9 +257,10 @@ namespace CutiePie.Salon.Editor
             so.ApplyModifiedProperties();
 
             AssignDragItem(GetOrAddComponent<DragItem>(stackTf.gameObject), settings, registry);
+            return stack;
         }
 
-        private static void SetupPlateStack(Transform prepArea, SalonSettings settings, DropTargetRegistry registry, ServingItem platePrefab, PrepCounter counter)
+        private static PlateStack SetupPlateStack(Transform prepArea, SalonSettings settings, DropTargetRegistry registry, ServingItem platePrefab, PrepCounter counter)
         {
             Transform stackTf = prepArea.Find(BoxPlateStack);
             PlateStack stack = GetOrAddComponent<PlateStack>(stackTf.gameObject);
@@ -270,6 +273,28 @@ namespace CutiePie.Salon.Editor
             so.ApplyModifiedProperties();
 
             AssignDragItem(GetOrAddComponent<DragItem>(stackTf.gameObject), settings, registry);
+            return stack;
+        }
+
+        /// <summary>Görseli olmayan istasyon nesnesi (PrepArea/ReadyTrayStation); tekrar çalıştırılınca yalnızca referanslar güncellenir.</summary>
+        private static ReadyTrayStation SetupReadyTrayStation(Transform prepArea, SalonSettings settings, PrepCounter counter,
+            TrayStack trayStack, PlateStack plateStack)
+        {
+            Transform stationTf = prepArea.Find(ReadyTrayStationName);
+            if (stationTf == null)
+            {
+                stationTf = CreatePoint(prepArea, ReadyTrayStationName, Vector2.zero);
+            }
+
+            ReadyTrayStation station = GetOrAddComponent<ReadyTrayStation>(stationTf.gameObject);
+
+            var so = new SerializedObject(station);
+            so.FindProperty("settings").objectReferenceValue = settings;
+            so.FindProperty("counter").objectReferenceValue = counter;
+            so.FindProperty("trayStack").objectReferenceValue = trayStack;
+            so.FindProperty("plateStack").objectReferenceValue = plateStack;
+            so.ApplyModifiedProperties();
+            return station;
         }
 
         private static ProductShelf SetupShelf(Transform prepArea, string boxName, ProductCategory category, ShelfSlot slotPrefab,
@@ -352,12 +377,14 @@ namespace CutiePie.Salon.Editor
             SetObjectField(go.GetComponent<OrderTicket>(), "counter", counter);
         }
 
-        private static void WireSalonRoundPrep(Transform root, LocalShowcaseStock stock, ProductShelf cakeShelf, ProductShelf drinkShelf)
+        private static void WireSalonRoundPrep(Transform root, LocalShowcaseStock stock, ProductShelf cakeShelf, ProductShelf drinkShelf,
+            ReadyTrayStation readyTrayStation)
         {
             var so = new SerializedObject(GetOrCreateSalonRound(root));
             so.FindProperty("showcaseStock").objectReferenceValue = stock;
             so.FindProperty("cakeShelf").objectReferenceValue = cakeShelf;
             so.FindProperty("drinkShelf").objectReferenceValue = drinkShelf;
+            so.FindProperty("readyTrayStation").objectReferenceValue = readyTrayStation;
             so.ApplyModifiedProperties();
         }
 

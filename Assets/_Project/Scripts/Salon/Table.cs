@@ -9,6 +9,7 @@ namespace CutiePie.Salon
     /// Tepsi için bırakma hedefidir: hazır tepsi masanın yakınına bırakılınca teslim OrderDelivery'ye devredilir.
     /// Müşteri yiyip kalkınca masa kirlenir (boş tabak kalır); kirli masaya dokununca temizlenir.
     /// Dokunma alanı prefab'taki BoxCollider2D'dir; masadaki tepsiye dokunulsa da tıklama masaya çıkar.
+    /// Kilitli masa geliştirmeyle açılınca kısa bir "açılma" animasyonu oynar (gövde büyüyüp küçülür, parıltı söner).
     /// </summary>
     public class Table : MonoBehaviour, IDropTarget, IPointerClickHandler
     {
@@ -31,7 +32,9 @@ namespace CutiePie.Salon
         private DropTargetRegistry registry;
         private OrderDelivery delivery;
         private Vector3 sparkleBaseScale = Vector3.one;
+        private Vector3 bodyBaseScale = Vector3.one;
         private float cleanTimeLeft;
+        private float unlockTimeLeft;
 
         public int Index => index;
         public TableState State { get; private set; } = TableState.Locked;
@@ -40,6 +43,9 @@ namespace CutiePie.Salon
 
         /// <summary>Temizlik parıltısı sürüyor (masa bu sırada hâlâ Dirty).</summary>
         public bool IsCleaning { get; private set; }
+
+        /// <summary>Açılma animasyonu sürüyor (masa bu sırada Empty'dir ve müşteri alabilir).</summary>
+        public bool IsUnlocking { get; private set; }
 
         /// <summary>Masaya ayrılmış müşteri (yoldayken de); yoksa null.</summary>
         public Customer Occupant { get; private set; }
@@ -56,14 +62,17 @@ namespace CutiePie.Salon
         /// <summary>
         /// TableManager kurulumda çağırır: ayarları verir, başlangıç durumunu belirler ve masayı bırakma hedefi olarak kaydeder.
         /// registry veya delivery yoksa masaya tepsi bırakılamaz.
+        /// animateUnlock: masa açık kurulacaksa açılma animasyonu oynatılır (TableManager yalnızca yeni açılan masada ister).
         /// </summary>
-        public void Initialize(SalonSettings salonSettings, bool open, DropTargetRegistry dropTargets, OrderDelivery orderDelivery)
+        public void Initialize(SalonSettings salonSettings, bool open, DropTargetRegistry dropTargets, OrderDelivery orderDelivery,
+            bool animateUnlock = false)
         {
             settings = salonSettings;
             delivery = orderDelivery;
             Occupant = null;
             ClearServedTray();
             StopSparkle();
+            StopUnlock();
 
             if (registry != null && registry != dropTargets)
             {
@@ -77,6 +86,11 @@ namespace CutiePie.Salon
             }
 
             SetState(open ? TableState.Empty : TableState.Locked, true);
+
+            if (open && animateUnlock)
+            {
+                StartUnlock();
+            }
         }
 
         private void Awake()
@@ -85,6 +99,11 @@ namespace CutiePie.Salon
             {
                 sparkleBaseScale = sparkle.transform.localScale;
                 sparkle.enabled = false;
+            }
+
+            if (body != null)
+            {
+                bodyBaseScale = body.transform.localScale;
             }
         }
 
@@ -98,15 +117,22 @@ namespace CutiePie.Salon
 
         private void Update()
         {
-            if (!IsCleaning)
+            if (IsCleaning)
             {
-                return;
+                UpdateCleaning();
             }
+            else if (IsUnlocking)
+            {
+                UpdateUnlock();
+            }
+        }
 
+        private void UpdateCleaning()
+        {
             cleanTimeLeft -= Time.deltaTime;
             if (cleanTimeLeft > 0f)
             {
-                UpdateSparkle(1f - cleanTimeLeft / settings.cleanSparkleDuration);
+                UpdateSparkle(1f - cleanTimeLeft / settings.cleanSparkleDuration, settings.cleanSparkleMaxScale, settings.cleanSparkleColor);
                 return;
             }
 
@@ -114,7 +140,11 @@ namespace CutiePie.Salon
             SetState(TableState.Empty);
         }
 
-        public void Lock() => SetState(TableState.Locked);
+        public void Lock()
+        {
+            StopUnlock();
+            SetState(TableState.Locked);
+        }
 
         public void Unlock()
         {
@@ -180,6 +210,9 @@ namespace CutiePie.Salon
 
             ClearServedTray();
 
+            // Parıltı görseli ortaktır; açılma animasyonu sürüyorsa bitirilir.
+            StopUnlock();
+
             // Ayarlar yoksa parıltı oynatılamaz; masa hemen boşalır.
             if (settings == null)
             {
@@ -194,7 +227,7 @@ namespace CutiePie.Salon
                 sparkle.enabled = true;
             }
 
-            UpdateSparkle(0f);
+            UpdateSparkle(0f, settings.cleanSparkleMaxScale, settings.cleanSparkleColor);
             return true;
         }
 
@@ -230,18 +263,83 @@ namespace CutiePie.Salon
             ServedTray = null;
         }
 
-        // t: 0 → 1 parıltı ilerlemesi; büyür ve söner.
-        private void UpdateSparkle(float t)
+        // t: 0 → 1 parıltı ilerlemesi; maxScale'e büyür ve söner. Temizlik ve açılma aynı görseli kullanır.
+        private void UpdateSparkle(float t, float maxScale, Color baseColor)
         {
             if (sparkle == null)
             {
                 return;
             }
 
-            sparkle.transform.localScale = sparkleBaseScale * Mathf.Lerp(1f, settings.cleanSparkleMaxScale, t);
-            Color color = settings.cleanSparkleColor;
+            sparkle.transform.localScale = sparkleBaseScale * Mathf.Lerp(1f, maxScale, t);
+            Color color = baseColor;
             color.a = Mathf.Lerp(color.a, 0f, t);
             sparkle.color = color;
+        }
+
+        // --- Açılma animasyonu ---
+
+        private void StartUnlock()
+        {
+            // Ayarlar yoksa animasyon oynatılamaz; masa yine de açıktır.
+            if (settings == null)
+            {
+                return;
+            }
+
+            IsUnlocking = true;
+            unlockTimeLeft = settings.tableUnlockDuration;
+            if (sparkle != null)
+            {
+                sparkle.enabled = true;
+            }
+
+            ApplyUnlockProgress(0f);
+        }
+
+        private void UpdateUnlock()
+        {
+            unlockTimeLeft -= Time.deltaTime;
+            if (unlockTimeLeft > 0f)
+            {
+                ApplyUnlockProgress(1f - unlockTimeLeft / settings.tableUnlockDuration);
+                return;
+            }
+
+            StopUnlock();
+        }
+
+        // t: 0 → 1. Gövde sinüs eğrisiyle büyüyüp eski boyuna döner; parıltı büyüyerek söner.
+        private void ApplyUnlockProgress(float t)
+        {
+            if (body != null)
+            {
+                float pop = Mathf.Sin(t * Mathf.PI);
+                body.transform.localScale = bodyBaseScale * Mathf.Lerp(1f, settings.tableUnlockBodyMaxScale, pop);
+            }
+
+            UpdateSparkle(t, settings.tableUnlockSparkleMaxScale, settings.tableUnlockSparkleColor);
+        }
+
+        private void StopUnlock()
+        {
+            if (!IsUnlocking)
+            {
+                return;
+            }
+
+            IsUnlocking = false;
+            unlockTimeLeft = 0f;
+            if (body != null)
+            {
+                body.transform.localScale = bodyBaseScale;
+            }
+
+            if (sparkle != null)
+            {
+                sparkle.enabled = false;
+                sparkle.transform.localScale = sparkleBaseScale;
+            }
         }
 
         private void StopSparkle()
