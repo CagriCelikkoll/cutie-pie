@@ -41,6 +41,32 @@ namespace CutiePie.Core
         /// <summary>Geliştirme satın alındı. newLevel: geliştirmenin yeni seviyesi.</summary>
         public static event Action<UpgradeData, int> UpgradePurchased;
 
+        // --- Stok (yayınlayan: Altyapı / StockManager) ---
+
+        /// <summary>Bir ürünün stoğu değişti. amount: yeni toplam dilim sayısı (değişim miktarı değil).</summary>
+        public static event Action<string, int> StockChanged;
+
+        // --- Fırın (yayınlayan: Altyapı / OvenService) ---
+
+        /// <summary>Fırına tarif kondu, pişirme başladı.</summary>
+        public static event Action<int, string> BakeStarted;
+
+        /// <summary>
+        /// Fırındaki parti hazır. Süre oyun açıkken dolduğunda bir kez; oyun açılışında hazır bulunan fırınlar için de yayınlanır.
+        /// </summary>
+        public static event Action<int> OvenReady;
+
+        /// <summary>Hazır parti toplandı ve stoğa eklendi. slices: eklenen dilim sayısı.</summary>
+        public static event Action<string, int> BatchCollected;
+
+        // --- Özel sipariş (yayınlayan: Altyapı / CustomOrderService) ---
+
+        /// <summary>Panodaki fişler değişti (fiş eklendi veya kaldırıldı).</summary>
+        public static event Action CustomOrderBoardChanged;
+
+        /// <summary>Özel sipariş tamamlandı; altın verildi, fiş panodan kalktı.</summary>
+        public static event Action<CustomOrderResult> CustomOrderCompleted;
+
         public static void RaiseCustomerSeated(CustomerInfo customer) => CustomerSeated?.Invoke(customer);
 
         public static void RaiseCustomerServed(CustomerInfo customer, int payment, int tip) =>
@@ -60,6 +86,18 @@ namespace CutiePie.Core
         public static void RaiseUpgradePurchased(UpgradeData upgrade, int newLevel) =>
             UpgradePurchased?.Invoke(upgrade, newLevel);
 
+        public static void RaiseStockChanged(string productId, int amount) => StockChanged?.Invoke(productId, amount);
+
+        public static void RaiseBakeStarted(int ovenIndex, string recipeId) => BakeStarted?.Invoke(ovenIndex, recipeId);
+
+        public static void RaiseOvenReady(int ovenIndex) => OvenReady?.Invoke(ovenIndex);
+
+        public static void RaiseBatchCollected(string productId, int slices) => BatchCollected?.Invoke(productId, slices);
+
+        public static void RaiseCustomOrderBoardChanged() => CustomOrderBoardChanged?.Invoke();
+
+        public static void RaiseCustomOrderCompleted(CustomOrderResult result) => CustomOrderCompleted?.Invoke(result);
+
         // Domain reload kapalıyken önceki Play oturumundan kalan abonelikleri temizler.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetSubscriptions()
@@ -72,6 +110,12 @@ namespace CutiePie.Core
             RoundEnded = null;
             CurrencyChanged = null;
             UpgradePurchased = null;
+            StockChanged = null;
+            BakeStarted = null;
+            OvenReady = null;
+            BatchCollected = null;
+            CustomOrderBoardChanged = null;
+            CustomOrderCompleted = null;
         }
     }
 }

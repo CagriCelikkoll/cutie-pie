@@ -36,6 +36,18 @@
     { "key": "upgrade.auto_drink.desc", "value": "İçecekler kendiliğinden tepsiye gelir." },
     { "key": "upgrade.waiter.desc", "value": "Garson tepsiyi masaya senin yerine götürür." },
     { "key": "common.close", "value": "Kapat" },
-    { "key": "round_end.combo_none", "value": "-" }
+    { "key": "round_end.combo_none", "value": "-" },
+    { "key": "order.part.base_vanilla", "value": "Vanilyalı Taban" },
+    { "key": "order.part.base_chocolate", "value": "Çikolatalı Taban" },
+    { "key": "order.part.base_strawberry", "value": "Çilekli Taban" },
+    { "key": "order.part.cream_white", "value": "Beyaz Krema" },
+    { "key": "order.part.cream_pink", "value": "Pembe Krema" },
+    { "key": "order.part.cream_yellow", "value": "Sarı Krema" },
+    { "key": "order.part.cream_blue", "value": "Mavi Krema" },
+    { "key": "order.part.deco_cherry", "value": "Kiraz" },
+    { "key": "order.part.deco_heart", "value": "Kalp Şeker" },
+    { "key": "order.part.deco_candle", "value": "Mum" },
+    { "key": "order.part.box_pink", "value": "Pembe Kutu" },
+    { "key": "order.part.box_blue", "value": "Mavi Kutu" }
   ]
 }

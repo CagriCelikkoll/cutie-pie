@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CutiePie.Core.Data;
 
 namespace CutiePie.Core
 {
@@ -21,6 +22,47 @@ namespace CutiePie.Core
 
         /// <summary>Geliştirme seviyeleri (JsonUtility sözlük desteklemediği için liste).</summary>
         public List<UpgradeLevelEntry> upgrades = new List<UpgradeLevelEntry>();
+
+        // --- Mutfak (saveVersion 2) ---
+
+        /// <summary>Pasta stokları (dilim). Listede olmayan ürünün stoğu 0'dır.</summary>
+        public List<StockEntry> stock = new List<StockEntry>();
+
+        /// <summary>Fırın durumları; sıra fırın indeksidir. G12'de doldurulur.</summary>
+        public List<OvenSaveEntry> ovens = new List<OvenSaveEntry>();
+
+        /// <summary>Son görülen UTC zaman (DateTime.Ticks). Saat geri alınmasını tespit etmek için. G12'de doldurulur.</summary>
+        public long lastSeenUtcTicks;
+
+        /// <summary>Panodaki fişler. G14'te doldurulur.</summary>
+        public List<CustomOrder> boardOrders = new List<CustomOrder>();
+
+        /// <summary>Bekleyen fiş yenilemelerinin UTC zamanları (DateTime.Ticks). G14'te doldurulur.</summary>
+        public List<long> pendingOrderRefreshUtcTicks = new List<long>();
+
+        /// <summary>Seçili dil kodu; boşsa varsayılan dil. G15'te doldurulur.</summary>
+        public string languageCode;
+    }
+
+    /// <summary>Bir ürünün kayıtlı stoğu.</summary>
+    [Serializable]
+    public class StockEntry
+    {
+        /// <summary>ProductData.id değeri.</summary>
+        public string productId;
+
+        public int amount;
+    }
+
+    /// <summary>Tek bir fırının kayıtlı durumu. recipeId boşsa fırın boştur.</summary>
+    [Serializable]
+    public class OvenSaveEntry
+    {
+        /// <summary>Fırındaki RecipeData.id; boşsa fırın boş.</summary>
+        public string recipeId;
+
+        /// <summary>Pişirmenin başladığı UTC zaman (DateTime.Ticks).</summary>
+        public long startUtcTicks;
     }
 
     /// <summary>Tek bir geliştirmenin kayıtlı seviyesi.</summary>

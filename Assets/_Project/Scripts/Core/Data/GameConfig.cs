@@ -24,6 +24,10 @@ namespace CutiePie.Core.Data
         [Tooltip("Oyundaki tüm geliştirmeler (Assets/_Project/Data/Upgrades).")]
         public UpgradeData[] upgrades;
 
+        [Header("Mutfak")]
+        [Tooltip("Mutfak denge değerleri (Assets/_Project/Data/Kitchen/KitchenSettings).")]
+        public KitchenSettings kitchen;
+
         [Header("Kayıt")]
         [Tooltip("persistentDataPath altındaki kayıt dosyasının adı.")]
         public string saveFileName;

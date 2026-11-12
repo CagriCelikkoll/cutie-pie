@@ -36,6 +36,18 @@
     { "key": "upgrade.auto_drink.desc", "value": "Drinks pop onto the tray by themselves." },
     { "key": "upgrade.waiter.desc", "value": "A waiter carries the tray to the table for you." },
     { "key": "common.close", "value": "Close" },
-    { "key": "round_end.combo_none", "value": "-" }
+    { "key": "round_end.combo_none", "value": "-" },
+    { "key": "order.part.base_vanilla", "value": "Vanilla Base" },
+    { "key": "order.part.base_chocolate", "value": "Chocolate Base" },
+    { "key": "order.part.base_strawberry", "value": "Strawberry Base" },
+    { "key": "order.part.cream_white", "value": "White Frosting" },
+    { "key": "order.part.cream_pink", "value": "Pink Frosting" },
+    { "key": "order.part.cream_yellow", "value": "Yellow Frosting" },
+    { "key": "order.part.cream_blue", "value": "Blue Frosting" },
+    { "key": "order.part.deco_cherry", "value": "Cherry" },
+    { "key": "order.part.deco_heart", "value": "Candy Heart" },
+    { "key": "order.part.deco_candle", "value": "Candle" },
+    { "key": "order.part.box_pink", "value": "Pink Box" },
+    { "key": "order.part.box_blue", "value": "Blue Box" }
   ]
 }
