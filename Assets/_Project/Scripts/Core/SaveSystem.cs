@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using CutiePie.Core.Data;
@@ -13,6 +14,9 @@ namespace CutiePie.Core
     public class SaveSystem : MonoBehaviour
     {
         public static SaveSystem Instance { get; private set; }
+
+        // Stok alanının eklendiği kayıt biçimi sürümü (göç için; denge değeri değildir).
+        private const int StockIntroducedVersion = 2;
 
         [SerializeField] private GameConfig config;
 
@@ -121,7 +125,15 @@ namespace CutiePie.Core
                 _backupPending = true;
             }
 
-            // Eski sürümlerden göç adımları ileride burada yapılacak (data.saveVersion < config.saveVersion).
+            // --- Eski sürümlerden göç ---
+
+            // v1 kayıtlarında stok alanı yoktur: oyuncuya bir kez başlangıç stoğu verilir.
+            // Boş listeye değil sürüme bakılır; stoğu bitmiş v2 kaydı da boş liste taşıyabilir.
+            if (data.saveVersion < StockIntroducedVersion)
+            {
+                Debug.Log($"[SaveSystem] Kayıt sürüm {data.saveVersion}; başlangıç stoğu ekleniyor.");
+                data.stock = CreateStartingStock();
+            }
 
             if (FindLevel(data.currentLevelId) == null)
             {
@@ -172,7 +184,25 @@ namespace CutiePie.Core
                 }
             }
 
+            SanitizeKitchen(data);
             return true;
+        }
+
+        // Mutfak alanlarındaki hatalı satırlar tüm kaydı bozuk saymak yerine ayıklanır.
+        private static void SanitizeKitchen(SaveData data)
+        {
+            data.stock ??= new List<StockEntry>();
+            data.ovens ??= new List<OvenSaveEntry>();
+            data.boardOrders ??= new List<CustomOrder>();
+            data.pendingOrderRefreshUtcTicks ??= new List<long>();
+
+            data.stock.RemoveAll(e => e == null || string.IsNullOrEmpty(e.productId));
+            foreach (StockEntry entry in data.stock)
+            {
+                entry.amount = Mathf.Max(0, entry.amount);
+            }
+
+            data.boardOrders.RemoveAll(o => o == null || string.IsNullOrEmpty(o.id));
         }
 
         private SaveData CreateDefaults()
@@ -183,8 +213,40 @@ namespace CutiePie.Core
                 gold = config.startingGold,
                 gems = config.startingGems,
                 shopRating = config.startingShopRating,
-                currentLevelId = config.startingLevel.id
+                currentLevelId = config.startingLevel.id,
+                stock = CreateStartingStock()
             };
+        }
+
+        // KitchenSettings.startingStock'tan yeni bir stok listesi üretir.
+        private List<StockEntry> CreateStartingStock()
+        {
+            var stock = new List<StockEntry>();
+            if (config.kitchen == null || config.kitchen.startingStock == null)
+            {
+                Debug.LogWarning("[SaveSystem] GameConfig.kitchen atanmamış; başlangıç stoğu verilmedi.");
+                return stock;
+            }
+
+            foreach (StockAmount item in config.kitchen.startingStock)
+            {
+                if (item == null || item.product == null || string.IsNullOrEmpty(item.product.id) || item.amount <= 0)
+                {
+                    continue;
+                }
+
+                StockEntry existing = stock.Find(e => e.productId == item.product.id);
+                if (existing != null)
+                {
+                    existing.amount += item.amount;
+                }
+                else
+                {
+                    stock.Add(new StockEntry { productId = item.product.id, amount = item.amount });
+                }
+            }
+
+            return stock;
         }
 
         private void ApplyToEconomy()
@@ -249,6 +311,44 @@ namespace CutiePie.Core
         private UpgradeLevelEntry FindUpgrade(string upgradeId)
         {
             return _data?.upgrades.Find(e => e.id == upgradeId);
+        }
+
+        // ------------------------------------------------------------------ Stok
+
+        /// <summary>Ürünün kayıtlı stoğu; kayıt yüklenmediyse veya ürün yoksa 0. Erişim için StockManager kullanılmalı.</summary>
+        public int GetStock(string productId)
+        {
+            StockEntry entry = FindStock(productId);
+            return entry != null ? entry.amount : 0;
+        }
+
+        /// <summary>Ürünün stoğunu ayarlar (diske yazmak için Save çağrılmalı). Kayıt yüklenmediyse false.</summary>
+        public bool SetStock(string productId, int amount)
+        {
+            if (_data == null || string.IsNullOrEmpty(productId))
+            {
+                return false;
+            }
+
+            StockEntry entry = FindStock(productId);
+            if (entry == null)
+            {
+                entry = new StockEntry { productId = productId };
+                _data.stock.Add(entry);
+            }
+
+            entry.amount = Mathf.Max(0, amount);
+            return true;
+        }
+
+        private StockEntry FindStock(string productId)
+        {
+            if (string.IsNullOrEmpty(productId))
+            {
+                return null;
+            }
+
+            return _data?.stock.Find(e => e.productId == productId);
         }
 
         // ------------------------------------------------------------------ Yazma
@@ -341,11 +441,24 @@ namespace CutiePie.Core
         /// <summary>Kayıt dosyalarını siler ve oyun içi değerleri varsayılana döndürür.</summary>
         public void DeleteSave()
         {
+            // Silinmeden önceki stoklu ürünler de "değişti" sayılır (yeni değerleri 0 olabilir).
+            var changedProducts = new HashSet<string>();
+            if (_data != null)
+            {
+                _data.stock.ForEach(e => changedProducts.Add(e.productId));
+            }
+
             DeleteFiles(config);
             _data = CreateDefaults();
             LoadState = SaveLoadState.NewDefaults;
             _backupPending = false;
             ApplyToEconomy();
+
+            _data.stock.ForEach(e => changedProducts.Add(e.productId));
+            foreach (string productId in changedProducts)
+            {
+                GameEvents.RaiseStockChanged(productId, GetStock(productId));
+            }
         }
 
         /// <summary>Ana, geçici ve yedek kayıt dosyalarını siler. Hata oyunu çökertmez.</summary>

@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d09a83c150983d540ba0171ea699cab2, type: 3}
+  m_Name: KitchenSettings
+  m_EditorClassIdentifier: 
+  startingOvenCount: 1
+  maxOvenCount: 3
+  recipes:
+  - {fileID: 11400000, guid: 80c66019d4e3bc341af1de1ab62ef307, type: 2}
+  - {fileID: 11400000, guid: 8c8881967b95382428f70ecf136f4664, type: 2}
+  startingStock:
+  - product: {fileID: 11400000, guid: 6afbe83e4d548ef45a582eaf31cde3eb, type: 2}
+    amount: 8
+  - product: {fileID: 11400000, guid: 0c4c9612b8ef1c94f854d507521ac51e, type: 2}
+    amount: 8
+  boardSize: 3
+  orderRefreshSeconds: 120
+  orderBaseRewardMin: 40
+  orderBaseRewardMax: 80
+  cakeParts:
+  - {fileID: 11400000, guid: ba580f87c172fba4eae056efc5006fb2, type: 2}
+  - {fileID: 11400000, guid: b239546802909ae469a77a07be09126b, type: 2}
+  - {fileID: 11400000, guid: 73bf34c0d4034ac49a10c96066b7b90d, type: 2}
+  - {fileID: 11400000, guid: d7a9a49b889de9a418b60d1d6055d0aa, type: 2}
+  - {fileID: 11400000, guid: d4e33ef15f3ef5946ae920ff15034986, type: 2}
+  - {fileID: 11400000, guid: 952381e22cdbd194b881c9fe992248e2, type: 2}
+  - {fileID: 11400000, guid: a6bc9624fc06ec048b9f9143a2ff7ca2, type: 2}
+  - {fileID: 11400000, guid: 364390e63de7f1746ab4df94e3ff773b, type: 2}
+  - {fileID: 11400000, guid: f80f0a797d09e214ca5eb5218895f63f, type: 2}
+  - {fileID: 11400000, guid: d33ca5f89286ab04a8137d886be20c9d, type: 2}
+  - {fileID: 11400000, guid: 6cb8ae3b671cac845a3a4d408f7b1bb7, type: 2}
+  - {fileID: 11400000, guid: 7e5e18452412a3d44af382c612210874, type: 2}
+  maxDecorations: 5
+  decorationPositionTolerance: 0.2
+  baseWeight: 0.3
+  creamWeight: 0.3
+  decorationWeight: 0.3
+  boxWeight: 0.1
+  starThresholds:
+  - 0.5
+  - 0.7
+  - 0.9
+  tipMinSimilarity: 0.9
+  tipRatio: 0.2

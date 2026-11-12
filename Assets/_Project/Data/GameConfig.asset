@@ -23,10 +23,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 42ddaef7659373c4cb362d49930dec1f, type: 2}
   - {fileID: 11400000, guid: 9ccbd07ff7db57944bacf15550ac0696, type: 2}
   - {fileID: 11400000, guid: f99df7827072b054894abfff902962f1, type: 2}
+  kitchen: {fileID: 11400000, guid: 95a0e416e1a86bf42b3c9bfe4568775b, type: 2}
   saveFileName: save.json
   saveTempFileName: save.json.tmp
   saveBackupFileName: save.json.bak
-  saveVersion: 1
+  saveVersion: 2
   firstSceneName: Shop
   shopSceneName: Shop
   salonSceneName: Salon

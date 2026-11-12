@@ -1,6 +1,7 @@
 using CutiePie.Ads;
 using CutiePie.Core.Data;
 using CutiePie.Core.Localization;
+using CutiePie.Kitchen;
 using CutiePie.Upgrades;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,6 +29,15 @@ namespace CutiePie.Core
         /// <summary>Geliştirme servisi. Kullanım: GameManager.Instance.Upgrades.TryPurchase("id").</summary>
         public UpgradeManager Upgrades { get; private set; }
 
+        /// <summary>Ortak pasta stoğu. Kullanım: GameManager.Instance.Stock.TryTake("id", 1).</summary>
+        public StockManager Stock { get; private set; }
+
+        /// <summary>Fırın servisi. Kullanım: GameManager.Instance.Ovens.StartBake(0, "recipeId").</summary>
+        public IOvenService Ovens { get; private set; }
+
+        /// <summary>Özel sipariş servisi. Kullanım: GameManager.Instance.Orders.Board.</summary>
+        public ICustomOrderService Orders { get; private set; }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -47,6 +57,12 @@ namespace CutiePie.Core
             Localization = new LocalizationService(config.languages, config.defaultLanguage);
 
             Upgrades = new UpgradeManager(config.upgrades);
+
+            Stock = new StockManager();
+
+            // G11: boş gövdeler. Mantık G12 (fırın) ve G14 (özel sipariş) görevlerinde gelecek.
+            Ovens = new OvenService();
+            Orders = new CustomOrderService();
         }
 
         private void Start()
