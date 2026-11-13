@@ -351,6 +351,72 @@ namespace CutiePie.Core
             return _data?.stock.Find(e => e.productId == productId);
         }
 
+        // ------------------------------------------------------------------ Fırınlar ve saat
+
+        /// <summary>Kayıt yüklendi mi (yüklenmeden okunan değerler varsayılandır, yazılanlar kaybolur).</summary>
+        public bool IsLoaded => LoadState != SaveLoadState.NotLoaded && _data != null;
+
+        /// <summary>Son görülen UTC zaman (DateTime.Ticks); hiç görülmediyse 0. Yalnızca ileri gider.</summary>
+        public long LastSeenUtcTicks => _data != null ? _data.lastSeenUtcTicks : 0L;
+
+        /// <summary>
+        /// Son görülen zamanı ileri alır (geri gitmez). Bellekte güncellenir; diske Save ile yazılır.
+        /// Cihaz saati geri alınırsa süreler bu değerden geriye düşmez.
+        /// </summary>
+        public void AdvanceLastSeen(long utcTicks)
+        {
+            if (_data != null && utcTicks > _data.lastSeenUtcTicks)
+            {
+                _data.lastSeenUtcTicks = utcTicks;
+            }
+        }
+
+        /// <summary>Fırının kayıtlı durumu. Kayıt yoksa veya fırın boşsa false (recipeId null).</summary>
+        public bool TryGetOven(int ovenIndex, out string recipeId, out long startUtcTicks)
+        {
+            recipeId = null;
+            startUtcTicks = 0L;
+            if (_data == null || ovenIndex < 0 || ovenIndex >= _data.ovens.Count)
+            {
+                return false;
+            }
+
+            OvenSaveEntry entry = _data.ovens[ovenIndex];
+            if (entry == null || string.IsNullOrEmpty(entry.recipeId))
+            {
+                return false;
+            }
+
+            recipeId = entry.recipeId;
+            startUtcTicks = entry.startUtcTicks;
+            return true;
+        }
+
+        /// <summary>
+        /// Fırının durumunu ayarlar; recipeId boşsa fırın boşalır. Liste gerekirse uzatılır.
+        /// Diske yazmak için Save çağrılmalı. Kayıt yüklenmediyse veya indeks negatifse false.
+        /// </summary>
+        public bool SetOven(int ovenIndex, string recipeId, long startUtcTicks)
+        {
+            if (_data == null || ovenIndex < 0)
+            {
+                return false;
+            }
+
+            while (_data.ovens.Count <= ovenIndex)
+            {
+                _data.ovens.Add(new OvenSaveEntry());
+            }
+
+            bool empty = string.IsNullOrEmpty(recipeId);
+            _data.ovens[ovenIndex] = new OvenSaveEntry
+            {
+                recipeId = empty ? null : recipeId,
+                startUtcTicks = empty ? 0L : startUtcTicks
+            };
+            return true;
+        }
+
         // ------------------------------------------------------------------ Yazma
 
         /// <summary>
@@ -365,6 +431,7 @@ namespace CutiePie.Core
             }
 
             CollectFromEconomy();
+            AdvanceLastSeen(GameClock.UtcNow.Ticks);
             _data.saveVersion = config.saveVersion;
 
             string mainPath = GetPath(config.saveFileName);
