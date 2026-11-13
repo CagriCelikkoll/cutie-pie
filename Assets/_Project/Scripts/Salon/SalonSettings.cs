@@ -133,6 +133,24 @@ namespace CutiePie.Salon
         [Tooltip("Parıltı rengi; saydamlığı süre boyunca bu değerden 0'a iner.")]
         public Color cleanSparkleColor = new Color(1f, 0.97f, 0.7f, 0.9f);
 
+        [Header("Masa açılma animasyonu (Ek Masa geliştirmesi)")]
+        [Tooltip("Kilitli masa açılınca oynayan animasyonun süresi (saniye). Masa bu sırada müşteri alabilir.")]
+        [Min(0.05f)] public float tableUnlockDuration = 0.5f;
+
+        [Tooltip("Masa gövdesinin animasyonun ortasında ulaştığı ölçek (1 = değişmez).")]
+        [Min(1f)] public float tableUnlockBodyMaxScale = 1.15f;
+
+        [Tooltip("Açılma parıltısının sonunda ulaştığı ölçek (masa boyutuna göre çarpan).")]
+        [Min(0.1f)] public float tableUnlockSparkleMaxScale = 1.6f;
+
+        [Tooltip("Açılma parıltısının rengi; saydamlığı süre boyunca bu değerden 0'a iner.")]
+        public Color tableUnlockSparkleColor = new Color(1f, 0.85f, 0.45f, 0.9f);
+
+        [Header("Hazır tepsi istasyonu (geliştirme)")]
+        [Tooltip("İki hazır tepsi arası süre geliştirmenin etki değerinden (UpgradeData.levelEffects, saniye) gelir; " +
+                 "etki bundan küçükse (veya 0) bu kullanılır.")]
+        [Min(0.1f)] public float readyTrayMinIntervalSeconds = 0.5f;
+
         [Header("Masa renkleri")]
         public Color tableLockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);
         public Color tableEmptyColor = new Color(0.8f, 0.6f, 0.4f, 1f);

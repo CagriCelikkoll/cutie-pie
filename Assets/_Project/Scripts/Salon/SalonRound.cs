@@ -1,13 +1,16 @@
 using CutiePie.Core;
 using CutiePie.Core.Data;
+using CutiePie.Upgrades;
 using UnityEngine;
 
 namespace CutiePie.Salon
 {
     /// <summary>
     /// Salon'u RoundManager'ın round olaylarına bağlar ve kurulum sırasını tek yerde tutar.
-    /// RoundStarted: masalar → tezgâh ve fiş temizliği → vitrin stoğu → raflar → girdi açılır → müşteri üretimi başlar.
-    /// RoundEnded: üretim durur, girdi kilitlenir (müşteriler kendileri donar). Sonuç ekranı: UI/RoundEndPanel.
+    /// RoundStarted: masalar (LevelData + Ek Masa seviyesi) → tezgâh ve fiş temizliği → vitrin stoğu → raflar
+    /// → hazır tepsi istasyonu → girdi açılır → müşteri üretimi başlar.
+    /// RoundEnded: üretim ve istasyon durur, girdi kilitlenir (müşteriler kendileri donar). Sonuç ekranı: UI/RoundEndPanel.
+    /// Round sonunda alınan geliştirmeler "Tekrar oyna" ile gelen RoundStarted'ta uygulanır.
     /// </summary>
     public class SalonRound : MonoBehaviour
     {
@@ -24,6 +27,9 @@ namespace CutiePie.Salon
 
         [Tooltip("Yeni round başında boşaltılır.")]
         [SerializeField] private OrderTicket orderTicket;
+
+        [Tooltip("Hazır tepsi istasyonu (ready_tray geliştirmesi); tezgâh temizlendikten sonra başlatılır.")]
+        [SerializeField] private ReadyTrayStation readyTrayStation;
 
         // RoundManager.Start'ta yayınlar; OnEnable'da abone olunduğu için ilk round kaçmaz.
         private void OnEnable()
@@ -46,9 +52,10 @@ namespace CutiePie.Salon
                 return;
             }
 
-            tableManager.Setup(level.openTableCount);
+            tableManager.Setup(GetOpenTableCount(level));
             ResetCounterAndTicket();
             SetupPrepArea(level);
+            StartReadyTrayStation();
             SalonInput.Unlock();
             customerSpawner.StartSpawning(level);
         }
@@ -60,7 +67,31 @@ namespace CutiePie.Salon
                 customerSpawner.StopSpawning();
             }
 
+            if (readyTrayStation != null)
+            {
+                readyTrayStation.StopRound();
+            }
+
             SalonInput.Lock();
+        }
+
+        // Açık masa = seviyenin masa sayısı + Ek Masa geliştirme seviyesi; masa yeri sayısını (8) aşamaz.
+        private int GetOpenTableCount(LevelData level)
+        {
+            UpgradeManager upgrades = GameManager.Instance != null ? GameManager.Instance.Upgrades : null;
+            int extraTables = upgrades != null ? upgrades.GetLevel(UpgradeIds.ExtraTable) : 0;
+            return Mathf.Min(level.openTableCount + extraTables, tableManager.Tables.Count);
+        }
+
+        private void StartReadyTrayStation()
+        {
+            if (readyTrayStation == null)
+            {
+                Debug.LogWarning("[SalonRound] ReadyTrayStation atanmamış; hazır tepsi geliştirmesi çalışmaz. Builder 7. adımı yeniden çalıştırın.", this);
+                return;
+            }
+
+            readyTrayStation.StartRound();
         }
 
         // Önceki round'dan tezgâhta kalan tepsi ve açık fiş temizlenir ("Tekrar oyna").

@@ -22,9 +22,15 @@ namespace CutiePie.Salon
         // Rastgele seçimde her seferinde yeni liste oluşturmamak için tekrar kullanılır.
         private readonly List<Table> freeBuffer = new List<Table>();
 
+        // Bu sahnede daha önce kurulum yapıldı mı? İlk kurulumda (sahneye giriş, ör. Shop'tan) açılma animasyonu oynamaz.
+        private bool hasSetupBefore;
+
         public IReadOnlyList<Table> Tables => tables;
 
-        /// <summary>İlk openCount masayı açar, gerisini kilitler.</summary>
+        /// <summary>
+        /// İlk openCount masayı açar, gerisini kilitler. Aynı sahnede ikinci ve sonraki kurulumlarda ("Tekrar oyna")
+        /// önceki round'da kilitli olup şimdi açılan masalar açılma animasyonu oynatır.
+        /// </summary>
         public void Setup(int openCount)
         {
             if (settings == null)
@@ -45,11 +51,18 @@ namespace CutiePie.Salon
 
             for (int i = 0; i < tables.Count; i++)
             {
-                if (tables[i] != null)
+                Table table = tables[i];
+                if (table == null)
                 {
-                    tables[i].Initialize(settings, i < openCount, registry, delivery);
+                    continue;
                 }
+
+                bool open = i < openCount;
+                bool newlyUnlocked = hasSetupBefore && open && table.State == TableState.Locked;
+                table.Initialize(settings, open, registry, delivery, newlyUnlocked);
             }
+
+            hasSetupBefore = true;
         }
 
         /// <summary>Boş masalardan rastgele birini verir; boş masa yoksa false döner.</summary>
