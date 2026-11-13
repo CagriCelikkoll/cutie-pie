@@ -222,53 +222,9 @@ namespace CutiePie.UI.Editor
         private static float LeftOfIcon(float iconX, float iconSize, float textWidth) =>
             iconX - iconSize * 0.5f - IconTextGap - textWidth * 0.5f;
 
-        // Yatay ScrollRect: Viewport (maske) > Cards (HorizontalLayoutGroup + ContentSizeFitter).
-        // Kartlar alana sığarsa ScrollRect onları ortada tutar; sığmazsa sürükleyerek kaydırılır.
-        private static (ScrollRect, RectTransform) CreateCardList(Transform card)
-        {
-            RectTransform scrollTf = UIBuilderKit.CreateRect(card, "CardScroll", new Vector2(0f, ScrollY), ScrollSize);
-            ScrollRect scroll = scrollTf.gameObject.AddComponent<ScrollRect>();
-
-            RectTransform viewport = UIBuilderKit.CreateStretched(scrollTf, "Viewport");
-            Image viewportImage = viewport.gameObject.AddComponent<Image>();
-
-            // Görünmez ama kartların arasındaki boşluktan da sürüklenebilsin.
-            viewportImage.color = Color.clear;
-            viewportImage.raycastTarget = true;
-            viewport.gameObject.AddComponent<RectMask2D>();
-
-            var listGo = new GameObject("Cards", typeof(RectTransform));
-            var list = (RectTransform)listGo.transform;
-            list.SetParent(viewport, false);
-            list.anchorMin = new Vector2(0.5f, 0f);
-            list.anchorMax = new Vector2(0.5f, 1f);
-            list.pivot = new Vector2(0.5f, 0.5f);
-            list.anchoredPosition = Vector2.zero;
-            list.sizeDelta = Vector2.zero;
-
-            HorizontalLayoutGroup layout = listGo.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(ListPaddingX, ListPaddingX, ListPaddingY, ListPaddingY);
-            layout.spacing = CardSpacing;
-            layout.childAlignment = TextAnchor.MiddleCenter;
-            layout.childControlWidth = false;
-            layout.childControlHeight = false;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
-
-            ContentSizeFitter fitter = listGo.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
-
-            scroll.content = list;
-            scroll.viewport = viewport;
-            scroll.horizontal = true;
-            scroll.vertical = false;
-            scroll.movementType = ScrollRect.MovementType.Elastic;
-            scroll.inertia = true;
-            scroll.horizontalScrollbar = null;
-            scroll.verticalScrollbar = null;
-
-            return (scroll, list);
-        }
+        // Yatay kaydırılan kart listesi; kurulum UIBuilderKit'te (fırın ekranı da aynısını kullanır).
+        private static (ScrollRect, RectTransform) CreateCardList(Transform card) =>
+            UIBuilderKit.CreateHorizontalScroll(card, "CardScroll", "Cards", new Vector2(0f, ScrollY), ScrollSize,
+                ListPaddingX, ListPaddingY, CardSpacing);
     }
 }
