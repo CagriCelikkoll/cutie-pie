@@ -14,5 +14,8 @@ namespace CutiePie.Upgrades
 
         /// <summary>Etki: garsonun tepsiyi masaya götürme süresi (saniye).</summary>
         public const string Waiter = "waiter";
+
+        /// <summary>Etki: fazladan açılan fırın sayısı. Fırın sayısı seviyeden okunur; asset G15'te eklenecek.</summary>
+        public const string ExtraOven = "extra_oven";
     }
 }
