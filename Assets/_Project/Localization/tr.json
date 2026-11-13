@@ -48,6 +48,10 @@
     { "key": "order.part.deco_heart", "value": "Kalp Şeker" },
     { "key": "order.part.deco_candle", "value": "Mum" },
     { "key": "order.part.box_pink", "value": "Pembe Kutu" },
-    { "key": "order.part.box_blue", "value": "Mavi Kutu" }
+    { "key": "order.part.box_blue", "value": "Mavi Kutu" },
+    { "key": "shop.upgrades", "value": "Geliştirmeler" },
+    { "key": "shop.settings", "value": "Ayarlar" },
+    { "key": "kitchen.title", "value": "Mutfak" },
+    { "key": "kitchen.back_to_shop", "value": "Pastaneye dön" }
   ]
 }

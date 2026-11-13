@@ -10,7 +10,8 @@ namespace CutiePie.Core.Editor
     /// Yalnızca editörde: hangi sahne açık olursa olsun Play'e basınca önce Boot (Build Settings'teki 0. sahne) yüklenir,
     /// böylece kalıcı yöneticiler hazır olur. Boot'tan sonra Play'e basılan sahne açılır (ör. Salon'da basılırsa doğrudan Salon);
     /// Boot'ta basılırsa normal akış (GameConfig.firstSceneName) çalışır. Build Settings dışı sahneler (ör. RoundTest)
-    /// Boot'a uğramadan doğrudan açılır. "Cutie Pie" menüsünden kapatılabilir.
+    /// Boot'a uğramadan doğrudan açılır; ancak sahnede BootInEditorMarker varsa önce Boot, sonra o sahne açılır.
+    /// "Cutie Pie" menüsünden kapatılabilir.
     /// </summary>
     [InitializeOnLoad]
     public static class BootSceneAutoLoader
@@ -82,6 +83,14 @@ namespace CutiePie.Core.Editor
             }
 
             bool inBuild = Array.Exists(EditorBuildSettings.scenes, s => s.enabled && s.path == active.path);
+            if (!inBuild && HasBootMarker(active))
+            {
+                // İşaretli test sahnesi: önce Boot, sonra bu sahne (adla yüklenemediği için yoluyla).
+                Debug.Log($"[BootSceneAutoLoader] '{active.name}' BootInEditorMarker içeriyor; Boot'tan sonra açılacak.");
+                EditorPlayStartScene.Set(active.path);
+                return;
+            }
+
             if (!inBuild)
             {
                 // Test sahneleri gibi Build Settings dışı sahneler Boot'a uğramadan doğrudan açılır.
@@ -91,6 +100,20 @@ namespace CutiePie.Core.Editor
             }
 
             EditorPlayStartScene.Set(active.name);
+        }
+
+        // Sahnede (pasif nesneler dahil) BootInEditorMarker var mı.
+        private static bool HasBootMarker(Scene scene)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                if (root.GetComponentInChildren<BootInEditorMarker>(true) != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

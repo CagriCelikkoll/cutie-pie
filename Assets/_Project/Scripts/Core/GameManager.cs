@@ -89,6 +89,15 @@ namespace CutiePie.Core
 
                 // Editörde Play başka bir sahnede basıldıysa doğrudan o sahne açılır (build'de her zaman null).
                 string editorStartScene = EditorPlayStartScene.Consume();
+#if UNITY_EDITOR
+                // BootInEditorMarker'lı test sahnesi Build Settings dışındadır; adla değil yoluyla yüklenir.
+                if (EditorPlayStartScene.IsScenePath(editorStartScene))
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(
+                        editorStartScene, new LoadSceneParameters(LoadSceneMode.Single));
+                    return;
+                }
+#endif
                 LoadScene(string.IsNullOrEmpty(editorStartScene) ? config.firstSceneName : editorStartScene);
             }
         }
@@ -101,6 +110,9 @@ namespace CutiePie.Core
 
         /// <summary>Salon'a geçer. Ör. açılış ekranındaki Kasa butonu.</summary>
         public void GoToSalon() => LoadScene(config.salonSceneName);
+
+        /// <summary>Mutfak'a geçer. Ör. açılış ekranındaki Mutfak butonu.</summary>
+        public void GoToKitchen() => LoadScene(config.kitchenSceneName);
 
         /// <summary>Adı verilen sahneyi yükler (Build Settings'te olmalı).</summary>
         public void LoadScene(string sceneName)
