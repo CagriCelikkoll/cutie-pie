@@ -65,6 +65,7 @@ namespace CutiePie.Salon.Editor
             so.FindProperty("drinkShelf").objectReferenceValue = FindShelf(prepArea, BoxDrinks);
             so.FindProperty("prepCounter").objectReferenceValue = FindPrepComponent<PrepCounter>(prepArea, BoxPrepCounter);
             so.FindProperty("orderTicket").objectReferenceValue = FindPrepComponent<OrderTicket>(prepArea, OrderTicketName);
+            so.FindProperty("readyTrayStation").objectReferenceValue = FindPrepComponent<ReadyTrayStation>(prepArea, ReadyTrayStationName);
             so.ApplyModifiedProperties();
 
             // RoundManager (sayaç Canvas'ı içinde) yoksa sahne köküne eklenir.

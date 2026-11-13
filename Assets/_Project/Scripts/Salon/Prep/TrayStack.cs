@@ -5,7 +5,7 @@ namespace CutiePie.Salon
     /// <summary>
     /// Tepsi yığını (servis adımı 1). Tezgâhta boş yer varsa sürüklenince yeni tepsi verir;
     /// tepsi tezgâha oturmazsa yığına dönüp yok olur. Yığın sınırsızdır.
-    /// TryPlaceTray sürüklemesiz yoldur; ileride "Hazır tepsi istasyonu" geliştirmesi bunu çağırır.
+    /// TryPlaceTray sürüklemesiz yoldur; "Hazır tepsi istasyonu" (ReadyTrayStation) bunu çağırır.
     /// </summary>
     [RequireComponent(typeof(DragItem))]
     public class TrayStack : MonoBehaviour, IDragSource
@@ -18,8 +18,12 @@ namespace CutiePie.Salon
         [SerializeField] private PrepCounter counter;
 
         /// <summary>Sürüklemeden, doğrudan tezgâha tepsi koyar. Yer yoksa false.</summary>
-        public bool TryPlaceTray(PrepCounter target)
+        public bool TryPlaceTray(PrepCounter target) => TryPlaceTray(target, out _);
+
+        /// <summary>Sürüklemeden, doğrudan tezgâha tepsi koyar ve konan tepsiyi verir. Yer yoksa false ve tray null.</summary>
+        public bool TryPlaceTray(PrepCounter target, out Tray placed)
         {
+            placed = null;
             if (target == null || trayPrefab == null || !target.HasFreeSlot)
             {
                 return false;
@@ -33,6 +37,7 @@ namespace CutiePie.Salon
             }
 
             target.Accept(tray.Item);
+            placed = tray;
             return true;
         }
 

@@ -5,7 +5,7 @@ namespace CutiePie.Salon
     /// <summary>
     /// Tabak yığını (servis adımı 2). Tezgâhta tabaksız bir tepsi varsa sürüklenince yeni tabak verir;
     /// tabak tepsiye oturmazsa yığına dönüp yok olur. Yığın sınırsızdır.
-    /// TryPlacePlate sürüklemesiz yoldur; ileride "Hazır tepsi istasyonu" geliştirmesi bunu çağırır.
+    /// TryPlacePlate sürüklemesiz yoldur; "Hazır tepsi istasyonu" (ReadyTrayStation) bunu çağırır.
     /// </summary>
     [RequireComponent(typeof(DragItem))]
     public class PlateStack : MonoBehaviour, IDragSource
