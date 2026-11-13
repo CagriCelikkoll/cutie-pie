@@ -5,7 +5,8 @@ using UnityEngine.UI;
 namespace CutiePie.Core.Shop
 {
     /// <summary>
-    /// Açılış ekranı (pastane). Kasa Salon'a geçer; Vitrin ve Mutfak şimdilik yalnızca "Yakında" mesajı gösterir.
+    /// Açılış ekranı (pastane). Kasa Salon'a, Mutfak Kitchen'a geçer; Vitrin şimdilik yalnızca "Yakında" mesajı gösterir.
+    /// Geliştirmeler butonu sahnede doğrudan UpgradesPanel.Open()'a bağlıdır (kod bağımlılığı yok).
     /// </summary>
     public class ShopScreen : MonoBehaviour
     {
@@ -23,14 +24,14 @@ namespace CutiePie.Core.Shop
             comingSoonPanel.SetActive(false);
             cashierButton.onClick.AddListener(HandleCashier);
             showcaseButton.onClick.AddListener(ShowComingSoon);
-            kitchenButton.onClick.AddListener(ShowComingSoon);
+            kitchenButton.onClick.AddListener(HandleKitchen);
         }
 
         private void OnDestroy()
         {
             cashierButton.onClick.RemoveListener(HandleCashier);
             showcaseButton.onClick.RemoveListener(ShowComingSoon);
-            kitchenButton.onClick.RemoveListener(ShowComingSoon);
+            kitchenButton.onClick.RemoveListener(HandleKitchen);
         }
 
         private void HandleCashier()
@@ -38,6 +39,14 @@ namespace CutiePie.Core.Shop
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.GoToSalon();
+            }
+        }
+
+        private void HandleKitchen()
+        {
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.GoToKitchen();
             }
         }
 

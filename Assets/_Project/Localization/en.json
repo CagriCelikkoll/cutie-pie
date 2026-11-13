@@ -48,6 +48,10 @@
     { "key": "order.part.deco_heart", "value": "Candy Heart" },
     { "key": "order.part.deco_candle", "value": "Candle" },
     { "key": "order.part.box_pink", "value": "Pink Box" },
-    { "key": "order.part.box_blue", "value": "Blue Box" }
+    { "key": "order.part.box_blue", "value": "Blue Box" },
+    { "key": "shop.upgrades", "value": "Upgrades" },
+    { "key": "shop.settings", "value": "Settings" },
+    { "key": "kitchen.title", "value": "Kitchen" },
+    { "key": "kitchen.back_to_shop", "value": "Back to shop" }
   ]
 }
