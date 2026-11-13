@@ -48,6 +48,11 @@
     { "key": "order.part.deco_heart", "value": "Candy Heart" },
     { "key": "order.part.deco_candle", "value": "Candle" },
     { "key": "order.part.box_pink", "value": "Pink Box" },
-    { "key": "order.part.box_blue", "value": "Blue Box" }
+    { "key": "order.part.box_blue", "value": "Blue Box" },
+    { "key": "salon.sold_out", "value": "Sold out" },
+    { "key": "salon.no_stock_title", "value": "No cakes in the showcase!" },
+    { "key": "salon.no_stock_message", "value": "Bake cakes in the kitchen." },
+    { "key": "salon.no_stock_go_kitchen", "value": "Go to kitchen" },
+    { "key": "salon.no_stock_continue", "value": "Open anyway" }
   ]
 }

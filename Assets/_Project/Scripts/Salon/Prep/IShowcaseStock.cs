@@ -6,11 +6,11 @@ namespace CutiePie.Salon
 {
     /// <summary>
     /// Salon vitrinindeki pasta dilimi stoğu. Salon yalnızca bu arayüzü bilir;
-    /// Faz 1'de LocalShowcaseStock, Faz 2'de Core'daki StockManager'a bağlanan bir adaptör kullanılır.
+    /// uygulaması Core'daki ortak stoğa (StockManager) bağlanan SharedShowcaseStock'tur.
     /// </summary>
     public interface IShowcaseStock
     {
-        /// <summary>Vitrinde stoğu tutulan pastalar.</summary>
+        /// <summary>Vitrinde gösterilen pastalar (stoğu 0 olanlar dahil).</summary>
         IReadOnlyList<ProductData> Available { get; }
 
         /// <summary>Bir ürünün stoğu değişti.</summary>
@@ -21,7 +21,7 @@ namespace CutiePie.Salon
         /// <summary>Bir dilim düşer; stok yoksa false.</summary>
         bool TryTakeSlice(ProductData product);
 
-        /// <summary>Round başında stoğu seviyenin menüsüne göre doldurur.</summary>
+        /// <summary>Round başında seviyenin menüsünü bağlar ve her ürün için Changed yayınlar (stok eklemez).</summary>
         void Refill(LevelData level);
     }
 }

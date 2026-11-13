@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CutiePie.Core.Data;
+using CutiePie.Core.Localization;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -54,6 +55,13 @@ namespace CutiePie.Salon.Editor
         private const float ShelfCountFontSize = 4.5f;
         private static readonly Vector2 ShelfCountRectSize = new Vector2(1.2f, 0.5f);
         private static readonly Color ShelfCountColor = new Color(0.3f, 0.2f, 0.15f, 1f);
+
+        // Vitrin yuvası "Tükendi" etiketi (G16): sayının yerinde, otomatik küçülen tek satır.
+        private const string SoldOutKey = "salon.sold_out";
+        private const string SoldOutFontPath = "Assets/_Project/Art/Fonts/Nunito-Bold SDF.asset";
+        private const float SoldOutFontSize = 3.2f;
+        private const float SoldOutMinFontSize = 1.5f;
+        private static readonly Color SoldOutColor = new Color(0.85f, 0.3f, 0.35f, 1f);
         private static readonly Vector2 ArrowVisualSize = new Vector2(0.35f, 0.9f);
         private static readonly Vector2 ArrowColliderSize = new Vector2(0.7f, 1.6f);
         private static readonly Color ArrowColor = new Color(0.45f, 0.35f, 0.4f, 1f);
@@ -136,10 +144,16 @@ namespace CutiePie.Salon.Editor
             SalonSettings settings = GetOrCreateSettings();
             EnsureProductPlaceholderColors(settings);
 
-            // Bırakma hedeflerinin listesi ve geçici vitrin stoğu PrepArea üzerinde durur.
+            // Bırakma hedeflerinin listesi ve ortak stok adaptörü PrepArea üzerinde durur.
+            // G16: silinen LocalShowcaseStock'tan kalan "Missing Script" bileşeni temizlenir.
+            int removedMissing = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(prepArea.gameObject);
+            if (removedMissing > 0)
+            {
+                Debug.Log($"[SalonSceneBuilder] PrepArea'dan {removedMissing} eksik betik bileşeni (eski LocalShowcaseStock) kaldırıldı.");
+            }
+
             DropTargetRegistry registry = GetOrAddComponent<DropTargetRegistry>(prepArea.gameObject);
-            LocalShowcaseStock stock = GetOrAddComponent<LocalShowcaseStock>(prepArea.gameObject);
-            SetObjectField(stock, "settings", settings);
+            SharedShowcaseStock stock = GetOrAddComponent<SharedShowcaseStock>(prepArea.gameObject);
 
             // Eski düzendeki (kökü ölçekli) kutular yeni düzene çevrilir.
             foreach (PrepBox box in PrepBoxes)
@@ -377,7 +391,7 @@ namespace CutiePie.Salon.Editor
             SetObjectField(go.GetComponent<OrderTicket>(), "counter", counter);
         }
 
-        private static void WireSalonRoundPrep(Transform root, LocalShowcaseStock stock, ProductShelf cakeShelf, ProductShelf drinkShelf,
+        private static void WireSalonRoundPrep(Transform root, SharedShowcaseStock stock, ProductShelf cakeShelf, ProductShelf drinkShelf,
             ReadyTrayStation readyTrayStation)
         {
             var so = new SerializedObject(GetOrCreateSalonRound(root));
@@ -476,6 +490,7 @@ namespace CutiePie.Salon.Editor
                 text.rectTransform.sizeDelta = ShelfCountRectSize;
 
                 so.FindProperty("countText").objectReferenceValue = text;
+                so.FindProperty("soldOutLabel").objectReferenceValue = BuildSoldOutLabel(root.transform);
             }
 
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -485,6 +500,45 @@ namespace CutiePie.Salon.Editor
             dragSo.ApplyModifiedPropertiesWithoutUndo();
 
             return SavePrefab(root, path).GetComponent<T>();
+        }
+
+        /// <summary>
+        /// Vitrin yuvasında sayının yerinde duran "Tükendi" etiketi (G16). Metin LocalizedText ile salon.sold_out anahtarından gelir;
+        /// Türkçe karakterler için Nunito fontu kullanılır. Başta kapalıdır, ShowcaseSlot stok 0 olunca açar.
+        /// </summary>
+        private static GameObject BuildSoldOutLabel(Transform slotRoot)
+        {
+            var labelGo = new GameObject("SoldOut", typeof(RectTransform));
+            labelGo.transform.SetParent(slotRoot, false);
+            labelGo.transform.localPosition = new Vector3(0f, ShelfCountOffsetY, 0f);
+
+            TextMeshPro text = labelGo.AddComponent<TextMeshPro>();
+            TMP_FontAsset font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(SoldOutFontPath);
+            if (font == null)
+            {
+                Debug.LogWarning($"[SalonSceneBuilder] '{SoldOutFontPath}' bulunamadı; TMP varsayılan fontu kullanılıyor.");
+                font = TMP_Settings.defaultFontAsset;
+            }
+
+            text.font = font;
+            text.text = SoldOutKey; // Editörde anahtar görünür; oyunda LocalizedText gerçek metni yazar.
+            text.enableAutoSizing = true;
+            text.fontSizeMin = SoldOutMinFontSize;
+            text.fontSizeMax = SoldOutFontSize;
+            text.fontSize = SoldOutFontSize;
+            text.enableWordWrapping = false;
+            text.alignment = TextAlignmentOptions.Center;
+            text.color = SoldOutColor;
+            text.sortingOrder = SalonSortOrder.PrepFixtureOverlay;
+            text.rectTransform.sizeDelta = ShelfCountRectSize;
+
+            LocalizedText localized = labelGo.AddComponent<LocalizedText>();
+            var so = new SerializedObject(localized);
+            so.FindProperty("key").stringValue = SoldOutKey;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            labelGo.SetActive(false);
+            return labelGo;
         }
 
         private static OrderTicket BuildOrderTicketPrefab(Sprite square, Sprite circle, SalonSettings settings)

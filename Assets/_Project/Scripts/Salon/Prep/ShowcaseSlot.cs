@@ -7,11 +7,15 @@ namespace CutiePie.Salon
     /// <summary>
     /// Vitrindeki tek pasta yeri (servis adımı 3): tabağa tek dilim verir.
     /// Stoktan yalnızca dilim tepsideki tabağa oturunca düşülür; ıskalanan dilim stoğu değiştirmez.
-    /// Kalan dilim sayısı rakamla gösterilir (yalnızca sayı, yerelleştirme gerekmez). Stok 0'da yuva sönük ve sürüklenmez.
+    /// Kalan dilim sayısı rakamla gösterilir. Stok 0'da yuva sönük görünür, sürüklenmez ve sayının yerine
+    /// "Tükendi" etiketi (yerelleştirilmiş, salon.sold_out) çıkar. Sayılar ortak stoğun Changed olayıyla yenilenir.
     /// </summary>
     public class ShowcaseSlot : ShelfSlot
     {
         [SerializeField] private TMP_Text countText;
+
+        [Tooltip("Stok 0 iken görünen \"Tükendi\" etiketi (LocalizedText'li TMP nesnesi).")]
+        [SerializeField] private GameObject soldOutLabel;
 
         private IShowcaseStock stock;
 
@@ -44,20 +48,27 @@ namespace CutiePie.Salon
         {
             base.RefreshState();
 
+            bool soldOut = Product != null && !CanTake;
+            if (soldOutLabel != null && soldOutLabel.activeSelf != soldOut)
+            {
+                soldOutLabel.SetActive(soldOut);
+            }
+
             if (countText == null)
             {
                 return;
             }
 
-            countText.enabled = Product != null;
-            if (Product == null)
+            // Tükendi etiketi varsa sayı gizlenir; etiket yoksa (eski prefab) sönük "0" gösterilir.
+            countText.enabled = Product != null && (!soldOut || soldOutLabel == null);
+            if (!countText.enabled)
             {
                 return;
             }
 
             countText.text = (stock != null ? stock.GetSlices(Product) : 0).ToString();
             Color color = countText.color;
-            color.a = CanTake ? 1f : SlotEmptyAlpha;
+            color.a = soldOut ? SlotEmptyAlpha : 1f;
             countText.color = color;
         }
 

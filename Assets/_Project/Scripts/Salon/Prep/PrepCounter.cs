@@ -1,4 +1,5 @@
 using System;
+using CutiePie.Core.Data;
 using UnityEngine;
 
 namespace CutiePie.Salon
@@ -38,6 +39,30 @@ namespace CutiePie.Salon
         }
 
         public bool HasFreeSlot => FreeSlotIndex() >= 0;
+
+        /// <summary>
+        /// Tezgâhtaki tepsilerde duran, verilen pastanın dilim sayısı. Bu dilimler stoktan düşmüştür ama henüz teslim edilmemiştir
+        /// (CustomerSpawner stok ayırmasında kullanır).
+        /// </summary>
+        public int CountSlices(ProductData product)
+        {
+            EnsureArray();
+            int count = 0;
+            if (product == null)
+            {
+                return count;
+            }
+
+            foreach (Tray tray in trays)
+            {
+                if (tray != null && tray.Slice != null && tray.Slice.Product == product)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
 
         public Vector3 SnapPoint
         {
@@ -114,7 +139,7 @@ namespace CutiePie.Salon
 
         /// <summary>
         /// Tezgâhtaki tüm tepsileri içerikleriyle (tabak, dilim, bardak) siler. Yeni round başında SalonRound çağırır.
-        /// Silinen dilimler stoğa dönmez; vitrin stoğu round başında zaten yeniden doldurulur.
+        /// Silinen dilimler stoğa dönmez (stoktan düşmüş sayılır; çöpe atılan dilimle aynı kural).
         /// </summary>
         public void ClearAll()
         {

@@ -68,9 +68,16 @@ namespace CutiePie.Salon
         public void OnDropped(ServingItem item, IDropTarget target)
         {
             // Parçanın kendi ürünü kullanılır; sürükleme sırasında sayfa değişmiş olsa da doğru ürün düşer.
-            if (!Commit(item.Product))
+            if (Commit(item.Product))
             {
-                Debug.LogWarning($"[ShelfSlot] '{(item.Product != null ? item.Product.id : "null")}' için stok yetmedi.", this);
+                return;
+            }
+
+            // Sürükleme sürerken stok bittiyse (ör. başka bir yerden düşüldü) parça tepsiden geri alınır; bedava dilim olmaz.
+            Debug.LogWarning($"[ShelfSlot] '{(item.Product != null ? item.Product.id : "null")}' için stok yetmedi; parça geri alındı.", this);
+            if (!(target is Tray tray && tray.Discard(item)) && item != null)
+            {
+                Destroy(item.gameObject);
             }
         }
 
