@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fd35cf3e1a10d34b8a62987520ba7a7, type: 3}
+  m_Name: OvenPanelSettings
+  m_EditorClassIdentifier: 
+  backgroundColor: {r: 1, g: 0.93, b: 0.9, a: 1}
+  stockBarColor: {r: 1, g: 0.89, b: 0.91, a: 1}
+  stockEntryColor: {r: 1, g: 0.97, b: 0.95, a: 1}
+  emptyCardColor: {r: 1, g: 0.91, b: 0.86, a: 1}
+  bakingCardColor: {r: 1, g: 0.87, b: 0.78, a: 1}
+  readyCardColor: {r: 0.88, g: 0.96, b: 0.86, a: 1}
+  lockedCardColor: {r: 0.9, g: 0.88, b: 0.89, a: 1}
+  lockedAlpha: 0.55
+  bakeButtonColor: {r: 0.55, g: 0.84, b: 0.62, a: 1}
+  collectButtonColor: {r: 1, g: 0.82, b: 0.38, a: 1}
+  unlockButtonColor: {r: 0.82, g: 0.7, b: 0.96, a: 1}
+  progressBackColor: {r: 0.98, g: 0.8, b: 0.84, a: 1}
+  progressFillColor: {r: 0.95, g: 0.55, b: 0.62, a: 1}
+  iconPlaceholderColor: {r: 0.96, g: 0.72, b: 0.78, a: 1}
+  glowColor: {r: 1, g: 0.93, b: 0.55, a: 1}
+  glowPulsesPerSecond: 1.2
+  glowMinAlpha: 0.25
+  glowMaxAlpha: 0.9
+  collectPulseScale: 1.06
+  maxFlyIcons: 6
+  flyDuration: 0.55
+  flyStagger: 0.07
+  flyArcHeight: 180
+  flyIconSize: 72
+  landPopScale: 1.2
+  landPopDuration: 0.15
