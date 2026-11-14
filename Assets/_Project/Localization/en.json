@@ -53,6 +53,27 @@
     { "key": "salon.no_stock_title", "value": "No cakes in the showcase!" },
     { "key": "salon.no_stock_message", "value": "Bake cakes in the kitchen." },
     { "key": "salon.no_stock_go_kitchen", "value": "Go to kitchen" },
-    { "key": "salon.no_stock_continue", "value": "Open anyway" }
+    { "key": "salon.no_stock_continue", "value": "Open anyway" },
+    { "key": "kitchen.ovens.title", "value": "Ovens" },
+    { "key": "kitchen.stock.title", "value": "Stock" },
+    { "key": "kitchen.oven.name", "value": "Oven {0}" },
+    { "key": "kitchen.oven.empty", "value": "Empty" },
+    { "key": "kitchen.oven.bake", "value": "Bake" },
+    { "key": "kitchen.oven.baking", "value": "Baking" },
+    { "key": "kitchen.oven.speed_up", "value": "Watch ad, finish now" },
+    { "key": "kitchen.oven.ad_playing", "value": "Ad playing..." },
+    { "key": "kitchen.oven.ready", "value": "Ready!" },
+    { "key": "kitchen.oven.collect", "value": "Collect" },
+    { "key": "kitchen.oven.locked", "value": "Locked" },
+    { "key": "kitchen.oven.unlock", "value": "Unlock with upgrade" },
+    { "key": "kitchen.picker.title", "value": "What shall we bake?" },
+    { "key": "kitchen.recipe.slices", "value": "{0} slices" },
+    { "key": "kitchen.recipe.duration_min", "value": "{0} min" },
+    { "key": "kitchen.recipe.duration_sec", "value": "{0} sec" },
+    { "key": "kitchen.recipe.duration_min_sec", "value": "{0} min {1} sec" },
+    { "key": "shop.upgrades", "value": "Upgrades" },
+    { "key": "shop.settings", "value": "Settings" },
+    { "key": "kitchen.title", "value": "Kitchen" },
+    { "key": "kitchen.back_to_shop", "value": "Back to shop" }
   ]
 }

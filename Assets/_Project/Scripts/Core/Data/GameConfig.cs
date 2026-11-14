@@ -51,6 +51,9 @@ namespace CutiePie.Core.Data
         [Tooltip("Salon (satış) sahnesinin adı.")]
         public string salonSceneName;
 
+        [Tooltip("Mutfak sahnesinin adı.")]
+        public string kitchenSceneName;
+
         [Header("Açılış ekranı")]
         [Tooltip("\"Yakında\" mesajının ekranda kalma süresi (gerçek zamanlı saniye).")]
         [Min(0f)] public float comingSoonDurationSeconds;

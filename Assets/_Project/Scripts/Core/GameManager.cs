@@ -38,6 +38,9 @@ namespace CutiePie.Core
         /// <summary>Özel sipariş servisi. Kullanım: GameManager.Instance.Orders.Board.</summary>
         public ICustomOrderService Orders { get; private set; }
 
+        // Ovens'ın somut hâli: Initialize/Tick yalnızca buradan çağrılır, dışarıya IOvenService açılır.
+        private OvenService _ovenService;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -60,8 +63,10 @@ namespace CutiePie.Core
 
             Stock = new StockManager();
 
-            // G11: boş gövdeler. Mantık G12 (fırın) ve G14 (özel sipariş) görevlerinde gelecek.
-            Ovens = new OvenService();
+            _ovenService = new OvenService(config.kitchen, Stock, Ads);
+            Ovens = _ovenService;
+
+            // G11: boş gövde. Mantık G14'te gelecek.
             Orders = new CustomOrderService();
         }
 
@@ -73,6 +78,9 @@ namespace CutiePie.Core
                 if (SaveSystem.Instance != null)
                 {
                     SaveSystem.Instance.LoadAndApply();
+
+                    // Kayıt yüklendikten sonra: açılışta hazır olan fırınlar için OvenReady burada yayınlanır.
+                    _ovenService.Initialize();
                 }
                 else
                 {
@@ -81,15 +89,30 @@ namespace CutiePie.Core
 
                 // Editörde Play başka bir sahnede basıldıysa doğrudan o sahne açılır (build'de her zaman null).
                 string editorStartScene = EditorPlayStartScene.Consume();
+#if UNITY_EDITOR
+                // BootInEditorMarker'lı test sahnesi Build Settings dışındadır; adla değil yoluyla yüklenir.
+                if (EditorPlayStartScene.IsScenePath(editorStartScene))
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(
+                        editorStartScene, new LoadSceneParameters(LoadSceneMode.Single));
+                    return;
+                }
+#endif
                 LoadScene(string.IsNullOrEmpty(editorStartScene) ? config.firstSceneName : editorStartScene);
             }
         }
+
+        // Fırın süreleri UTC zaman damgasıyla hesaplanır (timeScale'den etkilenmez); burada yalnızca hazır olma kontrol edilir.
+        private void Update() => _ovenService?.Tick();
 
         /// <summary>Açılış ekranına (pastane) döner. Ör. round sonundaki "Pastaneye dön" butonu.</summary>
         public void GoToShop() => LoadScene(config.shopSceneName);
 
         /// <summary>Salon'a geçer. Ör. açılış ekranındaki Kasa butonu.</summary>
         public void GoToSalon() => LoadScene(config.salonSceneName);
+
+        /// <summary>Mutfak'a geçer. Ör. açılış ekranındaki Mutfak butonu.</summary>
+        public void GoToKitchen() => LoadScene(config.kitchenSceneName);
 
         /// <summary>Adı verilen sahneyi yükler (Build Settings'te olmalı).</summary>
         public void LoadScene(string sceneName)
