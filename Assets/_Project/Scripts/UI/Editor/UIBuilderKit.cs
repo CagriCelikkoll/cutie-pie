@@ -16,6 +16,7 @@ namespace CutiePie.UI.Editor
     internal static class UIBuilderKit
     {
         public const string PrefabFolder = "Assets/_Project/Prefabs/UI";
+        public const string KitchenPrefabFolder = PrefabFolder + "/Kitchen";
         public const string SettingsPath = "Assets/_Project/Data/Salon/RoundEndSettings.asset";
 
         private const string PlaceholderFolder = "Assets/_Project/Art/Salon/Placeholders";
@@ -160,9 +161,17 @@ namespace CutiePie.UI.Editor
         {
             RectTransform tf = CreateRect(parent, name, position, size);
             Image image = AddSlicedImage(tf.gameObject, rounded, color);
+            Button button = AddButton(tf.gameObject, image);
 
-            Button button = tf.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
+            CreateText(tf, "Label", key, Vector2.zero, size, fontSize, settings.buttonTextColor, TextAlignmentOptions.Center);
+            return button;
+        }
+
+        /// <summary>Var olan bir nesneye ortak tonlu, seçili kalmayan Button ekler (ör. tamamı dokunulabilir kart).</summary>
+        public static Button AddButton(GameObject go, Image target)
+        {
+            Button button = go.AddComponent<Button>();
+            button.targetGraphic = target;
             ColorBlock colors = button.colors;
             colors.normalColor = Color.white;
             colors.highlightedColor = ButtonHighlighted;
@@ -175,8 +184,6 @@ namespace CutiePie.UI.Editor
             Navigation navigation = button.navigation;
             navigation.mode = Navigation.Mode.None;
             button.navigation = navigation;
-
-            CreateText(tf, "Label", key, Vector2.zero, size, fontSize, settings.buttonTextColor, TextAlignmentOptions.Center);
             return button;
         }
 
@@ -214,6 +221,58 @@ namespace CutiePie.UI.Editor
             }
 
             return text;
+        }
+
+        /// <summary>
+        /// Yatay ScrollRect: Viewport (maske) > içerik (HorizontalLayoutGroup + ContentSizeFitter).
+        /// Öğeler alana sığarsa ortada durur; sığmazsa sürükleyerek kaydırılır. Dönen RectTransform öğelerin ekleneceği içeriktir.
+        /// </summary>
+        public static (ScrollRect, RectTransform) CreateHorizontalScroll(Transform parent, string name, string contentName,
+            Vector2 position, Vector2 size, int paddingX, int paddingY, float spacing)
+        {
+            RectTransform scrollTf = CreateRect(parent, name, position, size);
+            ScrollRect scroll = scrollTf.gameObject.AddComponent<ScrollRect>();
+
+            RectTransform viewport = CreateStretched(scrollTf, "Viewport");
+            Image viewportImage = viewport.gameObject.AddComponent<Image>();
+
+            // Görünmez ama öğelerin arasındaki boşluktan da sürüklenebilsin.
+            viewportImage.color = Color.clear;
+            viewportImage.raycastTarget = true;
+            viewport.gameObject.AddComponent<RectMask2D>();
+
+            var listGo = new GameObject(contentName, typeof(RectTransform));
+            var list = (RectTransform)listGo.transform;
+            list.SetParent(viewport, false);
+            list.anchorMin = new Vector2(0.5f, 0f);
+            list.anchorMax = new Vector2(0.5f, 1f);
+            list.pivot = new Vector2(0.5f, 0.5f);
+            list.anchoredPosition = Vector2.zero;
+            list.sizeDelta = Vector2.zero;
+
+            HorizontalLayoutGroup layout = listGo.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(paddingX, paddingX, paddingY, paddingY);
+            layout.spacing = spacing;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+
+            ContentSizeFitter fitter = listGo.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            scroll.content = list;
+            scroll.viewport = viewport;
+            scroll.horizontal = true;
+            scroll.vertical = false;
+            scroll.movementType = ScrollRect.MovementType.Elastic;
+            scroll.inertia = true;
+            scroll.horizontalScrollbar = null;
+            scroll.verticalScrollbar = null;
+
+            return (scroll, list);
         }
 
         // ------------------------------------------------------------------ Fontlar
