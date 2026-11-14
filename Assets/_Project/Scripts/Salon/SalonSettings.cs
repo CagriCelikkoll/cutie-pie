@@ -71,9 +71,6 @@ namespace CutiePie.Salon
         [Tooltip("Vitrin ve içecek rafında sayfa başına ürün yeri.")]
         [Min(1)] public int shelfSlotsPerPage = 4;
 
-        [Tooltip("Round başında menüdeki her pasta için vitrindeki dilim sayısı (Faz 1: round içinde yenilenmez).")]
-        [Min(0)] public int startingSlicesPerCake = 15;
-
         [Tooltip("Müşteriye dokunma alanı (birim); gövdeden büyük tutulur.")]
         public Vector2 customerTapSize = new Vector2(1.3f, 1.6f);
 

@@ -4,7 +4,8 @@ namespace CutiePie.Salon
 {
     /// <summary>
     /// Çöp kutusu: tezgâhtaki tepsi üzerine bırakılınca tepsinin yalnızca içeriği (tabak, dilim, bardak) silinir;
-    /// boş tepsi tezgâhtaki yerine döner (Tray.OnDropped). Silinen dilim stoğa geri dönmez.
+    /// boş tepsi tezgâhtaki yerine döner (Tray.OnDropped). Silinen dilim stoğa geri dönmez:
+    /// ortak stoktan tabağa oturduğu anda düşmüştür, çöpe atılınca düşmüş sayılır.
     /// </summary>
     public class TrashBin : MonoBehaviour, IDropTarget
     {

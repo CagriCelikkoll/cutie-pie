@@ -11,6 +11,9 @@ namespace CutiePie.Salon
     /// → hazır tepsi istasyonu → girdi açılır → müşteri üretimi başlar.
     /// RoundEnded: üretim ve istasyon durur, girdi kilitlenir (müşteriler kendileri donar). Sonuç ekranı: UI/RoundEndPanel.
     /// Round sonunda alınan geliştirmeler "Tekrar oyna" ile gelen RoundStarted'ta uygulanır.
+    /// G16: vitrin stoğu Mutfak ile ortaktır (SharedShowcaseStock). Round başında hiç pasta stoğu yoksa
+    /// girdi kilitli kalır, SalonEvents.NoCakeStockAtRoundStart yayınlanır (UI/NoStockPanel açılır, zamanı durdurur)
+    /// ve oyuncu "Yine de aç" diyene kadar müşteri gelmez; sonra round yalnızca içecek siparişleriyle oynanır.
     /// </summary>
     public class SalonRound : MonoBehaviour
     {
@@ -18,7 +21,8 @@ namespace CutiePie.Salon
         [SerializeField] private CustomerSpawner customerSpawner;
 
         [Header("Hazırlama alanı")]
-        [SerializeField] private LocalShowcaseStock showcaseStock;
+        [Tooltip("Mutfak ile ortak pasta stoğu (GameManager.Instance.Stock adaptörü).")]
+        [SerializeField] private SharedShowcaseStock showcaseStock;
         [SerializeField] private ProductShelf cakeShelf;
         [SerializeField] private ProductShelf drinkShelf;
 
@@ -31,17 +35,22 @@ namespace CutiePie.Salon
         [Tooltip("Hazır tepsi istasyonu (ready_tray geliştirmesi); tezgâh temizlendikten sonra başlatılır.")]
         [SerializeField] private ReadyTrayStation readyTrayStation;
 
+        // Stok uyarısında oyuncunun seçimini bekleyen round'un seviyesi; beklenmiyorsa null.
+        private LevelData waitingLevel;
+
         // RoundManager.Start'ta yayınlar; OnEnable'da abone olunduğu için ilk round kaçmaz.
         private void OnEnable()
         {
             GameEvents.RoundStarted += HandleRoundStarted;
             GameEvents.RoundEnded += HandleRoundEnded;
+            SalonEvents.NoStockContinueRequested += HandleNoStockContinue;
         }
 
         private void OnDisable()
         {
             GameEvents.RoundStarted -= HandleRoundStarted;
             GameEvents.RoundEnded -= HandleRoundEnded;
+            SalonEvents.NoStockContinueRequested -= HandleNoStockContinue;
         }
 
         private void HandleRoundStarted(LevelData level)
@@ -52,16 +61,53 @@ namespace CutiePie.Salon
                 return;
             }
 
+            waitingLevel = null;
             tableManager.Setup(GetOpenTableCount(level));
             ResetCounterAndTicket();
             SetupPrepArea(level);
             StartReadyTrayStation();
+
+            if (showcaseStock != null && !showcaseStock.HasAnyCake)
+            {
+                SalonInput.Lock();
+                waitingLevel = level;
+                if (SalonEvents.RaiseNoCakeStockAtRoundStart())
+                {
+                    // Oyuncu seçene kadar beklenir (HandleNoStockContinue veya sahne değişimi).
+                    return;
+                }
+
+                waitingLevel = null;
+                Debug.LogWarning("[SalonRound] Pasta stoğu yok ama stok uyarı paneli sahnede değil; round yalnızca içecekle başlıyor. " +
+                                 "'Cutie Pie/UI/Stok Uyarı Panelini Kur' menüsünü çalıştırın.", this);
+            }
+
+            BeginPlay(level);
+        }
+
+        // Girdi açılır ve müşteri üretimi başlar (G17 sırası: hazır tepsi istasyonundan sonra).
+        private void BeginPlay(LevelData level)
+        {
             SalonInput.Unlock();
-            customerSpawner.StartSpawning(level);
+            customerSpawner.StartSpawning(level, showcaseStock, prepCounter);
+        }
+
+        private void HandleNoStockContinue()
+        {
+            if (waitingLevel == null)
+            {
+                return;
+            }
+
+            LevelData level = waitingLevel;
+            waitingLevel = null;
+            BeginPlay(level);
         }
 
         private void HandleRoundEnded(RoundResult result)
         {
+            waitingLevel = null;
+
             if (customerSpawner != null)
             {
                 customerSpawner.StopSpawning();
@@ -113,7 +159,7 @@ namespace CutiePie.Salon
             }
         }
 
-        // Vitrin stoğu önce dolar; pasta rafı ürünlerini ve dilim sayılarını ondan okur.
+        // Vitrin stoğu önce menüyü bağlar; pasta rafı ürünlerini ve dilim sayılarını ondan okur.
         private void SetupPrepArea(LevelData level)
         {
             if (showcaseStock == null || cakeShelf == null || drinkShelf == null)

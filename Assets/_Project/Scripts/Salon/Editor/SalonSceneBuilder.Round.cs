@@ -60,7 +60,7 @@ namespace CutiePie.Salon.Editor
             var so = new SerializedObject(GetOrCreateSalonRound(root));
             so.FindProperty("tableManager").objectReferenceValue = manager;
             so.FindProperty("customerSpawner").objectReferenceValue = spawner;
-            so.FindProperty("showcaseStock").objectReferenceValue = prepArea.GetComponent<LocalShowcaseStock>();
+            so.FindProperty("showcaseStock").objectReferenceValue = prepArea.GetComponent<SharedShowcaseStock>();
             so.FindProperty("cakeShelf").objectReferenceValue = FindShelf(prepArea, BoxCakeShowcase);
             so.FindProperty("drinkShelf").objectReferenceValue = FindShelf(prepArea, BoxDrinks);
             so.FindProperty("prepCounter").objectReferenceValue = FindPrepComponent<PrepCounter>(prepArea, BoxPrepCounter);

@@ -150,7 +150,39 @@ namespace CutiePie.Salon
             ContentsChanged?.Invoke(this);
         }
 
-        /// <summary>Tepsinin içeriğini (tabak, dilim, bardak) siler; tepsi yerinde kalır. Silinen dilim stoğa dönmez.</summary>
+        /// <summary>
+        /// Az önce kabul edilen dilimi veya bardağı geri alıp siler (kaynak stoktan düşemediyse; bedava parça olmasın diye).
+        /// Tabak ve tepsinin kendisi bu yolla kaldırılmaz. Parça bu tepside değilse false.
+        /// </summary>
+        public bool Discard(ServingItem part)
+        {
+            if (part == null)
+            {
+                return false;
+            }
+
+            if (part == Slice)
+            {
+                Slice = null;
+            }
+            else if (part == Drink)
+            {
+                Drink = null;
+            }
+            else
+            {
+                return false;
+            }
+
+            DestroyPart(part);
+            ContentsChanged?.Invoke(this);
+            return true;
+        }
+
+        /// <summary>
+        /// Tepsinin içeriğini (tabak, dilim, bardak) siler; tepsi yerinde kalır.
+        /// Silinen dilim stoğa dönmez: tabağa oturduğu anda ortak stoktan düşmüştür, çöpe atılınca da düşmüş sayılır.
+        /// </summary>
         public void Clear()
         {
             DestroyPart(Slice);
