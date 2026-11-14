@@ -74,6 +74,11 @@
     { "key": "shop.upgrades", "value": "Geliştirmeler" },
     { "key": "shop.settings", "value": "Ayarlar" },
     { "key": "kitchen.title", "value": "Mutfak" },
-    { "key": "kitchen.back_to_shop", "value": "Pastaneye dön" }
+    { "key": "kitchen.back_to_shop", "value": "Pastaneye dön" },
+    { "key": "settings.title", "value": "Ayarlar" },
+    { "key": "settings.language", "value": "Dil" },
+    { "key": "settings.lang_tr", "value": "Türkçe" },
+    { "key": "settings.lang_en", "value": "English" },
+    { "key": "settings.version", "value": "Sürüm {0}" }
   ]
 }

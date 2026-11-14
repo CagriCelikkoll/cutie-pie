@@ -65,5 +65,15 @@ namespace CutiePie.UI
 
         [Tooltip("Altın simgesi (fiyat ve mevcut altın).")]
         public Color goldIconColor = new Color(1f, 0.76f, 0.2f, 1f);
+
+        [Header("Ayarlar")]
+        [Tooltip("Etkin dilin buton rengi (SettingsPanel çalışma zamanında uygular).")]
+        public Color languageSelectedColor = new Color(0.55f, 0.84f, 0.62f, 1f);
+
+        [Tooltip("Seçili olmayan dilin buton rengi.")]
+        public Color languageIdleColor = new Color(1f, 0.91f, 0.86f, 1f);
+
+        [Tooltip("Ayarlar panelinin köşesindeki sürüm yazısı.")]
+        public Color versionTextColor = new Color(0.42f, 0.27f, 0.32f, 0.6f);
     }
 }

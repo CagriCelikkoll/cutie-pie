@@ -74,6 +74,11 @@
     { "key": "shop.upgrades", "value": "Upgrades" },
     { "key": "shop.settings", "value": "Settings" },
     { "key": "kitchen.title", "value": "Kitchen" },
-    { "key": "kitchen.back_to_shop", "value": "Back to shop" }
+    { "key": "kitchen.back_to_shop", "value": "Back to shop" },
+    { "key": "settings.title", "value": "Settings" },
+    { "key": "settings.language", "value": "Language" },
+    { "key": "settings.lang_tr", "value": "Türkçe" },
+    { "key": "settings.lang_en", "value": "English" },
+    { "key": "settings.version", "value": "Version {0}" }
   ]
 }
