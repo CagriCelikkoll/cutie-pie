@@ -65,6 +65,10 @@
     { "key": "kitchen.recipe.slices", "value": "{0} slices" },
     { "key": "kitchen.recipe.duration_min", "value": "{0} min" },
     { "key": "kitchen.recipe.duration_sec", "value": "{0} sec" },
-    { "key": "kitchen.recipe.duration_min_sec", "value": "{0} min {1} sec" }
+    { "key": "kitchen.recipe.duration_min_sec", "value": "{0} min {1} sec" },
+    { "key": "shop.upgrades", "value": "Upgrades" },
+    { "key": "shop.settings", "value": "Settings" },
+    { "key": "kitchen.title", "value": "Kitchen" },
+    { "key": "kitchen.back_to_shop", "value": "Back to shop" }
   ]
 }

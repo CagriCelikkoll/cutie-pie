@@ -65,6 +65,10 @@
     { "key": "kitchen.recipe.slices", "value": "{0} dilim" },
     { "key": "kitchen.recipe.duration_min", "value": "{0} dk" },
     { "key": "kitchen.recipe.duration_sec", "value": "{0} sn" },
-    { "key": "kitchen.recipe.duration_min_sec", "value": "{0} dk {1} sn" }
+    { "key": "kitchen.recipe.duration_min_sec", "value": "{0} dk {1} sn" },
+    { "key": "shop.upgrades", "value": "Geliştirmeler" },
+    { "key": "shop.settings", "value": "Ayarlar" },
+    { "key": "kitchen.title", "value": "Mutfak" },
+    { "key": "kitchen.back_to_shop", "value": "Pastaneye dön" }
   ]
 }
