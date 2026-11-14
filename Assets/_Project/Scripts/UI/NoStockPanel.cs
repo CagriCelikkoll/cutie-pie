@@ -9,7 +9,7 @@ namespace CutiePie.UI
     /// <summary>
     /// Round başında vitrinde hiç pasta yoksa açılan uyarı (G16): "Mutfakta pasta pişir".
     /// SalonEvents.NoCakeStockAtRoundStart ile açılır; açıkken Time.timeScale = 0 olur (round süresi ve sabır durur).
-    /// Butonlar: "Mutfağa git" (GameManager'da GoToKitchen olmadığı için şimdilik pastaneye döner) ve
+    /// Butonlar: "Mutfağa git" (GameManager.GoToKitchen ile Mutfak sahnesine geçer) ve
     /// "Yine de aç" (round yalnızca içecek siparişleriyle başlar).
     /// Zaman ölçeği panel kapanınca, bileşen kapanınca/yok olunca ve aktif sahne değişince MUTLAKA 1'e döner.
     /// Panel zamana bağlı animasyon kullanmaz; buton geçişleri uGUI'de zaman ölçeğinden bağımsızdır.
@@ -136,10 +136,9 @@ namespace CutiePie.UI
                 return;
             }
 
+            // Önce Hide(): zaman ölçeği Mutfak'a geçmeden 1'e döner (ResumeTime).
             Hide();
-
-            // TODO (altyapı): GameManager.GoToKitchen eklenince buraya bağlanacak. Şimdilik pastaneye döner.
-            GameManager.Instance.GoToShop();
+            GameManager.Instance.GoToKitchen();
         }
 
         private void SetContentActive(bool active)
