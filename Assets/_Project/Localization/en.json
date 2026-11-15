@@ -74,6 +74,8 @@
     { "key": "shop.upgrades", "value": "Upgrades" },
     { "key": "shop.settings", "value": "Settings" },
     { "key": "kitchen.title", "value": "Kitchen" },
-    { "key": "kitchen.back_to_shop", "value": "Back to shop" }
+    { "key": "kitchen.back_to_shop", "value": "Back to shop" },
+    { "key": "upgrade.extra_oven.name", "value": "Extra Oven" },
+    { "key": "upgrade.extra_oven.desc", "value": "Opens a new oven so you can bake more cakes at once." }
   ]
 }
