@@ -41,6 +41,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7e5e18452412a3d44af382c612210874, type: 2}
   maxDecorations: 5
   decorationPositionTolerance: 0.2
+  minDecorations: 1
+  decorationAreaMin: {x: 0.15, y: 0.2}
+  decorationAreaMax: {x: 0.85, y: 0.8}
+  decorationMinSpacing: 0.2
+  decorationPlacementAttempts: 30
+  decorationTypeShare: 0.5
   baseWeight: 0.3
   creamWeight: 0.3
   decorationWeight: 0.3

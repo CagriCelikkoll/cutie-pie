@@ -34,10 +34,13 @@ namespace CutiePie.Core
         /// <summary>Son görülen UTC zaman (DateTime.Ticks). Saat geri alınmasını tespit etmek için. G12'de doldurulur.</summary>
         public long lastSeenUtcTicks;
 
-        /// <summary>Panodaki fişler. G14'te doldurulur.</summary>
+        /// <summary>Panodaki fişler. CustomOrderService yönetir.</summary>
         public List<CustomOrder> boardOrders = new List<CustomOrder>();
 
-        /// <summary>Bekleyen fiş yenilemelerinin UTC zamanları (DateTime.Ticks). G14'te doldurulur.</summary>
+        /// <summary>
+        /// Bekleyen fiş yenilemeleri: her biri bir fişin tamamlandığı UTC zaman (DateTime.Ticks).
+        /// Yeni fiş bu zamandan KitchenSettings.orderRefreshSeconds sonra gelir.
+        /// </summary>
         public List<long> pendingOrderRefreshUtcTicks = new List<long>();
 
         /// <summary>Seçili dil kodu; boşsa varsayılan dil. G15'te doldurulur.</summary>

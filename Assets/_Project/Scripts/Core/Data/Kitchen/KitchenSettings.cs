@@ -45,6 +45,25 @@ namespace CutiePie.Core.Data
         [Tooltip("Süs konumunun 'yaklaşık doğru' sayıldığı en büyük uzaklık (0–1 pasta koordinatında).")]
         [Range(0f, 1f)] public float decorationPositionTolerance;
 
+        [Header("Fiş üretimi (süsler)")]
+        [Tooltip("Fişteki en az süs sayısı (maxDecorations'tan büyük olamaz).")]
+        [Min(0)] public int minDecorations;
+
+        [Tooltip("Fişte süslerin konabileceği alanın sol alt köşesi (CakeBuild pasta koordinatı, 0–1).")]
+        public Vector2 decorationAreaMin;
+
+        [Tooltip("Fişte süslerin konabileceği alanın sağ üst köşesi (CakeBuild pasta koordinatı, 0–1).")]
+        public Vector2 decorationAreaMax;
+
+        [Tooltip("Fişte iki süsün merkezleri arasındaki en az uzaklık (pasta koordinatı).")]
+        [Range(0f, 1f)] public float decorationMinSpacing;
+
+        [Tooltip("Bir süse uygun yer bulmak için en fazla deneme sayısı; bulunamazsa o süs atlanır.")]
+        [Min(1)] public int decorationPlacementAttempts;
+
+        [Tooltip("Doğru türdeki süsün yeri tutmasa da aldığı pay (0–1); kalan pay konum yakınlığından gelir.")]
+        [Range(0f, 1f)] public float decorationTypeShare;
+
         [Header("Benzerlik ağırlıkları (toplamı 1 olmalı)")]
         [Range(0f, 1f)] public float baseWeight;
         [Range(0f, 1f)] public float creamWeight;
