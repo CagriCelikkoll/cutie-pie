@@ -32,3 +32,11 @@ MonoBehaviour:
   upgradesButtonColor: {r: 0.82, g: 0.7, b: 0.96, a: 1}
   closeButtonColor: {r: 0.98, g: 0.7, b: 0.76, a: 1}
   buttonTextColor: {r: 0.3, g: 0.2, b: 0.25, a: 1}
+  upgradeCardColor: {r: 1, g: 0.91, b: 0.86, a: 1}
+  upgradeIconColor: {r: 0.82, g: 0.7, b: 0.96, a: 1}
+  buyButtonColor: {r: 0.55, g: 0.84, b: 0.62, a: 1}
+  maxedButtonColor: {r: 1, g: 0.82, b: 0.38, a: 1}
+  goldIconColor: {r: 1, g: 0.76, b: 0.2, a: 1}
+  languageSelectedColor: {r: 0.55, g: 0.84, b: 0.62, a: 1}
+  languageIdleColor: {r: 1, g: 0.91, b: 0.86, a: 1}
+  versionTextColor: {r: 0.42, g: 0.27, b: 0.32, a: 0.6}
