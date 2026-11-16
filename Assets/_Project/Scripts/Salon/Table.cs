@@ -10,6 +10,8 @@ namespace CutiePie.Salon
     /// Müşteri yiyip kalkınca masa kirlenir (boş tabak kalır); kirli masaya dokununca temizlenir.
     /// Dokunma alanı prefab'taki BoxCollider2D'dir; masadaki tepsiye dokunulsa da tıklama masaya çıkar.
     /// Kilitli masa geliştirmeyle açılınca kısa bir "açılma" animasyonu oynar (gövde büyüyüp küçülür, parıltı söner).
+    /// Görünüm: SalonSettings'te masa görselleri varsa boş/dolu/kilitli temiz görsel (kilitli soluk), kirli görsel;
+    /// yoksa duruma göre renkli kutu.
     /// </summary>
     public class Table : MonoBehaviour, IDropTarget, IPointerClickHandler
     {
@@ -188,7 +190,13 @@ namespace CutiePie.Salon
             }
 
             Occupant = null;
-            if (ServedTray != null)
+
+            // Kirli masa görselinde tabak ve bardak zaten çizili; tepsi kaldırılır (iki tabak görünmesin).
+            if (HasArt && settings.tableDirtySprite != null)
+            {
+                ClearServedTray();
+            }
+            else if (ServedTray != null)
             {
                 ServedTray.ClearFood();
             }
@@ -250,7 +258,10 @@ namespace CutiePie.Salon
 
             ClearServedTray();
             ServedTray = tray;
-            tray.PlaceOnTable(transform, settings != null ? settings.trayOnTableScale : 1f, SalonSortOrder.TrayOnTable);
+
+            // Görselli masada tepsi masanın üst yüzeyine oturur; yer tutucu kutuda merkezde kalır.
+            Vector2 offset = HasArt ? settings.trayOnTableOffset : Vector2.zero;
+            tray.PlaceOnTable(transform, settings != null ? settings.trayOnTableScale : 1f, SalonSortOrder.TrayOnTable, offset);
         }
 
         private void ClearServedTray()
@@ -383,17 +394,43 @@ namespace CutiePie.Salon
             StateChanged?.Invoke(this);
         }
 
+        /// <summary>SalonSettings'te masa görseli atanmış mı? Değilse renkli kutu yer tutucusu kullanılır.</summary>
+        private bool HasArt => settings != null && settings.tableCleanSprite != null;
+
         private void RefreshVisual()
         {
+            bool art = HasArt;
+
+            // Görselli masada kilit, koyu kapak yerine soluk renkle gösterilir.
             if (lockVisual != null)
             {
-                lockVisual.SetActive(State == TableState.Locked);
+                lockVisual.SetActive(State == TableState.Locked && !art);
             }
 
-            if (body != null && settings != null)
+            if (body == null || settings == null)
+            {
+                return;
+            }
+
+            if (!art)
             {
                 body.color = settings.GetTableColor(State);
+                return;
             }
+
+            Sprite sprite = State == TableState.Dirty && settings.tableDirtySprite != null
+                ? settings.tableDirtySprite
+                : settings.tableCleanSprite;
+            Color color = State == TableState.Locked ? settings.tableLockedTint : Color.white;
+
+            // Kirli ve temiz görsel aynı ölçekle çizilir; taban aynı yerde kalır. Collider değişmez.
+            SpriteFitter fitter = SpriteFitter.GetOrAdd(body);
+            Vector2 size = settings.tableVisualSize;
+            fitter.Configure(size, new Vector2(0f, settings.tableVisualBottomY + size.y * 0.5f), FitAlignment.Bottom);
+            fitter.Set(sprite, color, true, settings.tableCleanSprite);
+
+            // Açılma animasyonu bu ölçeği temel alır (görsel değişince ölçek de değişebilir).
+            bodyBaseScale = body.transform.localScale;
         }
     }
 }

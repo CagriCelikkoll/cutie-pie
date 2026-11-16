@@ -25,6 +25,8 @@ namespace CutiePie.Salon
     /// Otururken dokunulursa SalonEvents.CustomerTapped yayınlar (sipariş fişe düşer); dokunma alanı prefab'taki BoxCollider2D'dir.
     /// Teslim kararını OrderDelivery verir; müşteri yalnızca sonucu oynar (StartEating / RejectOrder).
     /// Round bitince (GameEvents.RoundEnded) olduğu yerde donar: yürümez, sabrı akmaz, dokunma yok sayılır.
+    /// Görünüm: SalonSettings'te mod görselleri varsa sabra göre mutlu → sabırsız → kızgın (tüm tipler için ortak);
+    /// yoksa CustomerTypeData.sprite ya da tipin yer tutucu rengi.
     /// </summary>
     public class Customer : MonoBehaviour, IPointerClickHandler
     {
@@ -138,6 +140,7 @@ namespace CutiePie.Salon
                         patienceBar.SetRatio(PatienceRatio);
                     }
 
+                    UpdateMoodFromPatience();
                     UpdateShake();
 
                     if (patienceLeft <= 0f)
@@ -208,6 +211,7 @@ namespace CutiePie.Salon
             eatTimeLeft = settings.eatDurationSeconds;
             StopShake();
             HideOverlays();
+            SetMood(Mood.Happy);
         }
 
         /// <summary>OrderDelivery yanlış teslimde çağırır: müşteri başını sallar, oturmaya ve beklemeye devam eder.</summary>
@@ -262,6 +266,7 @@ namespace CutiePie.Salon
             State = CustomerState.LeavingAngry;
             StopShake();
             HideOverlays();
+            SetMood(Mood.Angry);
 
             // Olay masa boşaltılmadan önce yayınlanır; Info masa sırasını taşımaya devam eder.
             GameEvents.RaiseCustomerLeftAngry(Info);
@@ -300,9 +305,38 @@ namespace CutiePie.Salon
             return false;
         }
 
+        // --- Görünüm ---
+
+        /// <summary>Müşterinin yüz ifadesi; görselli müşteride sabır barının rengiyle aynı eşiklerle değişir.</summary>
+        private enum Mood
+        {
+            None = 0,
+            Happy = 1,
+            Impatient = 2,
+            Angry = 3
+        }
+
+        private Mood mood = Mood.None;
+
+        /// <summary>SalonSettings'te müşteri mod görselleri atanmış mı? (Tüm tipler için ortak; CustomerTypeData.sprite'tan önce gelir.)</summary>
+        private bool HasMoodArt => settings != null && settings.customerHappySprite != null;
+
         private void ApplyAppearance()
         {
-            if (body == null || Type == null)
+            if (body == null)
+            {
+                return;
+            }
+
+            if (HasMoodArt)
+            {
+                ApplyArtLayout();
+                mood = Mood.None;
+                SetMood(Mood.Happy);
+                return;
+            }
+
+            if (Type == null)
             {
                 return;
             }
@@ -316,6 +350,73 @@ namespace CutiePie.Salon
             {
                 body.color = Type.placeholderColor;
             }
+        }
+
+        /// <summary>
+        /// Görselli müşteri yerleşimi (SalonSettings): tam boy görsel tabanı oturma noktasının altında, masanın arkasında
+        /// çizilir (bacaklar masanın arkasında kalır); sabır barı ve balon başın üstüne taşınır.
+        /// </summary>
+        private void ApplyArtLayout()
+        {
+            Vector2 size = settings.customerVisualSize;
+            SpriteFitter.GetOrAdd(body).Configure(size, new Vector2(0f, settings.customerVisualBottomY + size.y * 0.5f), FitAlignment.Bottom);
+            body.sortingOrder = SalonSortOrder.CustomerBehindTable;
+
+            if (patienceBar != null)
+            {
+                patienceBar.transform.localPosition = new Vector3(0f, settings.customerPatienceBarOffsetY, 0f);
+            }
+
+            if (orderBubble != null)
+            {
+                orderBubble.transform.localPosition = new Vector3(0f, settings.customerBubbleOffsetY, 0f);
+            }
+        }
+
+        /// <summary>Otururken sabır oranına göre ifade: yeşil mutlu, sarı sabırsız, kırmızı kızgın.</summary>
+        private void UpdateMoodFromPatience()
+        {
+            if (!HasMoodArt)
+            {
+                return;
+            }
+
+            float ratio = PatienceRatio;
+            if (ratio <= settings.patienceRedThreshold)
+            {
+                SetMood(Mood.Angry);
+            }
+            else if (ratio <= settings.patienceYellowThreshold)
+            {
+                SetMood(Mood.Impatient);
+            }
+            else
+            {
+                SetMood(Mood.Happy);
+            }
+        }
+
+        private void SetMood(Mood newMood)
+        {
+            if (!HasMoodArt || body == null || newMood == mood)
+            {
+                return;
+            }
+
+            mood = newMood;
+            Sprite happy = settings.customerHappySprite;
+            Sprite sprite = happy;
+            if (newMood == Mood.Impatient && settings.customerImpatientSprite != null)
+            {
+                sprite = settings.customerImpatientSprite;
+            }
+            else if (newMood == Mood.Angry && settings.customerAngrySprite != null)
+            {
+                sprite = settings.customerAngrySprite;
+            }
+
+            // Üç ifade mutlu görselin ölçeğiyle çizilir; taban hizalı olduğu için konum değişmez (sallanma bozulmaz).
+            SpriteFitter.GetOrAdd(body).Set(sprite, Color.white, true, happy);
         }
     }
 }

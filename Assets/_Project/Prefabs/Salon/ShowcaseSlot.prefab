@@ -98,6 +98,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boxSize: {x: 1, y: 1}
+  boxCenter: {x: 0, y: 0}
+  alignment: 0
 --- !u!1 &3380870559131790467
 GameObject:
   m_ObjectHideFlags: 0

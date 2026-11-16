@@ -46,6 +46,25 @@ MonoBehaviour:
   plateSprite: {fileID: 1750870238, guid: c1c96242a91361847b23d5d55e7d47d7, type: 3}
   stackVisualCount: 4
   stackVisualStep: {x: 0, y: 0.12}
+  backgroundSprite: {fileID: 21300000, guid: a0aca47204049664cb0e7255fae891ce, type: 3}
+  showcaseCabinetSprite: {fileID: -314449760, guid: b0dc034be225726418b1af670a7f373d, type: 3}
+  drinkCounterSprite: {fileID: -1338550211, guid: 8e454505c8b51f64992e48e6a88a3128, type: 3}
+  trashBinSprite: {fileID: 1062547163, guid: 12b331edb237aec4ba390f3c2524c607, type: 3}
+  prepPlaceholderAlpha: 0.5
+  tableCleanSprite: {fileID: -40993148, guid: 708ffe22c4bbef84c810917ce339694f, type: 3}
+  tableDirtySprite: {fileID: 493298864, guid: 4ce9c65f51607c44e9b9b65bc428d532, type: 3}
+  tableLockedTint: {r: 0.6, g: 0.6, b: 0.65, a: 0.6}
+  tableVisualSize: {x: 1.8, y: 1.5}
+  tableVisualBottomY: -0.55
+  trayOnTableOffset: {x: 0, y: 0.4}
+  customerHappySprite: {fileID: -81225718, guid: ebda8df47542e1d4287161491a87b7a1, type: 3}
+  customerImpatientSprite: {fileID: 1141305469, guid: 8edfc8b680c6d3440956fbd42f3c175f, type: 3}
+  customerAngrySprite: {fileID: 246040446, guid: e98547bc9aedf2447a54b06d725cd629, type: 3}
+  customerVisualSize: {x: 1.8, y: 1.9}
+  customerVisualBottomY: -0.9
+  customerPatienceBarOffsetY: 1.2
+  customerBubbleOffsetY: 1.7
+  customerTapOffsetY: 0.45
   ticketTickColor: {r: 0.3, g: 0.75, b: 0.35, a: 1}
   slotEmptyAlpha: 0.35
   tipPaymentRatio: 0.2
@@ -68,6 +87,22 @@ MonoBehaviour:
   tableUnlockSparkleMaxScale: 1.6
   tableUnlockSparkleColor: {r: 1, g: 0.85, b: 0.45, a: 0.9}
   readyTrayMinIntervalSeconds: 0.5
+  cleanupKeyTolerance: 60
+  cleanupStepTolerance: 10
+  cleanupFeatherDistance: 60
+  cleanupFeatherRadius: 2
+  cleanupShadowMinDarkness: 12
+  cleanupShadowDarknessRange: 60
+  cleanupShadowMaxAlpha: 0.45
+  cleanupOverrides:
+  - fileName: customer_happy
+    keyTolerance: 150
+    stepTolerance: 8
+  - fileName: trash_bin
+    keyTolerance: 70
+    stepTolerance: 14
+  showcaseCabinetSliceBorder: {x: 0.2, y: 0, z: 0.18, w: 0}
+  drinkCounterSliceBorder: {x: 0.26, y: 0, z: 0.34, w: 0}
   tableLockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   tableEmptyColor: {r: 0.8, g: 0.6, b: 0.4, a: 1}
   tableOccupiedColor: {r: 0.7, g: 0.5, b: 0.3, a: 1}

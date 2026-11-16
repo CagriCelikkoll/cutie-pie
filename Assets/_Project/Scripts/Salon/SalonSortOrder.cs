@@ -6,6 +6,9 @@ namespace CutiePie.Salon
     /// </summary>
     public static class SalonSortOrder
     {
+        /// <summary>Kamerayı kaplayan arka plan görseli; her şeyin arkasında.</summary>
+        public const int Background = -100;
+
         public const int Floor = 0;
         public const int Door = 1;
 
@@ -17,6 +20,9 @@ namespace CutiePie.Salon
 
         /// <summary>Hazırlama alanında taşınan parçalar (tepsi, tabak, dilim, bardak).</summary>
         public const int PrepItem = 5;
+
+        /// <summary>Görselli müşteri: masanın arkasında oturur gibi görünsün diye masanın hemen altında çizilir.</summary>
+        public const int CustomerBehindTable = 9;
 
         public const int Table = 10;
         public const int TableLock = 11;

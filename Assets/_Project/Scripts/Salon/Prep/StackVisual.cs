@@ -6,7 +6,7 @@ namespace CutiePie.Salon
     /// <summary>
     /// Tepsi / tabak yığınının görünümü: SalonSettings'teki görselden birkaç kopyayı kaydırarak üst üste çizer.
     /// Yalnızca görseldir; sürükleme ve collider yığın nesnesinde (TrayStack / PlateStack) kalır.
-    /// Görsel atanmamışsa hiçbir şey çizmez; yığının renkli yer tutucu kutusu görünmeye devam eder.
+    /// Görsel atanmamışsa hiçbir şey çizmez; yığının renkli yer tutucu kutusu görünmeye devam eder, görsel varsa gizlenir.
     /// </summary>
     [RequireComponent(typeof(SortingGroup))]
     public class StackVisual : MonoBehaviour
@@ -24,6 +24,9 @@ namespace CutiePie.Salon
         [Tooltip("Tek bir kopyanın sığacağı kutu (birim).")]
         [SerializeField] private Vector2 itemBoxSize = Vector2.one;
 
+        [Tooltip("Yığının renkli yer tutucu kutusu; görsel varken gizlenir (yığının collider'ı kök nesnede kalır).")]
+        [SerializeField] private SpriteRenderer placeholderBox;
+
         private void Start()
         {
             Build();
@@ -35,6 +38,11 @@ namespace CutiePie.Salon
             if (sprite == null)
             {
                 return;
+            }
+
+            if (placeholderBox != null)
+            {
+                placeholderBox.enabled = false;
             }
 
             int count = Mathf.Max(1, settings.stackVisualCount);

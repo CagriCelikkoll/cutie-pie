@@ -118,8 +118,8 @@ namespace CutiePie.Salon
                 return;
             }
 
-            customerMarker.sprite = customer.Body.sprite;
-            customerMarker.color = customer.Body.color;
+            // Müşteri görseli tam boy ve büyük; işaretin küçük kutusuna oranı korunarak sığar.
+            SpriteFitter.Apply(customerMarker, customer.Body.sprite, customer.Body.color, true);
         }
 
         private void OnCustomerLeft(CustomerInfo info) => ClearIfCurrent(info);

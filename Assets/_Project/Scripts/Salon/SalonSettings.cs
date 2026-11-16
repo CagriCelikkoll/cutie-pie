@@ -12,6 +12,17 @@ namespace CutiePie.Salon
         public Color color;
     }
 
+    /// <summary>"Beyaz Arka Planı Temizle" menüsünde tek bir görsel için farklı tolerans (ör. lekeli veya gri arka plan).</summary>
+    [System.Serializable]
+    public struct ArtCleanupOverride
+    {
+        [Tooltip("Kaynak dosyanın uzantısız adı (ör. customer_happy).")]
+        public string fileName;
+
+        [Range(0f, 255f)] public float keyTolerance;
+        [Range(0f, 255f)] public float stepTolerance;
+    }
+
     /// <summary>
     /// Salon'a özel denge ve görünüm ayarları. Koddaki tüm Salon değerleri buradan okunur.
     /// </summary>
@@ -93,6 +104,62 @@ namespace CutiePie.Salon
         [Tooltip("Yığında her kopyanın bir alttakine göre kayması (birim).")]
         public Vector2 stackVisualStep = new Vector2(0f, 0.12f);
 
+        [Header("Salon görselleri (boşsa renkli yer tutucu kalır)")]
+        [Tooltip("Kamerayı tamamen kaplayan arka plan (en arkada).")]
+        public Sprite backgroundSprite;
+
+        public Sprite showcaseCabinetSprite;
+        public Sprite drinkCounterSprite;
+        public Sprite trashBinSprite;
+
+        [Tooltip("Görseli olmayan hazırlama kutularının (ör. hazırlık tezgâhı) saydamlığı (0-1).")]
+        [Range(0f, 1f)] public float prepPlaceholderAlpha = 0.5f;
+
+        [Header("Masa görselleri")]
+        [Tooltip("Boş ve dolu masa. Kilitli masa da bu görseldir, tableLockedTint ile soluklaşır.")]
+        public Sprite tableCleanSprite;
+
+        [Tooltip("Kirli masa (içinde tabak ve bardak çizili; görsel varken masadaki tepsi kaldırılır).")]
+        public Sprite tableDirtySprite;
+
+        [Tooltip("Kilitli masanın rengi (soluk / gri).")]
+        public Color tableLockedTint = new Color(0.6f, 0.6f, 0.65f, 0.6f);
+
+        [Tooltip("Masa görselinin sığdığı kutu (birim). Collider (1.8 x 1.1) bundan bağımsızdır.")]
+        public Vector2 tableVisualSize = new Vector2(1.8f, 1.5f);
+
+        [Tooltip("Masa görselinin tabanının masa merkezine göre yüksekliği (birim).")]
+        public float tableVisualBottomY = -0.55f;
+
+        [Tooltip("Görselli masada teslim edilen tepsinin masa merkezine göre yeri (masanın üst yüzeyi).")]
+        public Vector2 trayOnTableOffset = new Vector2(0f, 0.4f);
+
+        [Header("Müşteri görselleri (tüm müşteri tipleri için ortak)")]
+        [Tooltip("Sabır yeşilken; yerken ve mutlu ayrılırken de.")]
+        public Sprite customerHappySprite;
+
+        [Tooltip("Sabır sarıyken.")]
+        public Sprite customerImpatientSprite;
+
+        [Tooltip("Sabır kırmızıyken ve kızgın ayrılırken.")]
+        public Sprite customerAngrySprite;
+
+        [Tooltip("Müşteri görselinin sığdığı kutu (birim). Üç mod görseli mutlu görselin ölçeğiyle çizilir.")]
+        public Vector2 customerVisualSize = new Vector2(1.8f, 1.9f);
+
+        [Tooltip("Müşteri görselinin tabanının müşteri merkezine (masadaki oturma noktası) göre yüksekliği. " +
+                 "Negatif değer bacakları masanın arkasına saklar.")]
+        public float customerVisualBottomY = -0.9f;
+
+        [Tooltip("Görselli müşteride sabır barının yüksekliği (başın üstü).")]
+        public float customerPatienceBarOffsetY = 1.2f;
+
+        [Tooltip("Görselli müşteride sipariş balonunun yüksekliği (sabır barının üstü).")]
+        public float customerBubbleOffsetY = 1.7f;
+
+        [Tooltip("Müşteri dokunma alanının (customerTapSize) dikey kayması; alt kenar masanın collider'ına taşmasın.")]
+        public float customerTapOffsetY = 0.45f;
+
         [Tooltip("Fişte tamamlanan satırın tik rengi.")]
         public Color ticketTickColor = new Color(0.3f, 0.75f, 0.35f, 1f);
 
@@ -160,6 +227,42 @@ namespace CutiePie.Salon
         [Tooltip("İki hazır tepsi arası süre geliştirmenin etki değerinden (UpgradeData.levelEffects, saniye) gelir; " +
                  "etki bundan küçükse (veya 0) bu kullanılır.")]
         [Min(0.1f)] public float readyTrayMinIntervalSeconds = 0.5f;
+
+        [Header("Görsel temizleme (yalnızca editör: Cutie Pie → Salon → Beyaz Arka Planı Temizle)")]
+        [Tooltip("Arka plan rengine (kenar piksellerinin medyanı) bu uzaklıktan yakın pikseller silinebilir (0-255).")]
+        [Range(0f, 255f)] public float cleanupKeyTolerance = 60f;
+
+        [Tooltip("Silme bir pikselden komşusuna yalnızca renk farkı bundan küçükse geçer; kontur çizgileri silmeyi durdurur.")]
+        [Range(0f, 255f)] public float cleanupStepTolerance = 10f;
+
+        [Tooltip("Kenar bandında pikselin tam opak sayıldığı, arka plana olan renk farkı.")]
+        [Min(1f)] public float cleanupFeatherDistance = 60f;
+
+        [Tooltip("Yumuşatılan kenar bandının genişliği (piksel).")]
+        [Range(0, 4)] public int cleanupFeatherRadius = 2;
+
+        [Tooltip("Arka plandan en az bu kadar koyu (parlaklık farkı) silinen alan yarı saydam gölgeye çevrilir. Müşterilerde uygulanmaz.")]
+        [Range(0f, 255f)] public float cleanupShadowMinDarkness = 12f;
+
+        [Tooltip("Gölgenin en koyu hâline ulaştığı parlaklık farkı aralığı.")]
+        [Min(1f)] public float cleanupShadowDarknessRange = 60f;
+
+        [Tooltip("Gölgenin en yüksek opaklığı (0-1).")]
+        [Range(0f, 1f)] public float cleanupShadowMaxAlpha = 0.45f;
+
+        [Tooltip("Varsayılan toleransın uymadığı görseller (ör. lekeli veya gradyanlı arka plan).")]
+        public List<ArtCleanupOverride> cleanupOverrides = new List<ArtCleanupOverride>
+        {
+            new ArtCleanupOverride { fileName = "customer_happy", keyTolerance = 150f, stepTolerance = 8f },
+            new ArtCleanupOverride { fileName = "trash_bin", keyTolerance = 70f, stepTolerance = 14f },
+        };
+
+        [Header("9-slice (temizleme menüsü border'ı koyar)")]
+        [Tooltip("Vitrin dolabının uzamayan kenarları, sprite'a oranla: sol, alt, sağ, üst (0-0.5). Yalnızca yatay uzatıldığı için alt/üst 0.")]
+        public Vector4 showcaseCabinetSliceBorder = new Vector4(0.2f, 0f, 0.18f, 0f);
+
+        [Tooltip("İçecek tezgâhının uzamayan kenarları (süs makineleri kenar parçalarında kalır): sol, alt, sağ, üst (0-0.5).")]
+        public Vector4 drinkCounterSliceBorder = new Vector4(0.26f, 0f, 0.34f, 0f);
 
         [Header("Masa renkleri")]
         public Color tableLockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);

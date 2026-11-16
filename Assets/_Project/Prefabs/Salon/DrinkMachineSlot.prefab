@@ -207,3 +207,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boxSize: {x: 1, y: 1}
+  boxCenter: {x: 0, y: 0}
+  alignment: 0

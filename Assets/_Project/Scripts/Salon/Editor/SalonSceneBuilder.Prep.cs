@@ -82,8 +82,6 @@ namespace CutiePie.Salon.Editor
         private const float TicketTickSize = 0.28f;
         private static readonly Vector2 TicketTickOffset = new Vector2(0.3f, 0.22f);
 
-        // Müşteri dokunma alanı gövdenin biraz üstüne kayar (balonu da kapsasın).
-        private const float CustomerTapOffsetY = 0.3f;
 
         // İkonu olmayan menü ürünlerine verilecek ayırt edici yer tutucu renkler (sırayla).
         private static readonly Color[] CakePlaceholderPalette =
@@ -164,6 +162,10 @@ namespace CutiePie.Salon.Editor
             {
                 GetOrConvertPrepBox(prepArea, box, square);
             }
+
+            // Vitrin / içecek tezgâhı / çöp görselleri; görselsiz kutular yarı saydam. Arka plan en arkada.
+            ApplyPrepBoxArt(prepArea, settings, square);
+            SetupBackground(root, settings);
 
             // Prefab'lar (her seferinde yeniden üretilir; aynı yol → GUID korunur).
             EnsureFolder(PrefabFolder);
@@ -628,7 +630,7 @@ namespace CutiePie.Salon.Editor
             }
 
             col.size = settings.customerTapSize;
-            col.offset = new Vector2(0f, CustomerTapOffsetY);
+            col.offset = new Vector2(0f, settings.customerTapOffsetY);
         }
 
         // --- Veri ---
@@ -775,7 +777,72 @@ namespace CutiePie.Salon.Editor
             so.FindProperty("settings").objectReferenceValue = settings;
             so.FindProperty("kind").intValue = (int)kind;
             so.FindProperty("itemBoxSize").vector2Value = StackItemBoxSize;
+            Transform boxVisual = stackTf.Find(PrepVisualName);
+            so.FindProperty("placeholderBox").objectReferenceValue = boxVisual != null ? boxVisual.GetComponent<SpriteRenderer>() : null;
             so.ApplyModifiedProperties();
+        }
+
+        /// <summary>
+        /// Hazırlama kutularının görünümü (tekrar çalıştırılabilir). Kutunun kökü, collider'ı ve altındaki yuvalar değişmez;
+        /// yalnızca "Visual" alt nesnesi güncellenir:
+        /// - Vitrin ve içecek tezgâhı: 9-slice görsel, kutu boyutuna uzatılır (yuvalar üstünde kalır).
+        /// - Çöp kutusu: görsel kutuya oranı korunarak sığar.
+        /// - Tepsi / tabak yığını: renkli kutu kalır; görsel varsa StackVisual oyunda gizler.
+        /// - Görseli olmayan diğer kutular (ör. hazırlık tezgâhı): renkli kutu, SalonSettings.prepPlaceholderAlpha saydamlığıyla.
+        /// </summary>
+        private static void ApplyPrepBoxArt(Transform prepArea, SalonSettings settings, Sprite square)
+        {
+            foreach (PrepBox box in PrepBoxes)
+            {
+                Transform boxTf = prepArea.Find(box.Name);
+                Transform visualTf = boxTf != null ? boxTf.Find(PrepVisualName) : null;
+                SpriteRenderer renderer = visualTf != null ? visualTf.GetComponent<SpriteRenderer>() : null;
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                SpriteFitter fitter = GetOrAddComponent<SpriteFitter>(visualTf.gameObject);
+                Undo.RecordObjects(new Object[] { renderer, visualTf, fitter }, "Hazırlama Görseli");
+                fitter.Configure(box.Size, Vector2.zero, FitAlignment.Center);
+
+                Sprite art = GetPrepBoxArt(box.Name, settings);
+                bool sliced = box.Name == BoxCakeShowcase || box.Name == BoxDrinks;
+                bool stack = box.Name == BoxTrayStack || box.Name == BoxPlateStack;
+
+                if (art != null && sliced)
+                {
+                    fitter.SetSliced(art, Color.white);
+                }
+                else if (art != null)
+                {
+                    fitter.Set(art, Color.white, true);
+                }
+                else
+                {
+                    Color color = box.Color;
+                    if (!stack)
+                    {
+                        color.a = settings.prepPlaceholderAlpha;
+                    }
+
+                    fitter.Set(square, color, false);
+                }
+
+                renderer.enabled = true;
+                EditorUtility.SetDirty(renderer);
+            }
+        }
+
+        private static Sprite GetPrepBoxArt(string boxName, SalonSettings settings)
+        {
+            switch (boxName)
+            {
+                case BoxCakeShowcase: return settings.showcaseCabinetSprite;
+                case BoxDrinks: return settings.drinkCounterSprite;
+                case BoxTrashBin: return settings.trashBinSprite;
+                default: return null;
+            }
         }
 
         // --- Yardımcılar ---

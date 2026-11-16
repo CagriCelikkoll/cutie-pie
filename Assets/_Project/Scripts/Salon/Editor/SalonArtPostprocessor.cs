@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.U2D.Sprites;
@@ -13,21 +14,43 @@ namespace CutiePie.Salon.Editor
     /// Görsellerin şeffaf kenar boşlukları birbirinden çok farklı olduğu için sprite, görselin dolu alanına
     /// (alpha sınırlarına) kırpılır ve pivot dolu alanın ortasına konur. Böylece SpriteFitter ve UI Image
     /// (preserveAspect) boşluğu değil görselin kendisini kutuya sığdırır.
+    ///
+    /// Klasör / ad kuralları:
+    /// - Background/: kırpılmaz, tek sprite, Max 2048, mip kapalı (kamerayı kaplayan arka plan).
+    /// - Customers/ ve table_*: pivot alt orta (durum görselleri değişince taban aynı yerde kalır).
+    /// - showcase_cabinet, drink_counter: 9-slice için Full Rect mesh (border'ı temizleme menüsü koyar).
+    /// "_cut" son eki (temizlenmiş kopya) ad kurallarında yok sayılır.
     /// </summary>
     public class SalonArtPostprocessor : AssetPostprocessor
     {
         private const string MenuPath = "Cutie Pie/Salon/Görsel Ayarlarını Yeniden Uygula";
         private const string ArtRoot = "Assets/_Project/Art/Salon/";
         private const string ExcludedFolder = ArtRoot + "Placeholders/";
+        private const string BackgroundFolder = ArtRoot + "Background/";
+        private const string CustomersFolder = ArtRoot + "Customers/";
         private const string PngExtension = ".png";
 
-        private const int MaxTextureSize = 1024;
+        /// <summary>Temizlenmiş kopyaların dosya adı son eki (WhiteBackgroundCleaner yazar).</summary>
+        public const string CutSuffix = "_cut";
 
-        // Kaynak görseller 2048 px; dünya boyutunu SpriteFitter belirlediği için bu değer yalnızca editördeki ilk görünüşü etkiler.
+        private const string TablePrefix = "table_";
+
+        /// <summary>9-slice çizilen görseller (son eksiz ad).</summary>
+        public const string ShowcaseCabinetName = "showcase_cabinet";
+        public const string DrinkCounterName = "drink_counter";
+
+        private const int MaxTextureSize = 1024;
+        private const int BackgroundMaxTextureSize = 2048;
+
+        // Kaynak görseller 2048 px; dünya boyutunu SpriteFitter / BackgroundFitter belirlediği için bu değer
+        // yalnızca editördeki ilk görünüşü etkiler.
         private const float PixelsPerUnit = 512f;
 
         // Bu değerin altındaki alpha (0-255) boş sayılır (kenarlardaki neredeyse görünmez gölge/kenar yumuşatma pikselleri).
         private const byte AlphaThreshold = 8;
+
+        private static readonly Vector2 CenterPivot = new Vector2(0.5f, 0.5f);
+        private static readonly Vector2 BottomCenterPivot = new Vector2(0.5f, 0f);
 
         // Menüden yeniden uygularken "yalnızca ilk içe aktarma" kuralını atlar.
         private static bool forceApply;
@@ -48,30 +71,72 @@ namespace CutiePie.Salon.Editor
             ApplySettings(importer, assetPath);
         }
 
+        private static string Normalize(string path) => path.Replace('\\', '/');
+
         private static bool IsSalonArt(string path)
         {
-            string normalized = path.Replace('\\', '/');
+            string normalized = Normalize(path);
             return normalized.StartsWith(ArtRoot)
                    && !normalized.StartsWith(ExcludedFolder)
                    && Path.GetExtension(normalized).ToLowerInvariant() == PngExtension;
         }
+
+        public static bool IsBackground(string path) => Normalize(path).StartsWith(BackgroundFolder);
+
+        public static bool IsCustomer(string path) => Normalize(path).StartsWith(CustomersFolder);
+
+        /// <summary>Dosya adı, "_cut" son eki olmadan (ör. "table_clean_cut.png" → "table_clean").</summary>
+        public static string GetBaseName(string path)
+        {
+            string name = Path.GetFileNameWithoutExtension(path);
+            return name.EndsWith(CutSuffix) ? name.Substring(0, name.Length - CutSuffix.Length) : name;
+        }
+
+        public static bool IsCutCopy(string path) => Path.GetFileNameWithoutExtension(path).EndsWith(CutSuffix);
+
+        private static bool IsSliced(string path)
+        {
+            string baseName = GetBaseName(path);
+            return baseName == ShowcaseCabinetName || baseName == DrinkCounterName;
+        }
+
+        private static bool UsesBottomPivot(string path) => IsCustomer(path) || GetBaseName(path).StartsWith(TablePrefix);
 
         private static void ApplySettings(TextureImporter importer, string path)
         {
             importer.textureType = TextureImporterType.Sprite;
             importer.spritePixelsPerUnit = PixelsPerUnit;
             importer.filterMode = FilterMode.Bilinear;
-            importer.mipmapEnabled = true;
             importer.textureCompression = TextureImporterCompression.CompressedHQ;
-            importer.maxTextureSize = MaxTextureSize;
             importer.alphaIsTransparency = true;
             importer.wrapMode = TextureWrapMode.Clamp;
+
+            // Arka plan: ekranı kaplar, uzaklaşmaz (mip gereksiz), kırpılmaz; tam çözünürlükte kalır.
+            if (IsBackground(path))
+            {
+                importer.mipmapEnabled = false;
+                importer.maxTextureSize = BackgroundMaxTextureSize;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                return;
+            }
+
+            importer.mipmapEnabled = true;
+            importer.maxTextureSize = MaxTextureSize;
+
+            // 9-slice çizim (SpriteRenderer Sliced) Full Rect mesh ister.
+            var textureSettings = new TextureImporterSettings();
+            importer.ReadTextureSettings(textureSettings);
+            textureSettings.spriteMeshType = IsSliced(path) ? SpriteMeshType.FullRect : SpriteMeshType.Tight;
+            importer.SetTextureSettings(textureSettings);
 
             // Dolu alan bulunamazsa (tamamen saydam / okunamayan dosya) tüm görsel tek sprite olarak kalır.
             if (TryGetOpaqueRect(path, out Rect rect))
             {
                 importer.spriteImportMode = SpriteImportMode.Multiple;
-                SetSingleSpriteRect(importer, Path.GetFileNameWithoutExtension(path), rect);
+                bool bottom = UsesBottomPivot(path);
+                SetSingleSpriteRect(importer, Path.GetFileNameWithoutExtension(path), rect,
+                    bottom ? SpriteAlignment.BottomCenter : SpriteAlignment.Center,
+                    bottom ? BottomCenterPivot : CenterPivot);
             }
             else
             {
@@ -82,24 +147,23 @@ namespace CutiePie.Salon.Editor
 
         /// <summary>
         /// Görselde tek sprite tanımlar (2D Sprite paketinin veri sağlayıcısıyla; TextureImporter.spritesheet 2022.3'te kaldırıldı).
-        /// Daha önce sprite varsa kimliği korunur ki ona bağlı referanslar (ProductData.icon vb.) kopmasın.
+        /// Daha önce sprite varsa kimliği ve 9-slice border'ı korunur ki ona bağlı referanslar (ProductData.icon vb.) kopmasın.
         /// </summary>
-        private static void SetSingleSpriteRect(TextureImporter importer, string spriteName, Rect rect)
+        private static void SetSingleSpriteRect(TextureImporter importer, string spriteName, Rect rect, SpriteAlignment alignment, Vector2 pivot)
         {
-            var factory = new SpriteDataProviderFactories();
-            factory.Init();
-            ISpriteEditorDataProvider provider = factory.GetSpriteEditorDataProviderFromObject(importer);
-            provider.InitSpriteEditorDataProvider();
+            ISpriteEditorDataProvider provider = CreateProvider(importer);
 
             SpriteRect[] existing = provider.GetSpriteRects();
-            GUID spriteId = existing != null && existing.Length > 0 ? existing[0].spriteID : GUID.Generate();
+            bool hasExisting = existing != null && existing.Length > 0;
+            GUID spriteId = hasExisting ? existing[0].spriteID : GUID.Generate();
 
             var spriteRect = new SpriteRect
             {
                 name = spriteName,
                 rect = rect,
-                alignment = SpriteAlignment.Center,
-                pivot = new Vector2(0.5f, 0.5f),
+                alignment = alignment,
+                pivot = pivot,
+                border = hasExisting ? existing[0].border : Vector4.zero,
                 spriteID = spriteId
             };
 
@@ -109,6 +173,15 @@ namespace CutiePie.Salon.Editor
             nameFileIds?.SetNameFileIdPairs(new[] { new SpriteNameFileIdPair(spriteName, spriteId) });
 
             provider.Apply();
+        }
+
+        private static ISpriteEditorDataProvider CreateProvider(TextureImporter importer)
+        {
+            var factory = new SpriteDataProviderFactories();
+            factory.Init();
+            ISpriteEditorDataProvider provider = factory.GetSpriteEditorDataProviderFromObject(importer);
+            provider.InitSpriteEditorDataProvider();
+            return provider;
         }
 
         /// <summary>Kaynak PNG'deki dolu piksellerin sınırı (kaynak piksel koordinatı, sol alt köşe 0,0).</summary>
@@ -164,15 +237,13 @@ namespace CutiePie.Salon.Editor
             }
         }
 
-        // --- Menü ---
+        // --- Dışarıdan kullanım (temizleme menüsü) ---
 
-        [MenuItem(MenuPath)]
-        private static void ReapplySettings()
+        /// <summary>Verilen görsellere Salon ayarlarını, "yalnızca ilk içe aktarma" kuralını atlayarak yeniden uygular.</summary>
+        public static void ForceReimport(IReadOnlyList<string> paths)
         {
-            string[] paths = GetTargetPaths();
-            if (paths.Length == 0)
+            if (paths == null || paths.Count == 0)
             {
-                EditorUtility.DisplayDialog("Salon Görselleri", $"{ArtRoot} altında (Placeholders hariç) PNG bulunamadı.", "Tamam");
                 return;
             }
 
@@ -190,14 +261,59 @@ namespace CutiePie.Salon.Editor
                 AssetDatabase.StopAssetEditing();
                 forceApply = false;
             }
+        }
 
+        /// <summary>
+        /// Görselin (tek) sprite'ına 9-slice border koyar. fractions: sprite dikdörtgenine oranla sol, alt, sağ, üst (0-0.5).
+        /// İçe aktarma sırasında değil, içe aktarma bittikten sonra çağrılır.
+        /// </summary>
+        public static bool ApplySliceBorder(string path, Vector4 fractions)
+        {
+            if (!(AssetImporter.GetAtPath(path) is TextureImporter importer))
+            {
+                return false;
+            }
+
+            ISpriteEditorDataProvider provider = CreateProvider(importer);
+            SpriteRect[] rects = provider.GetSpriteRects();
+            if (rects == null || rects.Length == 0)
+            {
+                return false;
+            }
+
+            Rect r = rects[0].rect;
+            rects[0].border = new Vector4(
+                Mathf.Round(Mathf.Clamp(fractions.x, 0f, 0.5f) * r.width),
+                Mathf.Round(Mathf.Clamp(fractions.y, 0f, 0.5f) * r.height),
+                Mathf.Round(Mathf.Clamp(fractions.z, 0f, 0.5f) * r.width),
+                Mathf.Round(Mathf.Clamp(fractions.w, 0f, 0.5f) * r.height));
+
+            provider.SetSpriteRects(rects);
+            provider.Apply();
+            importer.SaveAndReimport();
+            return true;
+        }
+
+        // --- Menü ---
+
+        [MenuItem(MenuPath)]
+        private static void ReapplySettings()
+        {
+            string[] paths = GetTargetPaths();
+            if (paths.Length == 0)
+            {
+                EditorUtility.DisplayDialog("Salon Görselleri", $"{ArtRoot} altında (Placeholders hariç) PNG bulunamadı.", "Tamam");
+                return;
+            }
+
+            ForceReimport(paths);
             Debug.Log($"[SalonArtPostprocessor] {paths.Length} görsele Salon ayarları yeniden uygulandı.");
         }
 
         /// <summary>Seçili Salon görselleri; seçim yoksa Art/Salon altındaki tüm PNG'ler (Placeholders hariç).</summary>
         private static string[] GetTargetPaths()
         {
-            var selected = new System.Collections.Generic.List<string>();
+            var selected = new List<string>();
             foreach (Object obj in Selection.GetFiltered<Texture2D>(SelectionMode.Assets))
             {
                 string path = AssetDatabase.GetAssetPath(obj);
@@ -212,7 +328,7 @@ namespace CutiePie.Salon.Editor
                 return selected.ToArray();
             }
 
-            var all = new System.Collections.Generic.List<string>();
+            var all = new List<string>();
             foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { ArtRoot.TrimEnd('/') }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
