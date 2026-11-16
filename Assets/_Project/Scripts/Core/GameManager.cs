@@ -59,14 +59,14 @@ namespace CutiePie.Core
             // TODO (yayın): AdMobAdsService hazır olunca burada seçilecek.
             Ads = new FakeAdsService(this, config.fakeAdDurationSeconds);
 
-            // Dil şimdilik kaydedilmez; her açılışta varsayılan dil kullanılır.
+            // Kayıt henüz yüklenmedi: geçici olarak defaultLanguage; asıl dil Start'ta ApplyStartupLanguage ile seçilir.
             Localization = new LocalizationService(config.languages, config.defaultLanguage);
 
             Upgrades = new UpgradeManager(config.upgrades);
 
             Stock = new StockManager();
 
-            _ovenService = new OvenService(config.kitchen, Stock, Ads);
+            _ovenService = new OvenService(config.kitchen, Stock, Ads, Upgrades);
             Ovens = _ovenService;
 
             _orderService = new CustomOrderService(config.kitchen);
@@ -81,6 +81,10 @@ namespace CutiePie.Core
                 if (SaveSystem.Instance != null)
                 {
                     SaveSystem.Instance.LoadAndApply();
+
+                    // Kayıtlı dil; yoksa cihaz dili kuralı. Cihaza göre seçilen dil kayda yazılmaz.
+                    Localization.ApplyStartupLanguage(SaveSystem.Instance.GetLanguageCode(), Application.systemLanguage,
+                        config.deviceFallbackLanguage, config.defaultLanguage);
 
                     // Kayıt yüklendikten sonra: açılışta hazır olan fırınlar için OvenReady burada yayınlanır.
                     _ovenService.Initialize();

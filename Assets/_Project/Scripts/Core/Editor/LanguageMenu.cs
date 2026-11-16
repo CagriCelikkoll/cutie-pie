@@ -2,7 +2,7 @@ using UnityEditor;
 
 namespace CutiePie.Core.Editor
 {
-    /// <summary>Yalnızca editörde ve Play sırasında: dili test için değiştirir. Seçim kaydedilmez.</summary>
+    /// <summary>Yalnızca editörde ve Play sırasında: dili değiştirir. Seçim kayda yazılır; Play'den çıkıp girince korunur.</summary>
     public static class LanguageMenu
     {
         // Dil kodları GameConfig.languages'taki kodlarla aynı olmalı.

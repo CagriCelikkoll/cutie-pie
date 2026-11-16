@@ -313,6 +313,30 @@ namespace CutiePie.Core
             return _data?.upgrades.Find(e => e.id == upgradeId);
         }
 
+        // ------------------------------------------------------------------ Dil
+
+        /// <summary>Oyuncunun seçtiği dil kodu; seçim yapılmadıysa veya kayıt yüklenmediyse null.</summary>
+        public string GetLanguageCode() =>
+            string.IsNullOrEmpty(_data?.languageCode) ? null : _data.languageCode;
+
+        /// <summary>Oyuncunun seçtiği dili yazar ve hemen kaydeder. Kayıt yüklenmediyse yazmaz, false döner.</summary>
+        public bool SetLanguageCode(string languageCode)
+        {
+            if (!IsLoaded || string.IsNullOrEmpty(languageCode))
+            {
+                Debug.LogWarning($"[SaveSystem] Dil kaydedilemedi ('{languageCode}'): kayıt yüklenmedi veya kod boş.");
+                return false;
+            }
+
+            if (_data.languageCode == languageCode)
+            {
+                return true;
+            }
+
+            _data.languageCode = languageCode;
+            return Save();
+        }
+
         // ------------------------------------------------------------------ Stok
 
         /// <summary>Ürünün kayıtlı stoğu; kayıt yüklenmediyse veya ürün yoksa 0. Erişim için StockManager kullanılmalı.</summary>

@@ -21,17 +21,19 @@ namespace CutiePie.Kitchen
         private readonly KitchenSettings _settings;
         private readonly StockManager _stock;
         private readonly IAdsService _ads;
+        private readonly UpgradeManager _upgrades;
 
         // OvenReady'nin yayınlandığı fırınlar (fırın başına bir kez; fırın boşalınca/yeniden pişince silinir).
         private readonly HashSet<int> _readyNotified = new HashSet<int>();
 
         private bool _initialized;
 
-        public OvenService(KitchenSettings settings, StockManager stock, IAdsService ads)
+        public OvenService(KitchenSettings settings, StockManager stock, IAdsService ads, UpgradeManager upgrades)
         {
             _settings = settings;
             _stock = stock;
             _ads = ads;
+            _upgrades = upgrades;
 
             if (_settings == null)
             {
@@ -103,6 +105,9 @@ namespace CutiePie.Kitchen
 
         // ------------------------------------------------------------------ Sorgular
 
+        /// <summary>
+        /// Açık fırın sayısı: startingOvenCount + extra_oven etki değeri (seviyedeki toplam ek fırın), maxOvenCount ile sınırlı.
+        /// </summary>
         public int Count
         {
             get
@@ -112,9 +117,10 @@ namespace CutiePie.Kitchen
                     return 0;
                 }
 
-                SaveSystem save = SaveSystem.Instance;
-                int upgradeLevel = save != null ? save.GetUpgradeLevel(UpgradeIds.ExtraOven) : 0;
-                return Mathf.Clamp(_settings.startingOvenCount + upgradeLevel, 0, _settings.maxOvenCount);
+                int extraOvens = _upgrades != null && _upgrades.TryGetEffect(UpgradeIds.ExtraOven, out float effect)
+                    ? Mathf.RoundToInt(effect)
+                    : 0;
+                return Mathf.Clamp(_settings.startingOvenCount + extraOvens, 0, _settings.maxOvenCount);
             }
         }
 

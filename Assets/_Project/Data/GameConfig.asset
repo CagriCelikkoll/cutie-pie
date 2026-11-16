@@ -23,6 +23,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 42ddaef7659373c4cb362d49930dec1f, type: 2}
   - {fileID: 11400000, guid: 9ccbd07ff7db57944bacf15550ac0696, type: 2}
   - {fileID: 11400000, guid: f99df7827072b054894abfff902962f1, type: 2}
+  - {fileID: 11400000, guid: 575f9fe29c3dd974ca356b0c7ed1635c, type: 2}
   kitchen: {fileID: 11400000, guid: 95a0e416e1a86bf42b3c9bfe4568775b, type: 2}
   saveFileName: save.json
   saveTempFileName: save.json.tmp
@@ -34,9 +35,12 @@ MonoBehaviour:
   kitchenSceneName: Kitchen
   comingSoonDurationSeconds: 1.5
   defaultLanguage: tr
+  deviceFallbackLanguage: en
   languages:
   - code: tr
     file: {fileID: 4900000, guid: d54559cd823579342a76ccca8cc3ca65, type: 3}
+    systemLanguage: 37
   - code: en
     file: {fileID: 4900000, guid: 3136f13f742614c4b8f013e0acb54d4f, type: 3}
+    systemLanguage: 10
   fakeAdDurationSeconds: 1

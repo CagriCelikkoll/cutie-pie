@@ -74,6 +74,8 @@
     { "key": "shop.upgrades", "value": "Geliştirmeler" },
     { "key": "shop.settings", "value": "Ayarlar" },
     { "key": "kitchen.title", "value": "Mutfak" },
-    { "key": "kitchen.back_to_shop", "value": "Pastaneye dön" }
+    { "key": "kitchen.back_to_shop", "value": "Pastaneye dön" },
+    { "key": "upgrade.extra_oven.name", "value": "Ek Fırın" },
+    { "key": "upgrade.extra_oven.desc", "value": "Aynı anda daha çok pasta pişirmek için yeni bir fırın açar." }
   ]
 }
