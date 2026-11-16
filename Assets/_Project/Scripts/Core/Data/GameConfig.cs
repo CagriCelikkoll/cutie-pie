@@ -59,8 +59,11 @@ namespace CutiePie.Core.Data
         [Min(0f)] public float comingSoonDurationSeconds;
 
         [Header("Dil")]
-        [Tooltip("Açılışta kullanılan dil kodu (languages listesinde olmalı).")]
+        [Tooltip("Son çare dil kodu: kayıtlı dil ve cihaz dili kuralı sonuç vermezse kullanılır (languages listesinde olmalı).")]
         public string defaultLanguage;
+
+        [Tooltip("Oyuncu dil seçmediyse ve cihaz dili hiçbir dilin systemLanguage'ıyla eşleşmezse kullanılan dil kodu.")]
+        public string deviceFallbackLanguage;
 
         [Tooltip("Desteklenen diller ve metin dosyaları (Assets/_Project/Localization).")]
         public LanguageFile[] languages;
@@ -79,5 +82,8 @@ namespace CutiePie.Core.Data
 
         [Tooltip("{\"entries\":[{\"key\":..., \"value\":...}]} biçiminde JSON dosyası.")]
         public TextAsset file;
+
+        [Tooltip("Bu dile karşılık gelen cihaz dili; oyuncu dil seçmediyse ilk açılışta buna göre seçilir.")]
+        public SystemLanguage systemLanguage = SystemLanguage.Unknown;
     }
 }

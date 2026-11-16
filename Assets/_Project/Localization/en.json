@@ -79,6 +79,8 @@
     { "key": "settings.language", "value": "Language" },
     { "key": "settings.lang_tr", "value": "Türkçe" },
     { "key": "settings.lang_en", "value": "English" },
-    { "key": "settings.version", "value": "Version {0}" }
+    { "key": "settings.version", "value": "Version {0}" },
+    { "key": "upgrade.extra_oven.name", "value": "Extra Oven" },
+    { "key": "upgrade.extra_oven.desc", "value": "Opens a new oven so you can bake more cakes at once." }
   ]
 }

@@ -313,6 +313,30 @@ namespace CutiePie.Core
             return _data?.upgrades.Find(e => e.id == upgradeId);
         }
 
+        // ------------------------------------------------------------------ Dil
+
+        /// <summary>Oyuncunun seçtiği dil kodu; seçim yapılmadıysa veya kayıt yüklenmediyse null.</summary>
+        public string GetLanguageCode() =>
+            string.IsNullOrEmpty(_data?.languageCode) ? null : _data.languageCode;
+
+        /// <summary>Oyuncunun seçtiği dili yazar ve hemen kaydeder. Kayıt yüklenmediyse yazmaz, false döner.</summary>
+        public bool SetLanguageCode(string languageCode)
+        {
+            if (!IsLoaded || string.IsNullOrEmpty(languageCode))
+            {
+                Debug.LogWarning($"[SaveSystem] Dil kaydedilemedi ('{languageCode}'): kayıt yüklenmedi veya kod boş.");
+                return false;
+            }
+
+            if (_data.languageCode == languageCode)
+            {
+                return true;
+            }
+
+            _data.languageCode = languageCode;
+            return Save();
+        }
+
         // ------------------------------------------------------------------ Stok
 
         /// <summary>Ürünün kayıtlı stoğu; kayıt yüklenmediyse veya ürün yoksa 0. Erişim için StockManager kullanılmalı.</summary>
@@ -414,6 +438,70 @@ namespace CutiePie.Core
                 recipeId = empty ? null : recipeId,
                 startUtcTicks = empty ? 0L : startUtcTicks
             };
+            return true;
+        }
+
+        // ------------------------------------------------------------------ Sipariş panosu
+
+        /// <summary>Kayıtlı pano fişleri (salt okunur); kayıt yüklenmediyse boş. Erişim için CustomOrderService kullanılmalı.</summary>
+        public IReadOnlyList<CustomOrder> BoardOrders =>
+            (IReadOnlyList<CustomOrder>)_data?.boardOrders ?? Array.Empty<CustomOrder>();
+
+        /// <summary>Bekleyen yenilemelerin tamamlanma zamanları (UTC ticks, salt okunur); kayıt yüklenmediyse boş.</summary>
+        public IReadOnlyList<long> PendingOrderRefreshes =>
+            (IReadOnlyList<long>)_data?.pendingOrderRefreshUtcTicks ?? Array.Empty<long>();
+
+        /// <summary>Panoya fiş ekler (diske yazmak için Save çağrılmalı). Kayıt yüklenmediyse veya fiş boşsa false.</summary>
+        public bool AddBoardOrder(CustomOrder order)
+        {
+            if (_data == null || order == null || string.IsNullOrEmpty(order.id))
+            {
+                return false;
+            }
+
+            _data.boardOrders.Add(order);
+            return true;
+        }
+
+        /// <summary>Panodan fiş kaldırır (diske yazmak için Save çağrılmalı). Fiş yoksa false.</summary>
+        public bool RemoveBoardOrder(string orderId)
+        {
+            return _data != null && _data.boardOrders.RemoveAll(o => o != null && o.id == orderId) > 0;
+        }
+
+        /// <summary>Bekleyen yenileme ekler: fişin tamamlandığı UTC zaman (Save çağrılmalı).</summary>
+        public bool AddPendingOrderRefresh(long completedUtcTicks)
+        {
+            if (_data == null)
+            {
+                return false;
+            }
+
+            _data.pendingOrderRefreshUtcTicks.Add(completedUtcTicks);
+            return true;
+        }
+
+        /// <summary>Bekleyen yenilemeyi sırasıyla kaldırır (Save çağrılmalı). İndeks geçersizse false.</summary>
+        public bool RemovePendingOrderRefreshAt(int index)
+        {
+            if (_data == null || index < 0 || index >= _data.pendingOrderRefreshUtcTicks.Count)
+            {
+                return false;
+            }
+
+            _data.pendingOrderRefreshUtcTicks.RemoveAt(index);
+            return true;
+        }
+
+        /// <summary>Bekleyen yenilemenin zamanını değiştirir (yalnızca test menüleri için; Save çağrılmalı).</summary>
+        public bool SetPendingOrderRefreshAt(int index, long completedUtcTicks)
+        {
+            if (_data == null || index < 0 || index >= _data.pendingOrderRefreshUtcTicks.Count)
+            {
+                return false;
+            }
+
+            _data.pendingOrderRefreshUtcTicks[index] = completedUtcTicks;
             return true;
         }
 
