@@ -31,13 +31,12 @@ namespace CutiePie.Salon
 
                 if (product.icon != null)
                 {
-                    icon.sprite = product.icon;
-                    icon.color = Color.white;
+                    SpriteFitter.Apply(icon, product.icon, Color.white, true);
                 }
                 else
                 {
-                    icon.sprite = placeholderSprite;
-                    icon.color = settings != null ? settings.GetProductPlaceholderColor(product) : Color.white;
+                    Color color = settings != null ? settings.GetProductPlaceholderColor(product) : Color.white;
+                    SpriteFitter.Apply(icon, placeholderSprite, color, false);
                 }
             }
 

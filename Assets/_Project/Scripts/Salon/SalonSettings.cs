@@ -80,6 +80,19 @@ namespace CutiePie.Salon
         [Tooltip("İkonu olmayan tabağın yer tutucu rengi.")]
         public Color plateColor = new Color(1f, 1f, 1f, 1f);
 
+        [Header("Görseller (tepsi ve tabak ürün olmadığı için buradan gelir)")]
+        [Tooltip("Tepsi görseli: tezgâhtaki ve masadaki tepsi, tepsi yığını. Boşsa trayColor renkli kutu.")]
+        public Sprite traySprite;
+
+        [Tooltip("Tabak görseli: tepsideki ve masadaki tabak, tabak yığını. Boşsa plateColor renkli kutu.")]
+        public Sprite plateSprite;
+
+        [Tooltip("Tepsi ve tabak yığınında üst üste çizilen kopya sayısı.")]
+        [Min(1)] public int stackVisualCount = 4;
+
+        [Tooltip("Yığında her kopyanın bir alttakine göre kayması (birim).")]
+        public Vector2 stackVisualStep = new Vector2(0f, 0.12f);
+
         [Tooltip("Fişte tamamlanan satırın tik rengi.")]
         public Color ticketTickColor = new Color(0.3f, 0.75f, 0.35f, 1f);
 

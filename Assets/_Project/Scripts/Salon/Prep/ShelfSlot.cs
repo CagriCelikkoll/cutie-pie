@@ -118,15 +118,15 @@ namespace CutiePie.Salon
                 placeholderCached = true;
             }
 
+            // Gerçek görsel yuvanın ikon kutusuna oranı korunarak sığar; yer tutucu kutuyu doldurur.
             if (Product.icon != null)
             {
-                icon.sprite = Product.icon;
-                icon.color = Color.white;
+                SpriteFitter.Apply(icon, Product.icon, Color.white, true);
             }
             else
             {
-                icon.sprite = placeholderSprite;
-                icon.color = settings != null ? settings.GetProductPlaceholderColor(Product) : Color.white;
+                Color color = settings != null ? settings.GetProductPlaceholderColor(Product) : Color.white;
+                SpriteFitter.Apply(icon, placeholderSprite, color, false);
             }
         }
 

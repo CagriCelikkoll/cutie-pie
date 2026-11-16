@@ -46,15 +46,14 @@ namespace CutiePie.Salon
                 return;
             }
 
+            // Gerçek görsel ikon kutusuna oranı korunarak sığar; yer tutucu kutuyu doldurur.
             if (product.icon != null)
             {
-                target.sprite = product.icon;
-                target.color = Color.white;
+                SpriteFitter.Apply(target, product.icon, Color.white, true);
             }
             else
             {
-                target.sprite = placeholder;
-                target.color = placeholderColor;
+                SpriteFitter.Apply(target, placeholder, placeholderColor, false);
             }
         }
     }

@@ -15,5 +15,5 @@ MonoBehaviour:
   id: cake_chocolate
   nameKey: product.cake_chocolate.name
   price: 12
-  icon: {fileID: 0}
+  icon: {fileID: 181329731, guid: c85cc646aa8b8b64ab0dec0baa7a3408, type: 3}
   category: 0

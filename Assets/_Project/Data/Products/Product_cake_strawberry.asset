@@ -15,5 +15,5 @@ MonoBehaviour:
   id: cake_strawberry
   nameKey: product.cake_strawberry.name
   price: 10
-  icon: {fileID: 0}
+  icon: {fileID: 925049782, guid: c711492e57c8cd04caf5c229aff3e853, type: 3}
   category: 0

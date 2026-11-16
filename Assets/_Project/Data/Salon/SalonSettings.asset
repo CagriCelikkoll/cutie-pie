@@ -42,6 +42,10 @@ MonoBehaviour:
   customerTapSize: {x: 1.3, y: 1.6}
   trayColor: {r: 0.7, g: 0.5, b: 0.35, a: 1}
   plateColor: {r: 1, g: 1, b: 1, a: 1}
+  traySprite: {fileID: 816201812, guid: 0500106c05810b74b92e0cfe82aa8a5b, type: 3}
+  plateSprite: {fileID: 1750870238, guid: c1c96242a91361847b23d5d55e7d47d7, type: 3}
+  stackVisualCount: 4
+  stackVisualStep: {x: 0, y: 0.12}
   ticketTickColor: {r: 0.3, g: 0.75, b: 0.35, a: 1}
   slotEmptyAlpha: 0.35
   tipPaymentRatio: 0.2

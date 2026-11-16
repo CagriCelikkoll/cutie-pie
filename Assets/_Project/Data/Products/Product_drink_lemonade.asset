@@ -15,5 +15,5 @@ MonoBehaviour:
   id: drink_lemonade
   nameKey: product.drink_lemonade.name
   price: 6
-  icon: {fileID: 0}
+  icon: {fileID: 945694709, guid: 676a2afc46d5f3b4388f290844632c49, type: 3}
   category: 1
