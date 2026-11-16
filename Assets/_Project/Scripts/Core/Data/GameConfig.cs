@@ -73,17 +73,23 @@ namespace CutiePie.Core.Data
         [Min(0f)] public float fakeAdDurationSeconds;
     }
 
-    /// <summary>Bir dilin kodu ve metin dosyası.</summary>
+    /// <summary>
+    /// Bir dilin kodu ve metin dosyaları. Dosyalar sahibine göre bölünür (ör. tr.altyapi.json, tr.oynanis.json)
+    /// ve yüklenirken birleştirilir; bir anahtar yalnızca bir dosyada olmalıdır.
+    /// </summary>
     [System.Serializable]
     public class LanguageFile
     {
         [Tooltip("Dil kodu, ör. tr, en.")]
         public string code;
 
-        [Tooltip("{\"entries\":[{\"key\":..., \"value\":...}]} biçiminde JSON dosyası.")]
-        public TextAsset file;
+        [Tooltip("{\"entries\":[{\"key\":..., \"value\":...}]} biçiminde JSON dosyaları; sırayla okunup birleştirilir.")]
+        public TextAsset[] files;
 
         [Tooltip("Bu dile karşılık gelen cihaz dili; oyuncu dil seçmediyse ilk açılışta buna göre seçilir.")]
         public SystemLanguage systemLanguage = SystemLanguage.Unknown;
+
+        /// <summary>En az bir metin dosyası atanmış mı.</summary>
+        public bool HasFiles => files != null && System.Array.Exists(files, f => f != null);
     }
 }
