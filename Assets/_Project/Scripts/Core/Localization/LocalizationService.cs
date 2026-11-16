@@ -84,7 +84,7 @@ namespace CutiePie.Core.Localization
             if (systemLanguage != SystemLanguage.Unknown)
             {
                 LanguageFile device = Array.Find(languages,
-                    l => l != null && l.file != null && l.systemLanguage == systemLanguage);
+                    l => l != null && l.HasFiles && l.systemLanguage == systemLanguage);
                 if (device != null && !string.IsNullOrEmpty(device.code))
                 {
                     return device.code;
@@ -100,40 +100,69 @@ namespace CutiePie.Core.Localization
         }
 
         private static bool IsAvailable(LanguageFile[] languages, string code) =>
-            !string.IsNullOrEmpty(code) && Array.Exists(languages, l => l != null && l.file != null && l.code == code);
+            !string.IsNullOrEmpty(code) && Array.Exists(languages, l => l != null && l.HasFiles && l.code == code);
 
         // Dili uygular ve LanguageChanged yayınlar; kayda dokunmaz.
         private bool ApplyLanguage(string code)
         {
             LanguageFile language = Array.Find(_languages, l => l != null && l.code == code);
-            if (language == null || language.file == null)
+            if (language == null || !language.HasFiles)
             {
                 Debug.LogWarning($"[Localization] '{code}' dili bulunamadı.");
                 return false;
             }
 
-            LocalizationTable parsed;
-            try
+            // Önce tüm dosyalar okunur; biri bozuksa dil değiştirilmez, mevcut dil kalır.
+            var merged = new Dictionary<string, string>();
+            var sources = new Dictionary<string, string>();
+            foreach (TextAsset file in language.files)
             {
-                parsed = JsonUtility.FromJson<LocalizationTable>(language.file.text);
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[Localization] '{code}' dil dosyası okunamadı: {e.Message}");
-                return false;
+                if (file == null)
+                {
+                    continue;
+                }
+
+                LocalizationTable parsed;
+                try
+                {
+                    parsed = JsonUtility.FromJson<LocalizationTable>(file.text);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[Localization] '{code}' dil dosyası okunamadı ({file.name}): {e.Message}");
+                    return false;
+                }
+
+                if (parsed?.entries == null)
+                {
+                    continue;
+                }
+
+                foreach (LocalizationEntry entry in parsed.entries)
+                {
+                    if (entry == null || string.IsNullOrEmpty(entry.key))
+                    {
+                        continue;
+                    }
+
+                    // Bir anahtar yalnızca bir dosyada olmalı; çakışmada ilk dosyadaki değer kalır.
+                    if (sources.TryGetValue(entry.key, out string firstFile))
+                    {
+                        Debug.LogWarning($"[Localization] '{code}' dilinde '{entry.key}' anahtarı iki dosyada var " +
+                                         $"({firstFile}, {file.name}); {firstFile} kullanılıyor.");
+                        continue;
+                    }
+
+                    merged[entry.key] = entry.value;
+                    sources[entry.key] = file.name;
+                }
             }
 
             _table.Clear();
             _reportedMissing.Clear();
-            if (parsed?.entries != null)
+            foreach (KeyValuePair<string, string> pair in merged)
             {
-                foreach (LocalizationEntry entry in parsed.entries)
-                {
-                    if (entry != null && !string.IsNullOrEmpty(entry.key))
-                    {
-                        _table[entry.key] = entry.value;
-                    }
-                }
+                _table[pair.Key] = pair.Value;
             }
 
             CurrentLanguage = code;

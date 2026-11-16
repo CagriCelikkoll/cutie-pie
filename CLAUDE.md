@@ -48,6 +48,9 @@ Dil: Türkçe ve İngilizce, ayarlardan seçilir.
   Aile politikası: çocuklara ve yaşı bilinmeyenlere yalnızca çocuk uyumlu, kişiselleştirilmemiş reklam;
   açılışta tarafsız yaş sorusu (doğum yılı).
 - Görseller şimdilik basit renkli sprite/kutu yer tutucularıdır.
+- Yerelleştirme dosyaları sahibine göre bölünmüştür: `Localization/<dil>.altyapi.json` ve `Localization/<dil>.oynanis.json`
+  (ör. `tr.altyapi.json`, `en.oynanis.json`). Oyun bir dilin dosyalarını birleştirir; aynı anahtar iki dosyada olursa uyarı verir.
+  Yeni yerelleştirme anahtarı, ekleyen kişinin kendi dosyasına (altyapi veya oynanis) eklenir. Diğer kişinin dosyası düzenlenmez.
 
 ## Ekip, sahiplik ve Git
 
