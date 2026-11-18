@@ -92,11 +92,12 @@ namespace CutiePie.Salon
 
         /// <summary>
         /// Teslim edilen tepsiyi masaya oturtur. Tezgâhta olmadığı için artık sürüklenemez, çöpe atılamaz ve içine parça konamaz.
+        /// offset: masa merkezine göre konum (görselli masada üst yüzey).
         /// </summary>
-        public void PlaceOnTable(Transform parent, float scale, int sortingOrder)
+        public void PlaceOnTable(Transform parent, float scale, int sortingOrder, Vector2 offset = default)
         {
             transform.SetParent(parent, false);
-            transform.localPosition = Vector3.zero;
+            transform.localPosition = offset;
             transform.localRotation = Quaternion.identity;
             transform.localScale = Vector3.one * scale;
             Item.SortingGroup.sortingOrder = sortingOrder;

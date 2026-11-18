@@ -20,6 +20,10 @@ namespace CutiePie.Salon.Editor
         private const string PrepVisualName = "Visual";
         private const string OrderTicketName = "OrderTicket";
         private const string ReadyTrayStationName = "ReadyTrayStation";
+        private const string StackVisualName = "StackVisual";
+
+        // Tepsi / tabak yığınında tek kopyanın sığacağı kutu (yığın kutusu 1 birim genişliğinde).
+        private static readonly Vector2 StackItemBoxSize = new Vector2(0.9f, 0.9f);
 
         // Prefab yolları.
         private const string TrayPrefabPath = PrefabFolder + "/Tray.prefab";
@@ -78,8 +82,6 @@ namespace CutiePie.Salon.Editor
         private const float TicketTickSize = 0.28f;
         private static readonly Vector2 TicketTickOffset = new Vector2(0.3f, 0.22f);
 
-        // Müşteri dokunma alanı gövdenin biraz üstüne kayar (balonu da kapsasın).
-        private const float CustomerTapOffsetY = 0.3f;
 
         // İkonu olmayan menü ürünlerine verilecek ayırt edici yer tutucu renkler (sırayla).
         private static readonly Color[] CakePlaceholderPalette =
@@ -160,6 +162,10 @@ namespace CutiePie.Salon.Editor
             {
                 GetOrConvertPrepBox(prepArea, box, square);
             }
+
+            // Vitrin / içecek tezgâhı / çöp görselleri; görselsiz kutular yarı saydam. Arka plan en arkada.
+            ApplyPrepBoxArt(prepArea, settings, square);
+            SetupBackground(root, settings);
 
             // Prefab'lar (her seferinde yeniden üretilir; aynı yol → GUID korunur).
             EnsureFolder(PrefabFolder);
@@ -262,6 +268,7 @@ namespace CutiePie.Salon.Editor
             Transform stackTf = prepArea.Find(BoxTrayStack);
             TrayStack stack = GetOrAddComponent<TrayStack>(stackTf.gameObject);
             EnsureBoxCollider(stackTf, FindPrepBox(BoxTrayStack).Size);
+            SetupStackVisual(stackTf, settings, StackVisual.StackKind.Tray);
 
             var so = new SerializedObject(stack);
             so.FindProperty("settings").objectReferenceValue = settings;
@@ -279,6 +286,7 @@ namespace CutiePie.Salon.Editor
             Transform stackTf = prepArea.Find(BoxPlateStack);
             PlateStack stack = GetOrAddComponent<PlateStack>(stackTf.gameObject);
             EnsureBoxCollider(stackTf, FindPrepBox(BoxPlateStack).Size);
+            SetupStackVisual(stackTf, settings, StackVisual.StackKind.Plate);
 
             var so = new SerializedObject(stack);
             so.FindProperty("settings").objectReferenceValue = settings;
@@ -411,6 +419,7 @@ namespace CutiePie.Salon.Editor
             root.GetComponent<SortingGroup>().sortingOrder = SalonSortOrder.PrepItem;
 
             SpriteRenderer visual = CreateSpriteChild(root.transform, PrepVisualName, sprite, size, color, 0);
+            AddFitter(visual, size);
             Transform attach = withAttachPoint ? CreateChildTransform(root.transform, "AttachPoint", PlateAttachOffset) : null;
 
             var so = new SerializedObject(item);
@@ -431,6 +440,7 @@ namespace CutiePie.Salon.Editor
             root.AddComponent<BoxCollider2D>().size = TraySize;
 
             SpriteRenderer body = CreateSpriteChild(root.transform, "Body", square, TraySize, settings.trayColor, 0);
+            AddFitter(body, TraySize);
             Transform plateSlot = CreateChildTransform(root.transform, "PlateSlot", TrayPlateSlotOffset);
             Transform drinkSlot = CreateChildTransform(root.transform, "DrinkSlot", TrayDrinkSlotOffset);
 
@@ -467,6 +477,7 @@ namespace CutiePie.Salon.Editor
 
             SpriteRenderer icon = CreateSpriteChild(root.transform, "Icon", square, new Vector2(ShelfIconSize, ShelfIconSize), iconColor, SalonSortOrder.PrepFixture);
             icon.transform.localPosition = new Vector3(0f, ShelfIconOffsetY, 0f);
+            AddFitter(icon, new Vector2(ShelfIconSize, ShelfIconSize));
 
             var so = new SerializedObject(slot);
             so.FindProperty("settings").objectReferenceValue = settings;
@@ -574,6 +585,7 @@ namespace CutiePie.Salon.Editor
             TicketLine line = lineTf.gameObject.AddComponent<TicketLine>();
 
             SpriteRenderer icon = CreateSpriteChild(lineTf, "Icon", square, new Vector2(TicketIconSize, TicketIconSize), iconColor, 1);
+            AddFitter(icon, new Vector2(TicketIconSize, TicketIconSize));
             SpriteRenderer tick = CreateSpriteChild(lineTf, "Tick", circle, new Vector2(TicketTickSize, TicketTickSize), settings.ticketTickColor, 2);
             tick.transform.localPosition = TicketTickOffset;
             tick.enabled = false;
@@ -618,7 +630,7 @@ namespace CutiePie.Salon.Editor
             }
 
             col.size = settings.customerTapSize;
-            col.offset = new Vector2(0f, CustomerTapOffsetY);
+            col.offset = new Vector2(0f, settings.customerTapOffsetY);
         }
 
         // --- Veri ---
@@ -744,7 +756,103 @@ namespace CutiePie.Salon.Editor
             return created;
         }
 
+        /// <summary>
+        /// Yığının üst üste dizilmiş görsel kopyaları (çalışma zamanında SalonSettings'teki görselden üretilir).
+        /// Tekrar çalıştırılınca yalnızca referanslar güncellenir; yığının collider'ı değişmez.
+        /// </summary>
+        private static void SetupStackVisual(Transform stackTf, SalonSettings settings, StackVisual.StackKind kind)
+        {
+            Transform visualTf = stackTf.Find(StackVisualName);
+            if (visualTf == null)
+            {
+                visualTf = CreatePoint(stackTf, StackVisualName, Vector2.zero);
+            }
+
+            StackVisual stackVisual = GetOrAddComponent<StackVisual>(visualTf.gameObject);
+            SortingGroup group = GetOrAddComponent<SortingGroup>(visualTf.gameObject);
+            Undo.RecordObject(group, "Yığın Görseli");
+            group.sortingOrder = SalonSortOrder.PrepFixture;
+
+            var so = new SerializedObject(stackVisual);
+            so.FindProperty("settings").objectReferenceValue = settings;
+            so.FindProperty("kind").intValue = (int)kind;
+            so.FindProperty("itemBoxSize").vector2Value = StackItemBoxSize;
+            Transform boxVisual = stackTf.Find(PrepVisualName);
+            so.FindProperty("placeholderBox").objectReferenceValue = boxVisual != null ? boxVisual.GetComponent<SpriteRenderer>() : null;
+            so.ApplyModifiedProperties();
+        }
+
+        /// <summary>
+        /// Hazırlama kutularının görünümü (tekrar çalıştırılabilir). Kutunun kökü, collider'ı ve altındaki yuvalar değişmez;
+        /// yalnızca "Visual" alt nesnesi güncellenir:
+        /// - Vitrin ve içecek tezgâhı: 9-slice görsel, kutu boyutuna uzatılır (yuvalar üstünde kalır).
+        /// - Çöp kutusu: görsel kutuya oranı korunarak sığar.
+        /// - Tepsi / tabak yığını: renkli kutu kalır; görsel varsa StackVisual oyunda gizler.
+        /// - Görseli olmayan diğer kutular (ör. hazırlık tezgâhı): renkli kutu, SalonSettings.prepPlaceholderAlpha saydamlığıyla.
+        /// </summary>
+        private static void ApplyPrepBoxArt(Transform prepArea, SalonSettings settings, Sprite square)
+        {
+            foreach (PrepBox box in PrepBoxes)
+            {
+                Transform boxTf = prepArea.Find(box.Name);
+                Transform visualTf = boxTf != null ? boxTf.Find(PrepVisualName) : null;
+                SpriteRenderer renderer = visualTf != null ? visualTf.GetComponent<SpriteRenderer>() : null;
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                SpriteFitter fitter = GetOrAddComponent<SpriteFitter>(visualTf.gameObject);
+                Undo.RecordObjects(new Object[] { renderer, visualTf, fitter }, "Hazırlama Görseli");
+                fitter.Configure(box.Size, Vector2.zero, FitAlignment.Center);
+
+                Sprite art = GetPrepBoxArt(box.Name, settings);
+                bool sliced = box.Name == BoxCakeShowcase || box.Name == BoxDrinks;
+                bool stack = box.Name == BoxTrayStack || box.Name == BoxPlateStack;
+
+                if (art != null && sliced)
+                {
+                    fitter.SetSliced(art, Color.white);
+                }
+                else if (art != null)
+                {
+                    fitter.Set(art, Color.white, true);
+                }
+                else
+                {
+                    Color color = box.Color;
+                    if (!stack)
+                    {
+                        color.a = settings.prepPlaceholderAlpha;
+                    }
+
+                    fitter.Set(square, color, false);
+                }
+
+                renderer.enabled = true;
+                EditorUtility.SetDirty(renderer);
+            }
+        }
+
+        private static Sprite GetPrepBoxArt(string boxName, SalonSettings settings)
+        {
+            switch (boxName)
+            {
+                case BoxCakeShowcase: return settings.showcaseCabinetSprite;
+                case BoxDrinks: return settings.drinkCounterSprite;
+                case BoxTrashBin: return settings.trashBinSprite;
+                default: return null;
+            }
+        }
+
         // --- Yardımcılar ---
+
+        /// <summary>Prefab kurarken görsele kutu boyutunu taşıyan SpriteFitter ekler (gerçek görsel bu kutuya sığar).</summary>
+        private static void AddFitter(SpriteRenderer renderer, Vector2 boxSize)
+        {
+            SpriteFitter fitter = renderer.gameObject.AddComponent<SpriteFitter>();
+            fitter.BoxSize = boxSize;
+        }
 
         private static void AssignDragItem(DragItem drag, SalonSettings settings, DropTargetRegistry registry)
         {

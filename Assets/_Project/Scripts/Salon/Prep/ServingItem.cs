@@ -15,7 +15,8 @@ namespace CutiePie.Salon
 
     /// <summary>
     /// Hazırlama alanında taşınan bir servis parçası (tepsi, tabak, pasta dilimi, içecek bardağı) ve verisi.
-    /// Görsel: ürünün ikonu varsa o, yoksa SalonSettings'teki yer tutucu rengi (OrderBubble ile aynı kural).
+    /// Görsel: dilim/bardakta ürünün ikonu, tepsi/tabakta SalonSettings.traySprite/plateSprite; yoksa yer tutucu rengi
+    /// (OrderBubble ile aynı kural). Görsel SpriteFitter ile parçanın kutusuna sığdırılır; collider ve yuvalar değişmez.
     /// SortingGroup sayesinde alt parçalarıyla birlikte tek blok olarak sıralanır (sürüklerken üste çıkar).
     /// </summary>
     [RequireComponent(typeof(SortingGroup))]
@@ -71,17 +72,26 @@ namespace CutiePie.Salon
                 return;
             }
 
-            if (Product != null && Product.icon != null)
+            // Gerçek görsel oranı korunarak parçanın kutusuna sığar; yer tutucu kutuyu doldurur.
+            Sprite art = GetArtSprite(settings);
+            if (art != null)
             {
-                visual.sprite = Product.icon;
-                visual.color = Color.white;
+                SpriteFitter.Apply(visual, art, Color.white, true);
                 return;
             }
 
-            visual.sprite = placeholderSprite;
-            if (settings != null)
+            Color color = settings != null ? GetPlaceholderColor(settings) : visual.color;
+            SpriteFitter.Apply(visual, placeholderSprite, color, false);
+        }
+
+        /// <summary>Dilim ve bardakta ürünün ikonu; tepsi ve tabakta SalonSettings'teki görsel. Yoksa null (yer tutucu).</summary>
+        private Sprite GetArtSprite(SalonSettings settings)
+        {
+            switch (kind)
             {
-                visual.color = GetPlaceholderColor(settings);
+                case ServingItemKind.Tray: return settings != null ? settings.traySprite : null;
+                case ServingItemKind.Plate: return settings != null ? settings.plateSprite : null;
+                default: return Product != null ? Product.icon : null;
             }
         }
 

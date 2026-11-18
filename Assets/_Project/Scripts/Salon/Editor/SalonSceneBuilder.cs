@@ -220,6 +220,8 @@ namespace CutiePie.Salon.Editor
             cakeIcon.transform.localPosition = new Vector3(-BubbleIconOffsetX, 0f, 0f);
             SpriteRenderer drinkIcon = CreateSpriteChild(bubbleGo.transform, "DrinkIcon", square, iconSize, settings.drinkPlaceholderColor, OrderOverlayContent);
             drinkIcon.transform.localPosition = new Vector3(BubbleIconOffsetX, 0f, 0f);
+            AddFitter(cakeIcon, iconSize);
+            AddFitter(drinkIcon, iconSize);
 
             var bubbleSo = new SerializedObject(bubble);
             bubbleSo.FindProperty("cakeIcon").objectReferenceValue = cakeIcon;

@@ -15,5 +15,5 @@ MonoBehaviour:
   id: drink_tea
   nameKey: product.drink_tea.name
   price: 5
-  icon: {fileID: 0}
+  icon: {fileID: -778201723, guid: c4fcff75f41b46143b3cff9390827653, type: 3}
   category: 1
