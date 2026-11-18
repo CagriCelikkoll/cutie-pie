@@ -40,6 +40,10 @@ namespace CutiePie.UI
         public static string FormatCountdown(int totalSeconds) =>
             $"{totalSeconds / SecondsPerMinute}:{totalSeconds % SecondsPerMinute:00}";
 
+        /// <summary>İki haneli dakikalı geri sayım (mm:ss), ör. sipariş panosundaki "02:00".</summary>
+        public static string FormatCountdownMinSec(int totalSeconds) =>
+            $"{totalSeconds / SecondsPerMinute:00}:{totalSeconds % SecondsPerMinute:00}";
+
         /// <summary>
         /// Simgeyi gösterir; sprite yoksa prefab'daki yer tutucu (yuvarlak kutu, verilen renk) kalır.
         /// placeholder: prefab'daki sprite (Awake'te saklanmış).

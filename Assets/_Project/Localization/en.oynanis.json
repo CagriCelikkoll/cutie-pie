@@ -50,6 +50,26 @@
     { "key": "settings.language", "value": "Language" },
     { "key": "settings.lang_tr", "value": "Türkçe" },
     { "key": "settings.lang_en", "value": "English" },
-    { "key": "settings.version", "value": "Version {0}" }
+    { "key": "settings.version", "value": "Version {0}" },
+    { "key": "order.board.title", "value": "Orders" },
+    { "key": "order.board.new_order", "value": "New order" },
+    { "key": "order.board.queued", "value": "Up next" },
+    { "key": "order.builder.step_counter", "value": "Step {0}/{1}" },
+    { "key": "order.step.base", "value": "Pick a base" },
+    { "key": "order.step.cream", "value": "Pick a frosting color" },
+    { "key": "order.step.decor", "value": "Drag toppings onto the cake" },
+    { "key": "order.step.box", "value": "Pick a box" },
+    { "key": "order.decor.count", "value": "Toppings {0}/{1}" },
+    { "key": "order.decor.hint", "value": "Tap a topping to remove it" },
+    { "key": "order.builder.ticket", "value": "Order" },
+    { "key": "order.builder.back", "value": "Back" },
+    { "key": "order.builder.next", "value": "Next" },
+    { "key": "order.builder.confirm", "value": "Confirm" },
+    { "key": "order.result.title", "value": "Order delivered!" },
+    { "key": "order.result.similarity", "value": "Similarity" },
+    { "key": "order.result.percent", "value": "{0}%" },
+    { "key": "order.result.gold", "value": "Gold" },
+    { "key": "order.result.tip", "value": "Tip" },
+    { "key": "order.result.continue", "value": "Back to orders" }
   ]
 }

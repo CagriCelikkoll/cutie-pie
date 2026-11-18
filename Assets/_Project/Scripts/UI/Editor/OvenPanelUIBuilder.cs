@@ -12,6 +12,8 @@ namespace CutiePie.UI.Editor
     /// - Prefabs/UI/Kitchen/RecipeOption.prefab: tarif seçicideki tek tarif.
     /// - Prefabs/UI/Kitchen/OvenCard.prefab: tek fırın kartı (Boş / Pişiyor / Hazır / Kilitli).
     /// - Prefabs/UI/Kitchen/OvenPanel.prefab: kendi Canvas'ı olan ekran (stok şeridi, fırınlar, tarif seçici, uçuş katmanı).
+    ///   Yalnızca Mutfak'ın sol alanını (Kitchen.unity'deki OvenPanelSlot ile aynı anchor'lar) çizer; üst şerit ve
+    ///   sağdaki sipariş panosu açık kalır.
     /// Hiçbir sahneye dokunmaz; Kitchen.unity'ye prefab'ı altyapı geliştiricisi ekler, test için "Cutie Pie/Test/Fırın Test Sahnesini Kur".
     /// Ortak renkler RoundEndSettings'ten, fırına özel renkler OvenPanelSettings'ten okunur (yoksa oluşturulur);
     /// buradaki sayılar yalnızca yerleşimdir (1920x1080 referans).
@@ -29,36 +31,39 @@ namespace CutiePie.UI.Editor
         // Mutfak ekranı tabanda durur; round sonu (10) ve geliştirme mağazası (20) gibi açılır pencereler üstünde kalır.
         public const int CanvasSortingOrder = 5;
 
-        // --- Panel (ekran merkezine göre)
-        private static readonly Vector2 StockBarPosition = new Vector2(0f, 425f);
-        private static readonly Vector2 StockBarSize = new Vector2(1780f, 170f);
-        private const float StockTitleX = -770f;
-        private static readonly Vector2 StockTitleSize = new Vector2(200f, 90f);
+        // --- Alan: Kitchen.unity'deki OvenPanelSlot ile aynı anchor'lar (Canvas'ın 0–1 oranı; 1920x1080'de 1152x886).
+        // Sağdaki sipariş panosu (OrderUIBuilder.AreaAnchorMin/Max, OrderBoardSlot) ve üst şerit (TopBar, y 0.88–1) boş kalır.
+        public static readonly Vector2 AreaAnchorMin = new Vector2(0.02f, 0.03f);
+        public static readonly Vector2 AreaAnchorMax = new Vector2(0.62f, 0.85f);
+        private const float AreaPadding = 16f;
+        private const float SectionGap = 8f;
+
+        // --- Stok şeridi (alanın üstüne yaslı, tam genişlik; solda başlık, sağında pastalar)
+        private const float StockBarHeight = 130f;
+        private const float StockTitleWidth = 180f;
         private const float StockTitleFontSize = 44f;
-        private const float StockEntriesX = 110f;
-        private static readonly Vector2 StockEntriesSize = new Vector2(1500f, 130f);
         private const float StockEntrySpacing = 24f;
 
-        private const float OvensTitleY = 290f;
-        private static readonly Vector2 OvensTitleSize = new Vector2(800f, 90f);
-        private const float OvensTitleFontSize = 64f;
+        private const float OvensTitleHeight = 70f;
+        private const float OvensTitleFontSize = 56f;
 
-        // 3 kart tam sığar, fazlası kaydırılır.
-        private static readonly Vector2 OvenScrollPosition = new Vector2(0f, -125f);
-        private static readonly Vector2 OvenScrollSize = new Vector2(1800f, 730f);
+        // --- Fırınlar: 3 kart tam sığar (OvenCardScale ile), fazlası kaydırılır.
         private const int ListPaddingX = 15;
         private const int ListPaddingY = 10;
-        private const float OvenCardSpacing = 40f;
+        private const float OvenCardSpacing = 24f;
 
-        // --- Tarif seçici (kart merkezine göre)
-        private static readonly Vector2 PickerCardSize = new Vector2(1500f, 820f);
-        private const float PickerTitleY = 335f;
-        private static readonly Vector2 PickerTitleSize = new Vector2(1000f, 90f);
-        private const float PickerTitleFontSize = 64f;
-        private static readonly Vector2 PickerScrollPosition = new Vector2(0f, -5f);
-        private static readonly Vector2 PickerScrollSize = new Vector2(1420f, 520f);
+        // Kart yerleşimi aşağıdaki tam boy değerlerle kurulur, sonra bu oranla küçültülür (alan genişliğine 3 kart).
+        private const float OvenCardScale = 0.66f;
+
+        // --- Tarif seçici (alanın içinde; kart merkezine göre). Kart, geniş ekranlarda (20:9) da alanın boyuna sığar.
+        private static readonly Vector2 PickerCardSize = new Vector2(1100f, 730f);
+        private const float PickerTitleY = 305f;
+        private static readonly Vector2 PickerTitleSize = new Vector2(1000f, 80f);
+        private const float PickerTitleFontSize = 60f;
+        private static readonly Vector2 PickerScrollPosition = new Vector2(0f, 10f);
+        private static readonly Vector2 PickerScrollSize = new Vector2(1020f, 500f);
         private const float OptionSpacing = 30f;
-        private static readonly Vector2 PickerCloseButtonPosition = new Vector2(0f, -340f);
+        private static readonly Vector2 PickerCloseButtonPosition = new Vector2(0f, -305f);
         private static readonly Vector2 PickerCloseButtonSize = new Vector2(420f, 100f);
         private const float PickerCloseFontSize = 42f;
 
@@ -239,14 +244,19 @@ namespace CutiePie.UI.Editor
             var root = new GameObject("OvenCard", typeof(RectTransform));
             try
             {
-                // Kök: kenarlık; içinde rengi duruma göre değişen zemin. Yerleşim düzeni kökün boyutunu kullanır.
+                // Kök: küçültülmüş kart boyu (yerleşim düzeni bunu kullanır). İçinde tam boy kurulan gövde OvenCardScale ile
+                // küçültülür: kenarlık + rengi duruma göre değişen zemin.
+                Vector2 outerSize = OvenCardSize + Vector2.one * (UIBuilderKit.CardBorderWidth * 2f);
                 var tf = (RectTransform)root.transform;
-                tf.sizeDelta = OvenCardSize + Vector2.one * (UIBuilderKit.CardBorderWidth * 2f);
-                UIBuilderKit.AddSlicedImage(root, rounded, ui.cardBorderColor);
+                tf.sizeDelta = outerSize * OvenCardScale;
                 CanvasGroup group = root.AddComponent<CanvasGroup>();
                 OvenCard card = root.AddComponent<OvenCard>();
 
-                RectTransform inner = UIBuilderKit.CreateRect(tf, "Inner", Vector2.zero, OvenCardSize);
+                RectTransform body = UIBuilderKit.CreateRect(tf, "Body", Vector2.zero, outerSize);
+                body.localScale = Vector3.one * OvenCardScale;
+                UIBuilderKit.AddSlicedImage(body.gameObject, rounded, ui.cardBorderColor);
+
+                RectTransform inner = UIBuilderKit.CreateRect(body, "Inner", Vector2.zero, OvenCardSize);
                 Image background = UIBuilderKit.AddSlicedImage(inner.gameObject, rounded, oven.emptyCardColor);
 
                 TMP_Text title = UIBuilderKit.CreateText(inner, "Title", KeyOvenName, new Vector2(0f, CardTitleY),
@@ -336,20 +346,34 @@ namespace CutiePie.UI.Editor
                 UIBuilderKit.SetupCanvas(root, CanvasSortingOrder);
                 OvenPanel panel = root.AddComponent<OvenPanel>();
 
+                // Content tam ekrandır ama görseli yoktur (tıklama almaz); yalnızca sol alan (Area) çizilir.
+                // Böylece üst şerit ve sağdaki sipariş panosu açık kalır. Uçuş katmanı tam ekranda kalır.
                 RectTransform content = UIBuilderKit.CreateStretched(root.transform, "Content");
 
-                // Tam ekran zemin; alttaki sahneye dokunulmaz.
-                RectTransform background = UIBuilderKit.CreateStretched(content, "Background");
-                background.gameObject.AddComponent<Image>().color = oven.backgroundColor;
+                RectTransform area = UIBuilderKit.CreateStretched(content, "Area");
+                area.anchorMin = AreaAnchorMin;
+                area.anchorMax = AreaAnchorMax;
+                area.offsetMin = area.offsetMax = Vector2.zero;
 
-                StockSummary stock = CreateStockBar(content, ui, oven, rounded, entryPrefab);
+                // Alanın zemini; alttaki sahneye bu alanda dokunulmaz.
+                UIBuilderKit.AddSlicedImage(area.gameObject, rounded, oven.backgroundColor);
 
-                UIBuilderKit.CreateText(content, "OvensTitle", KeyOvensTitle, new Vector2(0f, OvensTitleY), OvensTitleSize,
+                StockSummary stock = CreateStockBar(area, ui, oven, rounded, entryPrefab);
+
+                TMP_Text ovensTitle = UIBuilderKit.CreateText(area, "OvensTitle", KeyOvensTitle, Vector2.zero, Vector2.zero,
                     OvensTitleFontSize, ui.textColor, TextAlignmentOptions.Center);
-                (ScrollRect _, RectTransform ovenList) = UIBuilderKit.CreateHorizontalScroll(content, "OvenScroll", "Ovens",
-                    OvenScrollPosition, OvenScrollSize, ListPaddingX, ListPaddingY, OvenCardSpacing);
+                float ovensTitleTop = AreaPadding + StockBarHeight + SectionGap;
+                SetTopStretch(ovensTitle.rectTransform, ovensTitleTop, OvensTitleHeight);
 
-                RecipePicker picker = CreatePicker(content, ui, rounded, optionPrefab);
+                (ScrollRect ovenScroll, RectTransform ovenList) = UIBuilderKit.CreateHorizontalScroll(area, "OvenScroll", "Ovens",
+                    Vector2.zero, Vector2.zero, ListPaddingX, ListPaddingY, OvenCardSpacing);
+                var scrollTf = (RectTransform)ovenScroll.transform;
+                scrollTf.anchorMin = Vector2.zero;
+                scrollTf.anchorMax = Vector2.one;
+                scrollTf.offsetMin = new Vector2(AreaPadding, AreaPadding);
+                scrollTf.offsetMax = new Vector2(-AreaPadding, -(ovensTitleTop + OvensTitleHeight + SectionGap));
+
+                RecipePicker picker = CreatePicker(area, ui, rounded, optionPrefab);
                 SliceFlyAnimator fly = CreateFlyLayer(content, oven, rounded);
 
                 var so = new SerializedObject(panel);
@@ -370,18 +394,37 @@ namespace CutiePie.UI.Editor
             }
         }
 
+        // Alanın üstüne yaslı, tam genişlikte şerit (top: alanın üst kenarından uzaklık).
+        private static void SetTopStretch(RectTransform tf, float top, float height)
+        {
+            tf.anchorMin = new Vector2(0f, 1f);
+            tf.anchorMax = new Vector2(1f, 1f);
+            tf.pivot = new Vector2(0.5f, 1f);
+            tf.sizeDelta = new Vector2(-2f * AreaPadding, height);
+            tf.anchoredPosition = new Vector2(0f, -top);
+        }
+
         // Üst şerit: solda "Stok" başlığı, sağında pastalar yan yana (ortalı).
-        private static StockSummary CreateStockBar(Transform content, RoundEndSettings ui, OvenPanelSettings oven,
+        private static StockSummary CreateStockBar(Transform area, RoundEndSettings ui, OvenPanelSettings oven,
             Sprite rounded, StockEntry entryPrefab)
         {
-            RectTransform bar = UIBuilderKit.CreateRect(content, "StockBar", StockBarPosition, StockBarSize);
+            RectTransform bar = UIBuilderKit.CreateStretched(area, "StockBar");
+            SetTopStretch(bar, AreaPadding, StockBarHeight);
             UIBuilderKit.AddSlicedImage(bar.gameObject, rounded, oven.stockBarColor).raycastTarget = false;
             StockSummary summary = bar.gameObject.AddComponent<StockSummary>();
 
-            UIBuilderKit.CreateText(bar, "Title", KeyStockTitle, new Vector2(StockTitleX, 0f), StockTitleSize,
+            TMP_Text title = UIBuilderKit.CreateText(bar, "Title", KeyStockTitle, Vector2.zero, Vector2.zero,
                 StockTitleFontSize, ui.textColor, TextAlignmentOptions.Center);
+            RectTransform titleTf = title.rectTransform;
+            titleTf.anchorMin = Vector2.zero;
+            titleTf.anchorMax = new Vector2(0f, 1f);
+            titleTf.pivot = new Vector2(0f, 0.5f);
+            titleTf.sizeDelta = new Vector2(StockTitleWidth, 0f);
+            titleTf.anchoredPosition = Vector2.zero;
 
-            RectTransform entries = UIBuilderKit.CreateRect(bar, "Entries", new Vector2(StockEntriesX, 0f), StockEntriesSize);
+            RectTransform entries = UIBuilderKit.CreateStretched(bar, "Entries");
+            entries.offsetMin = new Vector2(StockTitleWidth, 0f);
+            entries.offsetMax = new Vector2(-AreaPadding, 0f);
             HorizontalLayoutGroup layout = entries.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = StockEntrySpacing;
             layout.childAlignment = TextAnchor.MiddleCenter;
@@ -397,10 +440,11 @@ namespace CutiePie.UI.Editor
             return summary;
         }
 
-        // Perde + kart: başlık, yatay kaydırılan tarifler, Kapat. Kök hep açık; içerik RecipePicker'ın Awake'inde kapanır.
-        private static RecipePicker CreatePicker(Transform content, RoundEndSettings ui, Sprite rounded, RecipeOption optionPrefab)
+        // Perde + kart: başlık, yatay kaydırılan tarifler, Kapat. Perde yalnızca fırın alanını örter (pano açık kalır).
+        // Kök hep açık; içerik RecipePicker'ın Awake'inde kapanır.
+        private static RecipePicker CreatePicker(Transform area, RoundEndSettings ui, Sprite rounded, RecipeOption optionPrefab)
         {
-            RectTransform pickerRoot = UIBuilderKit.CreateStretched(content, "RecipePicker");
+            RectTransform pickerRoot = UIBuilderKit.CreateStretched(area, "RecipePicker");
             RecipePicker picker = pickerRoot.gameObject.AddComponent<RecipePicker>();
 
             RectTransform pickerContent = UIBuilderKit.CreateStretched(pickerRoot, "Content");
