@@ -50,6 +50,26 @@
     { "key": "settings.language", "value": "Dil" },
     { "key": "settings.lang_tr", "value": "Türkçe" },
     { "key": "settings.lang_en", "value": "English" },
-    { "key": "settings.version", "value": "Sürüm {0}" }
+    { "key": "settings.version", "value": "Sürüm {0}" },
+    { "key": "order.board.title", "value": "Siparişler" },
+    { "key": "order.board.new_order", "value": "Yeni sipariş" },
+    { "key": "order.board.queued", "value": "Sırada" },
+    { "key": "order.builder.step_counter", "value": "Adım {0}/{1}" },
+    { "key": "order.step.base", "value": "Tabanı seç" },
+    { "key": "order.step.cream", "value": "Krema rengini seç" },
+    { "key": "order.step.decor", "value": "Süsleri pastaya sürükle" },
+    { "key": "order.step.box", "value": "Kutuyu seç" },
+    { "key": "order.decor.count", "value": "Süs {0}/{1}" },
+    { "key": "order.decor.hint", "value": "Süse dokununca kalkar" },
+    { "key": "order.builder.ticket", "value": "Sipariş" },
+    { "key": "order.builder.back", "value": "Geri" },
+    { "key": "order.builder.next", "value": "İleri" },
+    { "key": "order.builder.confirm", "value": "Onayla" },
+    { "key": "order.result.title", "value": "Sipariş teslim edildi!" },
+    { "key": "order.result.similarity", "value": "Benzerlik" },
+    { "key": "order.result.percent", "value": "%{0}" },
+    { "key": "order.result.gold", "value": "Altın" },
+    { "key": "order.result.tip", "value": "Bahşiş" },
+    { "key": "order.result.continue", "value": "Panoya dön" }
   ]
 }
