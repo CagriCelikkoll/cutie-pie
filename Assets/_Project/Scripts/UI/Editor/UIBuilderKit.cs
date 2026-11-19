@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using CutiePie.Core.Localization;
 using TMPro;
@@ -23,6 +24,8 @@ namespace CutiePie.UI.Editor
         private const string RoundedSpritePath = PlaceholderFolder + "/RoundedRect.png";
         private const string StarSpritePath = PlaceholderFolder + "/Star.png";
         private const string CircleSpritePath = PlaceholderFolder + "/Circle.png";
+        private const string ArrowSpritePath = PlaceholderFolder + "/Arrow.png";
+        private const string FadeSpritePath = PlaceholderFolder + "/FadeH.png";
 
         private const string BoldFontPath = "Assets/_Project/Art/Fonts/Nunito-Bold SDF.asset";
         private const string RegularFontPath = "Assets/_Project/Art/Fonts/Nunito-Regular SDF.asset";
@@ -35,6 +38,9 @@ namespace CutiePie.UI.Editor
         private const int StarPoints = 5;
         private const float StarInnerRatio = 0.48f;
         private const int CircleTextureSize = 128;
+        private const int ArrowTextureSize = 64;
+        private const int FadeTextureWidth = 64;
+        private const int FadeTextureHeight = 4;
         private const int Supersample = 4;
         private const float SpritePixelsPerUnit = 100f;
 
@@ -275,6 +281,221 @@ namespace CutiePie.UI.Editor
             return (scroll, list);
         }
 
+        // ------------------------------------------------------------------ Yerinde güncelleme
+        // Var olan prefab silinmeden güncellenir: nesneler adlarıyla bulunur, yoksa Create* ile eklenir, hiçbiri silinmez.
+        // Böylece mevcut nesnelerin fileID'leri korunur ve sahnelerdeki / iç içe prefab'lardaki referanslar kopmaz.
+        // Var olan nesnelerde yalnızca yerleşim ve referanslar eşitlenir; renk ve font yalnızca ilk eklenişte verilir.
+        // Her Ensure* bir şey değiştirdiyse changed'i true yapar; değişiklik yoksa prefab kaydedilmez.
+
+        /// <summary>
+        /// Prefab'ı açar, ensure ile günceller, yalnızca değişiklik olduysa kaydeder ve asset'i döndürür.
+        /// Prefab yoksa önce boş bir kök kaydedilir; ensure onu da aynı yoldan doldurur.
+        /// </summary>
+        public static GameObject UpdatePrefabInPlace(string path, string rootName, System.Func<GameObject, bool> ensure)
+        {
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)
+            {
+                var empty = new GameObject(rootName, typeof(RectTransform));
+                try
+                {
+                    PrefabUtility.SaveAsPrefabAsset(empty, path);
+                }
+                finally
+                {
+                    Object.DestroyImmediate(empty);
+                }
+
+                Debug.Log($"[UIBuilderKit] '{path}' yoktu; yeni prefab oluşturuluyor.");
+            }
+
+            GameObject contents = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                if (ensure(contents))
+                {
+                    PrefabUtility.SaveAsPrefabAsset(contents, path);
+                    Debug.Log($"[UIBuilderKit] '{path}' yerinde güncellendi.");
+                }
+                else
+                {
+                    Debug.Log($"[UIBuilderKit] '{path}' zaten güncel; kaydedilmedi.");
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(contents);
+            }
+
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        /// <summary>Değer farklıysa uygular ve changed'i işaretler.</summary>
+        public static void SetIfDifferent<T>(ref bool changed, T current, T desired, System.Action<T> apply)
+        {
+            if (EqualityComparer<T>.Default.Equals(current, desired))
+            {
+                return;
+            }
+
+            apply(desired);
+            changed = true;
+        }
+
+        public static T EnsureComponent<T>(GameObject go, ref bool changed) where T : Component
+        {
+            T component = go.GetComponent<T>();
+            if (component != null)
+            {
+                return component;
+            }
+
+            changed = true;
+            return go.AddComponent<T>();
+        }
+
+        public static void EnsureActive(GameObject go, bool active, ref bool changed)
+        {
+            SetIfDifferent(ref changed, go.activeSelf, active, go.SetActive);
+        }
+
+        /// <summary>Merkeze sabitli kutu (CreateRect yerleşimi).</summary>
+        public static void EnsureRect(RectTransform tf, Vector2 position, Vector2 size, ref bool changed)
+        {
+            var center = new Vector2(0.5f, 0.5f);
+            SetIfDifferent(ref changed, tf.anchorMin, center, v => tf.anchorMin = v);
+            SetIfDifferent(ref changed, tf.anchorMax, center, v => tf.anchorMax = v);
+            SetIfDifferent(ref changed, tf.pivot, center, v => tf.pivot = v);
+            SetIfDifferent(ref changed, tf.anchoredPosition, position, v => tf.anchoredPosition = v);
+            SetIfDifferent(ref changed, tf.sizeDelta, size, v => tf.sizeDelta = v);
+        }
+
+        /// <summary>Üst kutuya yayılan kutu; inset > 0 içeri, &lt; 0 dışarı taşar.</summary>
+        public static void EnsureStretchedRect(RectTransform tf, float inset, ref bool changed)
+        {
+            SetIfDifferent(ref changed, tf.anchorMin, Vector2.zero, v => tf.anchorMin = v);
+            SetIfDifferent(ref changed, tf.anchorMax, Vector2.one, v => tf.anchorMax = v);
+            SetIfDifferent(ref changed, tf.offsetMin, Vector2.one * inset, v => tf.offsetMin = v);
+            SetIfDifferent(ref changed, tf.offsetMax, -Vector2.one * inset, v => tf.offsetMax = v);
+        }
+
+        public static void EnsureScale(Transform tf, Vector3 scale, ref bool changed)
+        {
+            SetIfDifferent(ref changed, tf.localScale, scale, v => tf.localScale = v);
+        }
+
+        /// <summary>Doğrudan alt nesne; yoksa create ile üretilir ve changed işaretlenir.</summary>
+        public static RectTransform EnsureChild(Transform parent, string name, System.Func<RectTransform> create, ref bool changed)
+        {
+            Transform existing = FindChild(parent, name);
+            if (existing != null)
+            {
+                return (RectTransform)existing;
+            }
+
+            changed = true;
+            RectTransform created = create();
+            created.name = name;
+            return created;
+        }
+
+        public static RectTransform EnsureRectChild(Transform parent, string name, Vector2 position, Vector2 size, ref bool changed)
+        {
+            RectTransform tf = EnsureChild(parent, name, () => CreateRect(parent, name, position, size), ref changed);
+            EnsureRect(tf, position, size, ref changed);
+            return tf;
+        }
+
+        public static RectTransform EnsureStretchedChild(Transform parent, string name, ref bool changed)
+        {
+            RectTransform tf = EnsureChild(parent, name, () => CreateStretched(parent, name), ref changed);
+            EnsureStretchedRect(tf, 0f, ref changed);
+            return tf;
+        }
+
+        public static TMP_Text EnsureText(Transform parent, string name, string key, Vector2 position, Vector2 size,
+            float fontSize, Color color, TextAlignmentOptions alignment, ref bool changed, bool bold = true)
+        {
+            RectTransform tf = EnsureChild(parent, name,
+                () => (RectTransform)CreateText(parent, name, key, position, size, fontSize, color, alignment, bold).transform,
+                ref changed);
+            EnsureRect(tf, position, size, ref changed);
+            return tf.GetComponent<TMP_Text>();
+        }
+
+        public static Image EnsureIcon(Transform parent, string name, Vector2 position, float size, Sprite sprite, Color color,
+            ref bool changed)
+        {
+            RectTransform tf = EnsureChild(parent, name,
+                () => (RectTransform)CreateIcon(parent, name, position, size, sprite, color).transform, ref changed);
+            EnsureRect(tf, position, new Vector2(size, size), ref changed);
+            return tf.GetComponent<Image>();
+        }
+
+        public static Button EnsureButton(Transform parent, string name, string key, Vector2 position, Vector2 size,
+            float fontSize, Color color, Sprite rounded, RoundEndSettings settings, ref bool changed)
+        {
+            RectTransform tf = EnsureChild(parent, name,
+                () => (RectTransform)CreateButton(parent, name, key, position, size, fontSize, color, rounded, settings).transform,
+                ref changed);
+            EnsureRect(tf, position, size, ref changed);
+
+            Transform label = FindChild(tf, "Label");
+            if (label != null)
+            {
+                EnsureRect((RectTransform)label, Vector2.zero, size, ref changed);
+            }
+
+            return tf.GetComponent<Button>();
+        }
+
+        /// <summary>SerializedObject alanını (nesne referansı) gerekiyorsa değiştirir.</summary>
+        public static void EnsureReference(SerializedObject so, string property, Object value, ref bool changed)
+        {
+            SerializedProperty prop = so.FindProperty(property);
+            if (prop == null)
+            {
+                Debug.LogError($"[UIBuilderKit] {so.targetObject.GetType().Name}.{property} alanı bulunamadı.", so.targetObject);
+                return;
+            }
+
+            if (prop.objectReferenceValue != value)
+            {
+                prop.objectReferenceValue = value;
+                changed = true;
+            }
+        }
+
+        public static void EnsureFloat(SerializedObject so, string property, float value, ref bool changed)
+        {
+            SerializedProperty prop = so.FindProperty(property);
+            if (prop == null)
+            {
+                Debug.LogError($"[UIBuilderKit] {so.targetObject.GetType().Name}.{property} alanı bulunamadı.", so.targetObject);
+                return;
+            }
+
+            if (!Mathf.Approximately(prop.floatValue, value))
+            {
+                prop.floatValue = value;
+                changed = true;
+            }
+        }
+
+        // Transform.Find yol ayırıcısı ('/') yorumlar; burada yalnızca doğrudan çocuklara bakılır.
+        public static Transform FindChild(Transform parent, string name)
+        {
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform child = parent.GetChild(i);
+                if (child.name == name)
+                {
+                    return child;
+                }
+            }
+
+            return null;
+        }
+
         // ------------------------------------------------------------------ Fontlar
 
         public static TMP_FontAsset BoldFont => LoadFont(BoldFontPath);
@@ -373,12 +594,51 @@ namespace CutiePie.UI.Editor
             }, Vector4.zero);
         }
 
+        /// <summary>Sağa bakan üçgen ok; sola bakan ok için örneğin X ölçeği -1 yapılır.</summary>
+        public static Sprite GetOrCreateArrowSprite()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<Sprite>(ArrowSpritePath);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            float size = ArrowTextureSize;
+            Vector2[] polygon =
+            {
+                new Vector2(size * 0.2f, size * 0.08f),
+                new Vector2(size * 0.9f, size * 0.5f),
+                new Vector2(size * 0.2f, size * 0.92f),
+            };
+            return WriteSprite(ArrowSpritePath, ArrowTextureSize, (x, y) => InsidePolygon(polygon, new Vector2(x, y)), Vector4.zero);
+        }
+
+        /// <summary>Yatay solma: solda tam opak, sağa doğru yumuşakça saydamlaşır. Sağ kenar için X ölçeği -1 yapılır.</summary>
+        public static Sprite GetOrCreateHorizontalFadeSprite()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<Sprite>(FadeSpritePath);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            var pixels = new Color32[FadeTextureWidth * FadeTextureHeight];
+            for (int x = 0; x < FadeTextureWidth; x++)
+            {
+                float t = x / (FadeTextureWidth - 1f);
+                byte alpha = (byte)Mathf.RoundToInt(255f * (1f - Mathf.SmoothStep(0f, 1f, t)));
+                for (int y = 0; y < FadeTextureHeight; y++)
+                {
+                    pixels[y * FadeTextureWidth + x] = new Color32(255, 255, 255, alpha);
+                }
+            }
+
+            return SaveSprite(FadeSpritePath, FadeTextureWidth, FadeTextureHeight, pixels, Vector4.zero);
+        }
+
         // Beyaz şekil dokusu yazar (kenarlar Supersample x Supersample örnekle yumuşatılır) ve Sprite olarak içe aktarır.
         private static Sprite WriteSprite(string path, int size, System.Func<float, float, bool> inside, Vector4 border)
         {
-            EnsureFolder(Path.GetDirectoryName(path)?.Replace('\\', '/'));
-
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
             var pixels = new Color32[size * size];
             float step = 1f / Supersample;
             for (int y = 0; y < size; y++)
@@ -402,6 +662,15 @@ namespace CutiePie.UI.Editor
                 }
             }
 
+            return SaveSprite(path, size, size, pixels, border);
+        }
+
+        // Pikselleri PNG olarak yazar ve Sprite olarak içe aktarır.
+        private static Sprite SaveSprite(string path, int width, int height, Color32[] pixels, Vector4 border)
+        {
+            EnsureFolder(Path.GetDirectoryName(path)?.Replace('\\', '/'));
+
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
             texture.SetPixels32(pixels);
             File.WriteAllBytes(path, texture.EncodeToPNG());
             Object.DestroyImmediate(texture);
