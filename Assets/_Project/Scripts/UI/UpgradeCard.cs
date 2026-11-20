@@ -40,7 +40,16 @@ namespace CutiePie.UI
         [SerializeField] private Button buyButton;
         [SerializeField] private LocalizedText buyLabel;
 
+        [Tooltip("Panel bu karta odaklanınca yanıp sönen çerçeve; bileşeni normalde kapalıdır (nesne açık kalır).")]
+        [SerializeField] private Graphic focusHighlight;
+
+        // Odak vurgusu: toplam süre (sn, zaman ölçeğinden bağımsız) ve bu sürede kaç kez yanıp söneceği.
+        private const float FocusPulseDuration = 1.2f;
+        private const int FocusPulseCount = 2;
+
         private UpgradeData data;
+        private Coroutine focusRoutine;
+        private float focusAlpha = 1f;
 
         // Prefab'daki yer tutucu görünüm ve buton tonları; Bind ve Refresh bunlara geri döner.
         private bool defaultsCaptured;
@@ -67,6 +76,60 @@ namespace CutiePie.UI
             {
                 buyButton.onClick.RemoveListener(HandleBuyClicked);
             }
+        }
+
+        // Panel kapanınca yarım kalan vurgu bir sonraki açılışta görünmesin.
+        private void OnDisable() => StopFocusHighlight();
+
+        /// <summary>Kartın çerçevesini kısa süre yanıp söndürür (panel bu karta odaklandığında).</summary>
+        public void PlayFocusHighlight()
+        {
+            CaptureDefaults();
+            if (focusHighlight == null || !isActiveAndEnabled)
+            {
+                return;
+            }
+
+            StopFocusHighlight();
+            focusRoutine = StartCoroutine(FocusPulse());
+        }
+
+        private System.Collections.IEnumerator FocusPulse()
+        {
+            focusHighlight.enabled = true;
+            for (float time = 0f; time < FocusPulseDuration; time += Time.unscaledDeltaTime)
+            {
+                // sin² ile FocusPulseCount kez 0 → 1 → 0.
+                float wave = Mathf.Sin(Mathf.PI * FocusPulseCount * time / FocusPulseDuration);
+                SetFocusAlpha(focusAlpha * wave * wave);
+                yield return null;
+            }
+
+            focusRoutine = null;
+            StopFocusHighlight();
+        }
+
+        private void StopFocusHighlight()
+        {
+            if (focusRoutine != null)
+            {
+                StopCoroutine(focusRoutine);
+                focusRoutine = null;
+            }
+
+            if (focusHighlight != null)
+            {
+                // Nesne değil bileşen kapatılır: OnDisable sırasında çocuk nesnenin etkinliği değiştirilemez.
+                SetFocusAlpha(focusAlpha);
+                focusHighlight.enabled = false;
+            }
+        }
+
+        private void SetFocusAlpha(float alpha)
+        {
+            Color color = focusHighlight.color;
+            color.a = alpha;
+            focusHighlight.color = color;
         }
 
         /// <summary>Kartı bir geliştirmeye bağlar ve hemen yeniler.</summary>
@@ -145,6 +208,11 @@ namespace CutiePie.UI
             }
 
             defaultsCaptured = true;
+            if (focusHighlight != null)
+            {
+                focusAlpha = focusHighlight.color.a;
+            }
+
             if (icon != null)
             {
                 placeholderSprite = icon.sprite;

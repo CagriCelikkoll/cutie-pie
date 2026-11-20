@@ -11,7 +11,8 @@ namespace CutiePie.UI
     /// round sonu ekranı onu iç içe kullanır, başka bir sahne de prefab'ı bırakıp Open() çağırabilir.
     /// İlk açılışta GameConfig.upgrades listesindeki her geliştirme için bir kart üretir.
     /// Açıkken altın değişince veya satın alma olunca tüm kartlar yenilenir; mevcut altını CurrencyDisplay gösterir.
-    /// Kartlar yatay kaydırılır; sığmayınca kaydırma kendiliğinden devreye girer.
+    /// Kartlar yatay kaydırılır; sığmayınca kaydırma kendiliğinden devreye girer (oklar, solma ve tekerlek: ScrollAffordance).
+    /// Open() ilk karttan başlar; Open(id) o geliştirmenin kartına kaydırıp vurgular (ör. fırın kilidinden açılınca).
     /// </summary>
     public class UpgradesPanel : MonoBehaviour
     {
@@ -55,7 +56,16 @@ namespace CutiePie.UI
             Unsubscribe();
         }
 
-        public void Open()
+        /// <summary>Paneli açar ve ilk karttan başlatır.</summary>
+        public void Open() => OpenInternal(null);
+
+        /// <summary>
+        /// Paneli açar, verilen geliştirmenin kartını görünür alanın ortasına kaydırır (uçlarda sınırlanır) ve kısaca vurgular.
+        /// id boşsa Open() gibidir; bulunamazsa uyarı yazar ve yine Open() gibi ilk karttan başlar.
+        /// </summary>
+        public void Open(string focusUpgradeId) => OpenInternal(focusUpgradeId);
+
+        private void OpenInternal(string focusUpgradeId)
         {
             if (content == null)
             {
@@ -66,7 +76,16 @@ namespace CutiePie.UI
             EnsureCards();
             Subscribe();
             RefreshAll();
-            ScrollToStart();
+
+            UpgradeCard focus = FindCard(focusUpgradeId);
+            if (focus == null)
+            {
+                ScrollToStart();
+                return;
+            }
+
+            ScrollToCard(focus);
+            focus.PlayFocusHighlight();
         }
 
         public void Close()
@@ -136,6 +155,50 @@ namespace CutiePie.UI
             LayoutRebuilder.ForceRebuildLayoutImmediate(cardContainer);
             scrollRect.StopMovement();
             scrollRect.horizontalNormalizedPosition = 0f;
+        }
+
+        private UpgradeCard FindCard(string upgradeId)
+        {
+            if (string.IsNullOrEmpty(upgradeId))
+            {
+                return null;
+            }
+
+            foreach (UpgradeCard card in cards)
+            {
+                if (card != null && card.Data != null && card.Data.id == upgradeId)
+                {
+                    return card;
+                }
+            }
+
+            Debug.LogWarning($"[UpgradesPanel] '{upgradeId}' id'li geliştirme kartı bulunamadı; ilk karttan açılıyor.", this);
+            return null;
+        }
+
+        // Kartı görünür alanın ortasına getirir; içerik sığıyorsa veya kart uçtaysa konum uca sınırlanır.
+        private void ScrollToCard(UpgradeCard card)
+        {
+            if (scrollRect == null || cardContainer == null)
+            {
+                return;
+            }
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(cardContainer);
+            scrollRect.StopMovement();
+
+            RectTransform viewport = scrollRect.viewport != null ? scrollRect.viewport : (RectTransform)scrollRect.transform;
+            float hidden = cardContainer.rect.width - viewport.rect.width;
+            if (hidden <= 0f)
+            {
+                scrollRect.horizontalNormalizedPosition = 0f;
+                return;
+            }
+
+            Bounds bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(cardContainer, card.transform);
+            float centerFromLeft = bounds.center.x - cardContainer.rect.xMin;
+            float offset = Mathf.Clamp(centerFromLeft - viewport.rect.width * 0.5f, 0f, hidden);
+            scrollRect.horizontalNormalizedPosition = offset / hidden;
         }
 
         // ------------------------------------------------------------------ Olaylar
