@@ -115,14 +115,7 @@ namespace CutiePie.Kitchen
                 return 0f;
             }
 
-            long now = NowTicks();
-            long best = long.MaxValue;
-            foreach (long completed in save.PendingOrderRefreshes)
-            {
-                best = Math.Min(best, Math.Max(0L, DueTicks(completed) - now));
-            }
-
-            return (float)best / TimeSpan.TicksPerSecond;
+            return CustomOrderRefreshMath.SecondsUntilNext(save.PendingOrderRefreshes, NowTicks(), RefreshTicks());
         }
 
         public CustomOrderResult Score(string orderId, CakeBuild build) =>
@@ -309,9 +302,9 @@ namespace CutiePie.Kitchen
             return changed;
         }
 
-        private long RefreshTicks() => Math.Max(0, _settings.orderRefreshSeconds) * TimeSpan.TicksPerSecond;
+        private long RefreshTicks() => CustomOrderRefreshMath.RefreshTicks(_settings.orderRefreshSeconds);
 
-        private long DueTicks(long completedTicks) => completedTicks + RefreshTicks();
+        private long DueTicks(long completedTicks) => CustomOrderRefreshMath.DueTicks(completedTicks, RefreshTicks());
 
         // Saat kuralı: şimdiki zaman son görülen zamanın gerisine düşmez (saat geri alınırsa yenilenme donar).
         private static long NowTicks()
@@ -324,7 +317,7 @@ namespace CutiePie.Kitchen
             }
 
             save.AdvanceLastSeen(now);
-            return Math.Max(now, save.LastSeenUtcTicks);
+            return CustomOrderRefreshMath.Now(now, save.LastSeenUtcTicks);
         }
     }
 }
