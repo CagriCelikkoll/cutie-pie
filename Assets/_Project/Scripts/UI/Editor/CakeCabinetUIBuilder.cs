@@ -11,7 +11,7 @@ namespace CutiePie.UI.Editor
     /// <summary>
     /// Yalnızca editörde: G22 Pasta Dolabı prefab'larını kurar / günceller ("Cutie Pie/UI/Pasta Dolabı Oluştur").
     /// - Prefabs/UI/Kitchen/CakeCabinetCard.prefab: tek tatlı kartı (görsel, kilit, ad, dilim kutucukları, durum, seçim çerçevesi, ✓).
-    /// - Prefabs/UI/CakeCabinetPanel.prefab: kendi Canvas'ı olan ekran. Hiyerarşi:
+    /// - Prefabs/UI/Kitchen/CakeCabinetPanel.prefab: kendi Canvas'ı olan ekran (eski yol Prefabs/UI/'daysa oraya taşınır). Hiyerarşi:
     ///   Screen (tam ekran; Show/Hide bunu açıp kapatır) > Background (tam ekran krem zemin) + Content (1920x1080 tasarım alanı,
     ///   DesignAreaFitter ile her en-boy oranında ekrana sığar ve ölçeklenir; uzun ekranlarda yanlarda zemin görünür).
     ///   Content'te çizim sırası (arkadan öne): aşçı (kafası kornişin arkasından taşar) → dolap (cam gövde, 2 raf,
@@ -27,7 +27,10 @@ namespace CutiePie.UI.Editor
     {
         private const string MenuPath = "Cutie Pie/UI/Pasta Dolabı Oluştur";
         private const string CardPrefabPath = UIBuilderKit.KitchenPrefabFolder + "/CakeCabinetCard.prefab";
-        private const string PanelPrefabPath = UIBuilderKit.PrefabFolder + "/CakeCabinetPanel.prefab";
+        private const string PanelPrefabPath = UIBuilderKit.KitchenPrefabFolder + "/CakeCabinetPanel.prefab";
+
+        // G22'nin ilk sürümündeki yol; varsa BuildPrefabs PanelPrefabPath'e taşır.
+        private const string LegacyPanelPrefabPath = UIBuilderKit.PrefabFolder + "/CakeCabinetPanel.prefab";
         private const string SettingsPath = "Assets/_Project/Data/Salon/CakeCabinetSettings.asset";
 
         private const string PlaceholderFolder = "Assets/_Project/Art/Salon/Placeholders";
@@ -162,8 +165,42 @@ namespace CutiePie.UI.Editor
                 root => EnsureCard(root, settings, rounded, circle, lockSprite, check));
             CakeCabinetCard card = cardPrefab.GetComponent<CakeCabinetCard>();
 
-            return UIBuilderKit.UpdatePrefabInPlace(PanelPrefabPath, "CakeCabinetPanel",
+            string panelPath = MigrateLegacyPanelPath();
+            return UIBuilderKit.UpdatePrefabInPlace(panelPath, "CakeCabinetPanel",
                 root => EnsurePanel(root, settings, rounded, circle, card));
+        }
+
+        /// <summary>
+        /// Eski yoldaki (Prefabs/UI/) panel prefab'ını Prefabs/UI/Kitchen/'a taşır; GUID ve .meta korunur, sahnelerdeki
+        /// referanslar kopmaz. Güncellenecek prefab'ın yolunu döndürür. Taşıma başarısız olursa yeni yolda ikinci bir kopya
+        /// yaratılmaz; eski yoldaki prefab yerinde güncellenir.
+        /// </summary>
+        private static string MigrateLegacyPanelPath()
+        {
+            bool legacyExists = AssetDatabase.LoadAssetAtPath<GameObject>(LegacyPanelPrefabPath) != null;
+            bool currentExists = AssetDatabase.LoadAssetAtPath<GameObject>(PanelPrefabPath) != null;
+
+            if (!legacyExists)
+            {
+                return PanelPrefabPath;
+            }
+
+            if (currentExists)
+            {
+                Debug.LogWarning($"[CakeCabinetUIBuilder] Hem '{LegacyPanelPrefabPath}' hem '{PanelPrefabPath}' var; taşıma yapılmadı. " +
+                                 "Yalnızca yeni yoldaki güncelleniyor; eskisini kullanılmıyorsa elle silin.");
+                return PanelPrefabPath;
+            }
+
+            string error = AssetDatabase.MoveAsset(LegacyPanelPrefabPath, PanelPrefabPath);
+            if (!string.IsNullOrEmpty(error))
+            {
+                Debug.LogError($"[CakeCabinetUIBuilder] '{LegacyPanelPrefabPath}' taşınamadı: {error}. Eski yoldaki prefab güncelleniyor.");
+                return LegacyPanelPrefabPath;
+            }
+
+            Debug.Log($"[CakeCabinetUIBuilder] Panel prefab'ı taşındı: '{LegacyPanelPrefabPath}' → '{PanelPrefabPath}' (GUID korundu).");
+            return PanelPrefabPath;
         }
 
         /// <summary>Data/Salon/CakeCabinetSettings.asset; yoksa varsayılan değerlerle oluşturur.</summary>

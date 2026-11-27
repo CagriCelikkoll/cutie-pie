@@ -76,7 +76,7 @@
     { "key": "kitchen.cabinet.slices", "value": "{0} dilim" },
     { "key": "kitchen.cabinet.low", "value": "Az kaldı!" },
     { "key": "kitchen.cabinet.out", "value": "Bitti!" },
-    { "key": "kitchen.cabinet.locked", "value": "Seviye {0}'te açılır" },
+    { "key": "kitchen.cabinet.locked", "value": "{0}. seviyede açılır" },
     { "key": "kitchen.cabinet.pick", "value": "Bir pasta seç" },
     { "key": "kitchen.cabinet.make", "value": "{0} yap" }
   ]

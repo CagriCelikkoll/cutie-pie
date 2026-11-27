@@ -10,7 +10,7 @@ namespace CutiePie.UI
     /// <summary>
     /// Pasta Dolabı'ndaki tek tatlı: görsel, ad, dilim kutucukları ve durum yazısı.
     /// Durumlar: Normal ("{0} dilim"), Az kaldı (eşik ve altı), Bitti (0, görsel soluk),
-    /// Kilitli (görsel soluk + kilit, "Seviye {0}'te açılır"; seçilemez).
+    /// Kilitli (görsel soluk + kilit, "{0}. seviyede açılır"; seçilemez).
     /// Kartın tamamı butondur; dokununca Clicked yayınlanır, seçimi CakeCabinetPanel yönetir.
     /// </summary>
     public class CakeCabinetCard : MonoBehaviour

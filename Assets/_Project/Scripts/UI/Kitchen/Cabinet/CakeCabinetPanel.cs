@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace CutiePie.UI
 {
     /// <summary>
-    /// Mutfağın giriş ekranı: Pasta Dolabı (G22). Kendi Canvas'ı olan prefab'dır (Prefabs/UI/CakeCabinetPanel.prefab).
+    /// Mutfağın giriş ekranı: Pasta Dolabı (G22). Kendi Canvas'ı olan prefab'dır (Prefabs/UI/Kitchen/CakeCabinetPanel.prefab).
     /// Kafede satılan tatlıları ve her birinden salonda kalan dilimi gösterir; oyuncu bir tatlı seçip "… yap"a basınca
     /// RecipeChosen(tarif id'si) yayınlanır (tezgâh ekranına geçişi dinleyen taraf yapar).
     /// Tarifler varsayılan olarak GameConfig.kitchen.recipes'ten gelir (SetRecipes ile değiştirilebilir).
@@ -58,7 +58,7 @@ namespace CutiePie.UI
         public string SelectedRecipeId => selected != null && selected.Recipe != null ? selected.Recipe.id : null;
 
         /// <summary>
-        /// Tarifin açılacağı seviye: 0 açık, 0'dan büyükse kilitli ("Seviye {0}'te açılır"). null: hepsi açık.
+        /// Tarifin açılacağı seviye: 0 açık, 0'dan büyükse kilitli ("{0}. seviyede açılır"). null: hepsi açık.
         /// Atanınca kartlar yenilenir; seçili tarif kilitlenirse seçim düşer.
         /// </summary>
         public Func<RecipeData, int> LockLevelProvider
