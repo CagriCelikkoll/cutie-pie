@@ -70,6 +70,14 @@
     { "key": "order.result.percent", "value": "%{0}" },
     { "key": "order.result.gold", "value": "Altın" },
     { "key": "order.result.tip", "value": "Bahşiş" },
-    { "key": "order.result.continue", "value": "Panoya dön" }
+    { "key": "order.result.continue", "value": "Panoya dön" },
+    { "key": "kitchen.cabinet.title", "value": "PASTA DOLABI" },
+    { "key": "kitchen.cabinet.ask", "value": "Hangi pastayı yapalım?" },
+    { "key": "kitchen.cabinet.slices", "value": "{0} dilim" },
+    { "key": "kitchen.cabinet.low", "value": "Az kaldı!" },
+    { "key": "kitchen.cabinet.out", "value": "Bitti!" },
+    { "key": "kitchen.cabinet.locked", "value": "{0}. seviyede açılır" },
+    { "key": "kitchen.cabinet.pick", "value": "Bir pasta seç" },
+    { "key": "kitchen.cabinet.make", "value": "{0} yap" }
   ]
 }
