@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08f1ac16aff38984188bc0334d445e83, type: 3}
+  m_Name: CakeCabinetSettings
+  m_EditorClassIdentifier: 
+  lowStockThreshold: 2
+  sliceTileCount: 8
+  backgroundColor: {r: 1, g: 0.95686275, b: 0.91764706, a: 1}
+  textColor: {r: 0.35686275, g: 0.22745098, b: 0.18039216, a: 1}
+  buttonColor: {r: 0.95686275, g: 0.56078434, b: 0.6509804, a: 1}
+  buttonBorderColor: {r: 0.7058824, g: 0.3254902, b: 0.41568628, a: 1}
+  buttonTextColor: {r: 1, g: 1, b: 1, a: 1}
+  buttonDisabledTint: {r: 0.82, g: 0.82, b: 0.82, a: 1}
+  cabinetColor: {r: 0.96862745, g: 0.72156864, b: 0.7764706, a: 1}
+  cabinetBorderColor: {r: 0.7058824, g: 0.3254902, b: 0.41568628, a: 1}
+  corniceColor: {r: 0.95686275, g: 0.56078434, b: 0.6509804, a: 1}
+  corniceTextColor: {r: 1, g: 0.95686275, b: 0.91764706, a: 1}
+  glassColor: {r: 1, g: 1, b: 1, a: 0.55}
+  shelfColor: {r: 0.9098039, g: 0.6039216, b: 0.68235296, a: 1}
+  chefSkinColor: {r: 0.9882353, g: 0.8509804, b: 0.7529412, a: 1}
+  chefHatColor: {r: 1, g: 1, b: 1, a: 1}
+  chefCheekColor: {r: 0.96862745, g: 0.65882355, b: 0.72156864, a: 1}
+  bubbleColor: {r: 1, g: 1, b: 1, a: 1}
+  cardColor: {r: 1, g: 0.95686275, b: 0.91764706, a: 1}
+  lockedColor: {r: 0.90588236, g: 0.8627451, b: 0.8392157, a: 1}
+  selectionColor: {r: 0.9647059, g: 0.7764706, b: 0.30588236, a: 1}
+  checkColor: {r: 0.49411765, g: 0.827451, b: 0.6509804, a: 1}
+  cakePlaceholderColor: {r: 0.95686275, g: 0.6901961, b: 0.7529412, a: 1}
+  sliceFilledColor: {r: 0.95686275, g: 0.56078434, b: 0.6509804, a: 1}
+  sliceEmptyColor: {r: 0.9372549, g: 0.8745098, b: 0.84313726, a: 1}
+  lowStockColor: {r: 0.9411765, g: 0.5411765, b: 0.18039216, a: 1}
+  outOfStockColor: {r: 0.8784314, g: 0.3529412, b: 0.5019608, a: 1}
+  dimmedAlpha: 0.4

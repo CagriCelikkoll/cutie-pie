@@ -70,6 +70,14 @@
     { "key": "order.result.percent", "value": "{0}%" },
     { "key": "order.result.gold", "value": "Gold" },
     { "key": "order.result.tip", "value": "Tip" },
-    { "key": "order.result.continue", "value": "Back to orders" }
+    { "key": "order.result.continue", "value": "Back to orders" },
+    { "key": "kitchen.cabinet.title", "value": "CAKE CABINET" },
+    { "key": "kitchen.cabinet.ask", "value": "Which cake shall we make?" },
+    { "key": "kitchen.cabinet.slices", "value": "{0} slices" },
+    { "key": "kitchen.cabinet.low", "value": "Running low!" },
+    { "key": "kitchen.cabinet.out", "value": "Sold out!" },
+    { "key": "kitchen.cabinet.locked", "value": "Unlocks at level {0}" },
+    { "key": "kitchen.cabinet.pick", "value": "Pick a cake" },
+    { "key": "kitchen.cabinet.make", "value": "Make {0}" }
   ]
 }
