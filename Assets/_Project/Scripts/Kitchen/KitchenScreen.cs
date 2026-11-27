@@ -1,5 +1,6 @@
 using CutiePie.Core;
 using CutiePie.UI;
+using CutiePie.Upgrades;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,7 +10,8 @@ namespace CutiePie.Kitchen
     /// Mutfak sahnesinin ana ekranı: "Pastaneye dön" butonu ve paneller arası bağlantı.
     /// Fırın paneli (G19), sipariş panosu (G20) ve geliştirme mağazası kendi Canvas'ı olan prefab örnekleri olarak sahnenin
     /// kökündedir; KitchenCanvas'taki OvenPanelSlot / OrderBoardSlot yalnızca yerleşim kılavuzudur (görüntüleri kapalı).
-    /// Kilitli fırında "Geliştirmeyle aç" (OvenPanel.UnlockRequested) geliştirme mağazasını açar (UpgradesPanel.Open).
+    /// Kilitli fırında "Geliştirmeyle aç" (OvenPanel.UnlockRequested) geliştirme mağazasını Ek Fırın kartına odaklanarak açar
+    /// (UpgradesPanel.Open(UpgradeIds.ExtraOven)).
     /// UnlockRequested düz bir C# olayı olduğu için bağlantı Inspector'dan değil buradan kurulur.
     /// </summary>
     public class KitchenScreen : MonoBehaviour
@@ -51,7 +53,8 @@ namespace CutiePie.Kitchen
         {
             if (upgradesPanel != null)
             {
-                upgradesPanel.Open();
+                // Mağaza Ek Fırın kartına kaydırılıp vurgulanarak açılır.
+                upgradesPanel.Open(UpgradeIds.ExtraOven);
             }
         }
 
