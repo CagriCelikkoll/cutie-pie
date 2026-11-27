@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CutiePie.Core
 {
     /// <summary>
-    /// Round süresini, kaçırmaları, komboyu ve round toplamlarını yönetir; RoundStarted ve RoundEnded yayınlar.
+    /// Round süresini, kaçırmaları, komboyu ve round toplamlarını yönetir; RoundStarted, MissesChanged ve RoundEnded yayınlar.
     /// Ödeme ve bahşişi EconomyManager ekler; burada yalnızca round sonunda kombo farkı eklenir.
     /// Singleton değildir: Salon sahnesindeki prefab'a Inspector referansıyla erişilir.
     /// </summary>
@@ -33,6 +33,12 @@ namespace CutiePie.Core
 
         /// <summary>Şu anki art arda başarılı teslim sayısı.</summary>
         public int CurrentStreak { get; private set; }
+
+        /// <summary>Bu round'daki kaçırma sayısı. Değişince GameEvents.MissesChanged yayınlanır.</summary>
+        public int Misses => _misses;
+
+        /// <summary>Round'u bitiren kaçırma sınırı (CurrentLevel.maxMisses); henüz round başlamadıysa 0.</summary>
+        public int MaxMisses => CurrentLevel != null ? CurrentLevel.maxMisses : 0;
 
         /// <summary>Şu anki seriye karşılık gelen kombo çarpanı.</summary>
         public float CurrentMultiplier => comboSettings.GetMultiplier(CurrentStreak);
@@ -112,6 +118,9 @@ namespace CutiePie.Core
             IsRunning = true;
 
             GameEvents.RaiseRoundStarted(level);
+
+            // Kaçırma göstergesi ilk değeri sahne açılışında sorgulamadan alsın.
+            GameEvents.RaiseMissesChanged(_misses, MaxMisses);
         }
 
         private void HandleCustomerServed(CustomerInfo customer, int payment, int tip)
@@ -137,6 +146,9 @@ namespace CutiePie.Core
 
             CurrentStreak = 0;
             _misses++;
+
+            // Önce gösterge güncellenir; round bu kaçırmayla bitiyorsa RoundEnded bundan sonra gelir.
+            GameEvents.RaiseMissesChanged(_misses, MaxMisses);
             if (_misses >= CurrentLevel.maxMisses)
             {
                 EndRound(false);

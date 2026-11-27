@@ -18,3 +18,11 @@ MonoBehaviour:
   slicesPerBatch: 8
   icon: {fileID: 0}
   nameKey: product.cake_chocolate.name
+  ingredients:
+  - {fileID: 11400000, guid: a2f8638b0c8cbe246b35c507f6bb8d35, type: 2}
+  - {fileID: 11400000, guid: cf932b7517b93344d915d486c93d8ef9, type: 2}
+  - {fileID: 11400000, guid: 0a7acb7d257e4c04f9734e539d1e2047, type: 2}
+  - {fileID: 11400000, guid: 619311d844b6c2d4a903f0a62ca6083b, type: 2}
+  - {fileID: 11400000, guid: e6fa69f1aa125cf47a532632d069fb04, type: 2}
+  perfectFrosting: {fileID: 11400000, guid: d7a9a49b889de9a418b60d1d6055d0aa, type: 2}
+  perfectTopping: {fileID: 11400000, guid: 364390e63de7f1746ab4df94e3ff773b, type: 2}

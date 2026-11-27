@@ -126,6 +126,15 @@ namespace CutiePie.Kitchen
 
         public OvenState GetState(int ovenIndex) => GetState(ovenIndex, NowTicks());
 
+        public int ReadyCount
+        {
+            get
+            {
+                long now = NowTicks();
+                return OvenStateMath.CountReady(Count, i => GetState(i, now));
+            }
+        }
+
         public string GetRecipeId(int ovenIndex) =>
             TryGetBake(ovenIndex, out RecipeData recipe, out _) ? recipe.id : null;
 
@@ -170,24 +179,22 @@ namespace CutiePie.Kitchen
 
         public bool Collect(int ovenIndex)
         {
-            SaveSystem save = SaveSystem.Instance;
-            if (!CanUse(ovenIndex) || GetState(ovenIndex) != OvenState.Ready ||
-                !TryGetBake(ovenIndex, out RecipeData recipe, out long start))
+            if (!TryGetReadyBatch(ovenIndex, out RecipeData recipe, out long start))
             {
                 return false;
             }
 
-            // Önce fırın boşaltılır; StockManager.Add ikisini birlikte kaydeder.
-            save.SetOven(ovenIndex, null, 0L);
-            if (_stock == null || !_stock.Add(recipe.product.id, recipe.slicesPerBatch))
+            return CollectBatch(ovenIndex, recipe, start, false) != null;
+        }
+
+        public BatchCollectResult CollectWithDecoration(int ovenIndex, string frostingId, string toppingId)
+        {
+            if (!TryGetReadyBatch(ovenIndex, out RecipeData recipe, out long start))
             {
-                save.SetOven(ovenIndex, recipe.id, start);
-                return false;
+                return null;
             }
 
-            _readyNotified.Remove(ovenIndex);
-            GameEvents.RaiseBatchCollected(recipe.product.id, recipe.slicesPerBatch);
-            return true;
+            return CollectBatch(ovenIndex, recipe, start, recipe.IsPerfectDecoration(frostingId, toppingId));
         }
 
         public void SpeedUpWithAd(int ovenIndex, Action<bool> callback)
@@ -232,6 +239,52 @@ namespace CutiePie.Kitchen
 
         // ------------------------------------------------------------------ Yardımcılar
 
+        // Fırın kullanılabilir, Ready ve içinde bilinen bir tarif varsa true.
+        private bool TryGetReadyBatch(int ovenIndex, out RecipeData recipe, out long startUtcTicks)
+        {
+            recipe = null;
+            startUtcTicks = 0L;
+            return CanUse(ovenIndex) && GetState(ovenIndex) == OvenState.Ready &&
+                   TryGetBake(ovenIndex, out recipe, out startUtcTicks);
+        }
+
+        // Ortak toplama yolu (Collect ve CollectWithDecoration). Çift toplama güvenliği: fırın, stok eklenmeden ÖNCE ve aynı
+        // çağrı içinde boşaltılır; bu yüzden aynı partiye gelen ikinci çağrı fırını Empty bulur ve hiçbir şey eklemez.
+        // Stok eklenemezse (kayıt yok, geçersiz ürün) fırın eski hâline döner ve null döner. Dolap doluysa fırın yine boşalır.
+        private BatchCollectResult CollectBatch(int ovenIndex, RecipeData recipe, long start, bool perfect)
+        {
+            SaveSystem save = SaveSystem.Instance;
+            string productId = recipe.product.id;
+            int bonus = KitchenBatchMath.BonusSlices(perfect, _settings.perfectDecorationBonusSlices);
+            int total = KitchenBatchMath.TotalSlices(recipe.slicesPerBatch, perfect, _settings.perfectDecorationBonusSlices);
+
+            save.SetOven(ovenIndex, null, 0L);
+            if (_stock == null || !_stock.Add(productId, total, out int added))
+            {
+                save.SetOven(ovenIndex, recipe.id, start);
+                return null;
+            }
+
+            // Add yalnızca dilim eklendiyse kaydeder; dolap doluyken boşalan fırın da diske yazılsın.
+            if (added == 0)
+            {
+                save.Save();
+            }
+
+            _readyNotified.Remove(ovenIndex);
+            GameEvents.RaiseBatchCollected(productId, added);
+
+            return new BatchCollectResult
+            {
+                productId = productId,
+                baseSlices = recipe.slicesPerBatch,
+                bonusSlices = bonus,
+                perfect = perfect,
+                addedSlices = added,
+                lostSlices = total - added
+            };
+        }
+
         // Partiyi hemen hazır yapar: başlangıç, pişme süresi kadar geriye çekilir. Kaydeder ve OvenReady yayınlar.
         private void MakeReady(int ovenIndex, RecipeData recipe)
         {
@@ -247,12 +300,8 @@ namespace CutiePie.Kitchen
 
         private OvenState GetState(int ovenIndex, long nowTicks)
         {
-            if (!TryGetBake(ovenIndex, out RecipeData recipe, out long start))
-            {
-                return OvenState.Empty;
-            }
-
-            return Elapsed(start, nowTicks) >= BakeTicks(recipe) ? OvenState.Ready : OvenState.Baking;
+            bool hasBake = TryGetBake(ovenIndex, out RecipeData recipe, out long start);
+            return OvenStateMath.StateAt(hasBake, start, hasBake ? BakeTicks(recipe) : 0L, nowTicks);
         }
 
         // Fırın geçerli ve içinde bilinen bir tarif varsa true.
@@ -292,7 +341,7 @@ namespace CutiePie.Kitchen
         }
 
         // Başlangıç ileride görünse de (bozuk kayıt) geçen süre negatif olmaz.
-        private static long Elapsed(long startTicks, long nowTicks) => Math.Max(0L, nowTicks - startTicks);
+        private static long Elapsed(long startTicks, long nowTicks) => OvenStateMath.Elapsed(startTicks, nowTicks);
 
         private static long BakeTicks(RecipeData recipe) => recipe.bakeSeconds * TimeSpan.TicksPerSecond;
     }

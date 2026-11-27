@@ -30,6 +30,13 @@
     { "key": "kitchen.title", "value": "Mutfak" },
     { "key": "kitchen.back_to_shop", "value": "Pastaneye dön" },
     { "key": "upgrade.extra_oven.name", "value": "Ek Fırın" },
-    { "key": "upgrade.extra_oven.desc", "value": "Aynı anda daha çok pasta pişirmek için yeni bir fırın açar." }
+    { "key": "upgrade.extra_oven.desc", "value": "Aynı anda daha çok pasta pişirmek için yeni bir fırın açar." },
+    { "key": "ingredient.flour", "value": "Un" },
+    { "key": "ingredient.sugar", "value": "Şeker" },
+    { "key": "ingredient.egg", "value": "Yumurta" },
+    { "key": "ingredient.milk", "value": "Süt" },
+    { "key": "ingredient.butter", "value": "Tereyağı" },
+    { "key": "ingredient.cocoa", "value": "Kakao" },
+    { "key": "ingredient.strawberry", "value": "Çilek" }
   ]
 }

@@ -64,7 +64,7 @@ namespace CutiePie.Core
 
             Upgrades = new UpgradeManager(config.upgrades);
 
-            Stock = new StockManager();
+            Stock = new StockManager(config.kitchen);
 
             _ovenService = new OvenService(config.kitchen, Stock, Ads, Upgrades);
             Ovens = _ovenService;

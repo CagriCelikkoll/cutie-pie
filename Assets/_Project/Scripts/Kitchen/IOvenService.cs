@@ -4,7 +4,8 @@ namespace CutiePie.Kitchen
 {
     /// <summary>
     /// Fırın servisi sözleşmesi. Erişim: GameManager.Instance.Ovens.
-    /// Süreler gerçek zamanlıdır (oyun kapalıyken de işler). Olaylar: GameEvents.BakeStarted, OvenReady, BatchCollected.
+    /// Süreler gerçek zamanlıdır (oyun kapalıyken de işler). Olaylar: GameEvents.BakeStarted, OvenReady, BatchCollected
+    /// (dolap taşarsa StockManager'dan StockOverflow).
     /// </summary>
     public interface IOvenService
     {
@@ -23,8 +24,27 @@ namespace CutiePie.Kitchen
         /// <summary>Boş fırına tarifi koyar ve BakeStarted yayınlar. Fırın dolu veya tarif bilinmiyorsa false.</summary>
         bool StartBake(int ovenIndex, string recipeId);
 
-        /// <summary>Hazır partiyi stoğa ekler, fırını boşaltır ve BatchCollected yayınlar. Hazır değilse false.</summary>
+        /// <summary>
+        /// Ready durumdaki açık fırın sayısı (ör. Shop'taki "N pasta hazır" rozeti; sahne açılışında sorgulanır,
+        /// değişimi OvenReady / BatchCollected ile izlenir). Süslenmekte olan fırın da Ready sayılır.
+        /// </summary>
+        int ReadyCount { get; }
+
+        /// <summary>
+        /// Bonussuz toplama: hazır partiyi stoğa ekler (dolap kapasitesinde kırpılır, taşan dilim kaybolur ve StockOverflow
+        /// yayınlanır), fırını boşaltır ve BatchCollected yayınlar. Dolap dolu olsa da fırın boşalır.
+        /// Kullanım: süslemeden bırakılan parti, eski "Topla", editör menüleri. Hazır değilse false ve hiçbir şey değişmez.
+        /// Fırın toplanınca hemen boşaldığı için aynı partiye ikinci bir Collect/CollectWithDecoration false/null döner.
+        /// </summary>
         bool Collect(int ovenIndex);
+
+        /// <summary>
+        /// Süslenmiş partiyi toplar: krema ve süs tarifteki doğru değerlere eşitse (RecipeData.IsPerfectDecoration)
+        /// KitchenSettings.perfectDecorationBonusSlices kadar fazla dilim eklenir; yanlışsa ceza yoktur.
+        /// Gerisi Collect ile aynıdır (kırpma, fırını boşaltma, BatchCollected). Fırın süsleme boyunca Ready kalır;
+        /// uygulama kapanırsa parti fırında bekler. Hazır değilse (boş, pişiyor, zaten toplandı) null döner, hiçbir şey değişmez.
+        /// </summary>
+        BatchCollectResult CollectWithDecoration(int ovenIndex, string frostingId, string toppingId);
 
         /// <summary>
         /// Ödüllü reklam izletir; reklam tamamlanırsa pişen parti anında hazır olur.

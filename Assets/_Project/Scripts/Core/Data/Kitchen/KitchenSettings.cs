@@ -4,7 +4,8 @@ using UnityEngine;
 namespace CutiePie.Core.Data
 {
     /// <summary>
-    /// Mutfak denge değerleri: fırınlar, tarifler, başlangıç stoğu, sipariş panosu, benzerlik ağırlıkları ve ödül tablosu.
+    /// Mutfak denge değerleri: fırınlar, tarifler, başlangıç stoğu, dolap kapasitesi, tezgâh, sipariş panosu,
+    /// benzerlik ağırlıkları ve ödül tablosu.
     /// </summary>
     [CreateAssetMenu(fileName = "KitchenSettings", menuName = "Cutie Pie/Kitchen/Kitchen Settings")]
     public class KitchenSettings : ScriptableObject
@@ -22,6 +23,16 @@ namespace CutiePie.Core.Data
 
         [Tooltip("Yeni oyuncuya (ve stok alanı olmayan eski kayıtlara) bir kez verilen stok.")]
         public StockAmount[] startingStock;
+
+        [Tooltip("Pasta dolabında ürün başına en fazla dilim. Stok buna ulaşınca ekleme kırpılır, taşan dilim kaybolur.")]
+        [Min(1)] public int cabinetCapacityPerProduct;
+
+        [Header("Tezgâh")]
+        [Tooltip("Malzeme adımında gösterilen tüm malzemeler (v1: sınırsız, yalnızca veri).")]
+        public IngredientData[] ingredients;
+
+        [Tooltip("Krema ve süs tarifteki doğru değerlere eşitse partiye eklenen dilim.")]
+        [Min(0)] public int perfectDecorationBonusSlices;
 
         [Header("Sipariş panosu")]
         [Tooltip("Panoda aynı anda duran en fazla fiş sayısı.")]
@@ -100,6 +111,30 @@ namespace CutiePie.Core.Data
             }
 
             return Array.Find(cakeParts, p => p != null && p.id == partId);
+        }
+
+        /// <summary>id'si verilen malzeme; yoksa null.</summary>
+        public IngredientData FindIngredient(string ingredientId)
+        {
+            if (string.IsNullOrEmpty(ingredientId) || ingredients == null)
+            {
+                return null;
+            }
+
+            return Array.Find(ingredients, i => i != null && i.id == ingredientId);
+        }
+
+        /// <summary>
+        /// cakeParts içindeki verilen türdeki parçalar, listedeki sırayla (Süsle ekranı: Cream ve Decoration). Yoksa boş dizi.
+        /// </summary>
+        public CakePartData[] GetParts(CakePartType type)
+        {
+            if (cakeParts == null)
+            {
+                return Array.Empty<CakePartData>();
+            }
+
+            return Array.FindAll(cakeParts, p => p != null && p.type == type);
         }
     }
 

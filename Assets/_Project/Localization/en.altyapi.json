@@ -30,6 +30,13 @@
     { "key": "kitchen.title", "value": "Kitchen" },
     { "key": "kitchen.back_to_shop", "value": "Back to shop" },
     { "key": "upgrade.extra_oven.name", "value": "Extra Oven" },
-    { "key": "upgrade.extra_oven.desc", "value": "Opens a new oven so you can bake more cakes at once." }
+    { "key": "upgrade.extra_oven.desc", "value": "Opens a new oven so you can bake more cakes at once." },
+    { "key": "ingredient.flour", "value": "Flour" },
+    { "key": "ingredient.sugar", "value": "Sugar" },
+    { "key": "ingredient.egg", "value": "Egg" },
+    { "key": "ingredient.milk", "value": "Milk" },
+    { "key": "ingredient.butter", "value": "Butter" },
+    { "key": "ingredient.cocoa", "value": "Cocoa" },
+    { "key": "ingredient.strawberry", "value": "Strawberry" }
   ]
 }
