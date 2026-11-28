@@ -18,3 +18,11 @@ MonoBehaviour:
   slicesPerBatch: 8
   icon: {fileID: 0}
   nameKey: product.cake_strawberry.name
+  ingredients:
+  - {fileID: 11400000, guid: a2f8638b0c8cbe246b35c507f6bb8d35, type: 2}
+  - {fileID: 11400000, guid: cf932b7517b93344d915d486c93d8ef9, type: 2}
+  - {fileID: 11400000, guid: 0a7acb7d257e4c04f9734e539d1e2047, type: 2}
+  - {fileID: 11400000, guid: 8d69cd6897b0efb47978ccf9f7653198, type: 2}
+  - {fileID: 11400000, guid: 8a9ec6e6d7d3cca49ab8855dc2e58e2b, type: 2}
+  perfectFrosting: {fileID: 11400000, guid: d4e33ef15f3ef5946ae920ff15034986, type: 2}
+  perfectTopping: {fileID: 11400000, guid: f80f0a797d09e214ca5eb5218895f63f, type: 2}

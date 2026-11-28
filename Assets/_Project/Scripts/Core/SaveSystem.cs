@@ -522,6 +522,14 @@ namespace CutiePie.Core
             AdvanceLastSeen(GameClock.UtcNow.Ticks);
             _data.saveVersion = config.saveVersion;
 
+#if UNITY_EDITOR
+            // Edit Mode testlerinin kaydı gerçek save.json'a hiç yazılmaz.
+            if (_diskWritesDisabledForTests)
+            {
+                return true;
+            }
+#endif
+
             string mainPath = GetPath(config.saveFileName);
             string tempPath = GetPath(config.saveTempFileName);
 
@@ -647,5 +655,49 @@ namespace CutiePie.Core
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => Instance = null;
+
+#if UNITY_EDITOR
+        // Yalnızca editör: true ise Save diske yazmaz (Edit Mode testleri).
+        private bool _diskWritesDisabledForTests;
+
+        /// <summary>
+        /// Yalnızca editör (Edit Mode testleri): JSON metnini diskteki kayıt gibi doğrular, eski sürümden göç ettirir,
+        /// yükler ve Instance yapar. Bu nesne diske hiç yazmaz ve dosya okumaz (gerçek save.json'a dokunulmaz).
+        /// JSON geçersizse null döner. Test sonunda ReleaseForTests çağrılmalıdır.
+        /// </summary>
+        public static SaveSystem CreateForTests(GameObject host, GameConfig gameConfig, string json)
+        {
+            SaveData data;
+            try
+            {
+                data = JsonUtility.FromJson<SaveData>(json);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+
+            if (host == null || gameConfig == null || !IsValid(data))
+            {
+                return null;
+            }
+
+            SaveSystem save = host.AddComponent<SaveSystem>();
+            save.config = gameConfig;
+            save._diskWritesDisabledForTests = true;
+            save.SetLoaded(data, SaveLoadState.LoadedFromFile);
+            Instance = save;
+            return save;
+        }
+
+        /// <summary>Yalnızca editör (Edit Mode testleri): CreateForTests ile kurulan Instance'ı bırakır.</summary>
+        public void ReleaseForTests()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
+#endif
     }
 }

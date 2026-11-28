@@ -33,6 +33,13 @@ namespace CutiePie.Core
         /// <summary>Round bitti; sonucu taşır.</summary>
         public static event Action<RoundResult> RoundEnded;
 
+        /// <summary>
+        /// Round'daki kaçırma sayısı değişti. misses: yeni kaçırma sayısı, maxMisses: round'u bitiren sınır (LevelData.maxMisses).
+        /// Round başında (RoundStarted'dan hemen sonra) ilk değerle (0, maxMisses) de yayınlanır. Kaçırma round'u bitiriyorsa
+        /// bu olay RoundEnded'dan önce gelir (gösterge son değeri de gösterir).
+        /// </summary>
+        public static event Action<int, int> MissesChanged;
+
         // --- Ekonomi ve gelişim (yayınlayan: Altyapı) ---
 
         /// <summary>Bir para türünün miktarı değişti. newAmount: yeni toplam miktar.</summary>
@@ -46,6 +53,12 @@ namespace CutiePie.Core
         /// <summary>Bir ürünün stoğu değişti. amount: yeni toplam dilim sayısı (değişim miktarı değil).</summary>
         public static event Action<string, int> StockChanged;
 
+        /// <summary>
+        /// Stoğa ekleme dolap kapasitesini aştı; fazlası kırpılıp kayboldu. lostSlices: stoğa giremeyen dilim sayısı (&gt; 0).
+        /// Kırpılmayan kısım için StockChanged ayrıca yayınlanır (eklenen 0 değilse).
+        /// </summary>
+        public static event Action<string, int> StockOverflow;
+
         // --- Fırın (yayınlayan: Altyapı / OvenService) ---
 
         /// <summary>Fırına tarif kondu, pişirme başladı.</summary>
@@ -56,7 +69,10 @@ namespace CutiePie.Core
         /// </summary>
         public static event Action<int> OvenReady;
 
-        /// <summary>Hazır parti toplandı ve stoğa eklendi. slices: eklenen dilim sayısı.</summary>
+        /// <summary>
+        /// Hazır parti toplandı, fırın boşaldı. slices: stoğa gerçekten eklenen dilim sayısı (kusursuz bonusu dahil,
+        /// dolap kapasitesinde kırpıldıktan sonra; dolap doluysa 0 olabilir).
+        /// </summary>
         public static event Action<string, int> BatchCollected;
 
         // --- Özel sipariş (yayınlayan: Altyapı / CustomOrderService) ---
@@ -80,6 +96,8 @@ namespace CutiePie.Core
 
         public static void RaiseRoundEnded(RoundResult result) => RoundEnded?.Invoke(result);
 
+        public static void RaiseMissesChanged(int misses, int maxMisses) => MissesChanged?.Invoke(misses, maxMisses);
+
         public static void RaiseCurrencyChanged(CurrencyType currency, int newAmount) =>
             CurrencyChanged?.Invoke(currency, newAmount);
 
@@ -87,6 +105,8 @@ namespace CutiePie.Core
             UpgradePurchased?.Invoke(upgrade, newLevel);
 
         public static void RaiseStockChanged(string productId, int amount) => StockChanged?.Invoke(productId, amount);
+
+        public static void RaiseStockOverflow(string productId, int lostSlices) => StockOverflow?.Invoke(productId, lostSlices);
 
         public static void RaiseBakeStarted(int ovenIndex, string recipeId) => BakeStarted?.Invoke(ovenIndex, recipeId);
 
@@ -108,9 +128,11 @@ namespace CutiePie.Core
             WrongOrderDelivered = null;
             RoundStarted = null;
             RoundEnded = null;
+            MissesChanged = null;
             CurrencyChanged = null;
             UpgradePurchased = null;
             StockChanged = null;
+            StockOverflow = null;
             BakeStarted = null;
             OvenReady = null;
             BatchCollected = null;
