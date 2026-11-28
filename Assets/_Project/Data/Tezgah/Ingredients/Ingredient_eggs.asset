@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa9aa930faa926d47aec06d635a96d07, type: 3}
+  m_Name: Ingredient_eggs
+  m_EditorClassIdentifier: 
+  id: eggs
+  nameKey: kitchen.counter.ingredient.eggs.name
+  hintKey: kitchen.counter.ingredient.eggs.hint
+  icon: {fileID: 0}
+  bowlTint: {r: 1, g: 0.84705883, b: 0.41960785, a: 1}

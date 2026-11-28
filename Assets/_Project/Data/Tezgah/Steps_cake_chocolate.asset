@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74e69cf4a4163e7479132f7fd31fefa1, type: 3}
+  m_Name: Steps_cake_chocolate
+  m_EditorClassIdentifier: 
+  recipeId: cake_chocolate
+  ingredients:
+  - ingredient: {fileID: 11400000, guid: 0feb56b6a3d3e6542af516af4d643f89, type: 2}
+    amountKey: kitchen.counter.amount.cups_2
+  - ingredient: {fileID: 11400000, guid: dee366e29998cdb4998a6f423040b30e, type: 2}
+    amountKey: kitchen.counter.amount.pieces_3
+  - ingredient: {fileID: 11400000, guid: 016cdc0a213003d40b126e9c808c9261, type: 2}
+    amountKey: kitchen.counter.amount.cups_1
+  - ingredient: {fileID: 11400000, guid: 76b9677fb850b08419615f0b73b04494, type: 2}
+    amountKey: kitchen.counter.amount.spoons_3
+  - ingredient: {fileID: 11400000, guid: b8256a23f5169114395bf116e9417bae, type: 2}
+    amountKey: kitchen.counter.amount.cups_1
+  - ingredient: {fileID: 11400000, guid: ac11a07b176a2204ba9fa5625a977659, type: 2}
+    amountKey: kitchen.counter.amount.grams_100
+  mixTurns: 3
+  batterStartColor: {r: 0.93333334, g: 0.8666667, b: 0.78431374, a: 1}
+  batterReadyColor: {r: 0.48235294, g: 0.29411766, b: 0.19607843, a: 1}
