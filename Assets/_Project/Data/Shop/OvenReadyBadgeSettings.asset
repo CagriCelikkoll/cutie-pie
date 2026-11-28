@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c467b3ab61fefc47bee6820ebdd02d5, type: 3}
+  m_Name: OvenReadyBadgeSettings
+  m_EditorClassIdentifier: 
+  backgroundColor: {r: 0.24313726, g: 0.5568628, b: 0.43137255, a: 1}
+  borderColor: {r: 1, g: 1, b: 1, a: 1}
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  borderWidth: 3
+  height: 34
+  horizontalPadding: 12
+  font: {fileID: 11400000, guid: f9365dac75f620e4082f9e884756d6a9, type: 2}
+  fontSize: 17
+  bold: 1
+  insetFromButtonRight: 10
+  offsetFromButtonTop: 0
+  safeAreaMargin: 8
+  oneKey: shop.ovens_ready.one
+  otherKey: shop.ovens_ready.other

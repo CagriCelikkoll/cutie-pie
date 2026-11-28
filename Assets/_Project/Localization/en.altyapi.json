@@ -37,6 +37,8 @@
     { "key": "ingredient.milk", "value": "Milk" },
     { "key": "ingredient.butter", "value": "Butter" },
     { "key": "ingredient.cocoa", "value": "Cocoa" },
-    { "key": "ingredient.strawberry", "value": "Strawberry" }
+    { "key": "ingredient.strawberry", "value": "Strawberry" },
+    { "key": "shop.ovens_ready.one", "value": "1 cake ready" },
+    { "key": "shop.ovens_ready.other", "value": "{0} cakes ready" }
   ]
 }
