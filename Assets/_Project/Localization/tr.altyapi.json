@@ -37,6 +37,8 @@
     { "key": "ingredient.milk", "value": "Süt" },
     { "key": "ingredient.butter", "value": "Tereyağı" },
     { "key": "ingredient.cocoa", "value": "Kakao" },
-    { "key": "ingredient.strawberry", "value": "Çilek" }
+    { "key": "ingredient.strawberry", "value": "Çilek" },
+    { "key": "shop.ovens_ready.one", "value": "1 pasta hazır" },
+    { "key": "shop.ovens_ready.other", "value": "{0} pasta hazır" }
   ]
 }
